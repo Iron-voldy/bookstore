@@ -236,7 +236,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="${pageContext.request.contextPath}/">
+            <a class="navbar-brand" href="<%=request.getContextPath()%>/">
                 <i class="fas fa-book-open me-2"></i>BookVerse
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -245,16 +245,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/">Home</a>
+                        <a class="nav-link" href="<%=request.getContextPath()%>/">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/search-book">Books</a>
+                        <a class="nav-link" href="<%=request.getContextPath()%>/search-book">Books</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="${pageContext.request.contextPath}/login">Login</a>
+                        <a class="nav-link active" href="<%=request.getContextPath()%>/login">Login</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/register">Register</a>
+                        <a class="nav-link" href="<%=request.getContextPath()%>/register">Register</a>
                     </li>
                 </ul>
             </div>
@@ -306,7 +306,7 @@
                             <div class="divider">OR</div>
 
                             <!-- Login Form -->
-                            <form action="${pageContext.request.contextPath}/login" method="post">
+                            <form action="<%=request.getContextPath()%>/login" method="post">
                                 <div class="mb-3">
                                     <label for="username" class="form-label">Username</label>
                                     <div class="input-group">
@@ -331,7 +331,7 @@
                                             Remember me
                                         </label>
                                     </div>
-                                    <a href="${pageContext.request.contextPath}/forgot-password" class="text-decoration-none" style="color: var(--accent-color);">Forgot password?</a>
+                                    <a href="<%=request.getContextPath()%>/forgot-password" class="text-decoration-none" style="color: var(--accent-color);">Forgot password?</a>
                                 </div>
                                 <div class="d-grid">
                                     <button type="submit" class="btn btn-accent">
@@ -341,7 +341,7 @@
                             </form>
 
                             <div class="text-center mt-4">
-                                <p>Don't have an account? <a href="${pageContext.request.contextPath}/register" class="text-decoration-none" style="color: var(--accent-color);">Register now</a></p>
+                                <p>Don't have an account? <a href="<%=request.getContextPath()%>/register" class="text-decoration-none" style="color: var(--accent-color);">Register now</a></p>
                             </div>
                         </div>
                     </div>

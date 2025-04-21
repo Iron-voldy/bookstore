@@ -231,7 +231,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="${pageContext.request.contextPath}/">
+            <a class="navbar-brand" href="<%=request.getContextPath()%>/">
                 <i class="fas fa-book-open me-2"></i>BookVerse
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -240,20 +240,20 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/">Home</a>
+                        <a class="nav-link" href="<%=request.getContextPath()%>/">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/search-book">Books</a>
+                        <a class="nav-link" href="<%=request.getContextPath()%>/search-book">Books</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/view-recommendations">Recommendations</a>
+                        <a class="nav-link" href="<%=request.getContextPath()%>/view-recommendations">Recommendations</a>
                     </li>
                 </ul>
 
                 <!-- User Menu -->
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/view-cart">
+                        <a class="nav-link" href="<%=request.getContextPath()%>/view-cart">
                             <i class="fas fa-shopping-cart"></i> Cart
                             <span class="badge rounded-pill bg-accent">
                                 ${sessionScope.cartCount != null ? sessionScope.cartCount : 0}
@@ -268,11 +268,11 @@
                             <% } %>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item active" href="${pageContext.request.contextPath}/user/profile.jsp">My Profile</a></li>
-                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/order-history">My Orders</a></li>
-                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/user-reviews">My Reviews</a></li>
+                            <li><a class="dropdown-item active" href="<%=request.getContextPath()%>/user/profile.jsp">My Profile</a></li>
+                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/order-history">My Orders</a></li>
+                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/user-reviews">My Reviews</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">Logout</a></li>
+                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/logout">Logout</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -321,7 +321,7 @@
                                 <% } %>
                             </p>
                             <div class="d-grid gap-2">
-                                <a href="${pageContext.request.contextPath}/user/profile.jsp" class="btn btn-outline-accent">
+                                <a href="<%=request.getContextPath()%>/user/profile.jsp" class="btn btn-outline-accent">
                                     <i class="fas fa-arrow-left me-1"></i> Back to Profile
                                 </a>
                             </div>
@@ -334,7 +334,7 @@
                             <h5 class="mb-0"><i class="fas fa-user-edit me-2"></i> Edit Profile</h5>
                         </div>
                         <div class="card-body">
-                            <form action="${pageContext.request.contextPath}/update-profile" method="post">
+                            <form action="<%=request.getContextPath()%>/update-profile" method="post">
                                 <div class="mb-3">
                                     <label for="username" class="form-label">Username</label>
                                     <input type="text" class="form-control" id="username" name="username" value="<%= currentUser.getUsername() %>" disabled>

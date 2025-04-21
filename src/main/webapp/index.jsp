@@ -232,7 +232,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
-            <a class="navbar-brand" href="${pageContext.request.contextPath}/">
+            <a class="navbar-brand" href="<%=request.getContextPath()%>/">
                 <i class="fas fa-book-open me-2"></i>BookVerse
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -241,13 +241,13 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="${pageContext.request.contextPath}/">Home</a>
+                        <a class="nav-link active" href="<%=request.getContextPath()%>/">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/search-book">Books</a>
+                        <a class="nav-link" href="<%=request.getContextPath()%>/search-book">Books</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/view-recommendations">Recommendations</a>
+                        <a class="nav-link" href="<%=request.getContextPath()%>/view-recommendations">Recommendations</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#contact">Contact</a>
@@ -255,7 +255,7 @@
                 </ul>
 
                 <!-- Search Form -->
-                <form class="d-flex mx-auto" action="${pageContext.request.contextPath}/search-book" method="get">
+                <form class="d-flex mx-auto" action="<%=request.getContextPath()%>/search-book" method="get">
                     <div class="input-group">
                         <input class="form-control" type="search" name="searchQuery" placeholder="Search books..." aria-label="Search" style="background-color: var(--secondary-dark); color: var(--text-primary); border-color: var(--border-color);">
                         <button class="btn btn-outline-light" type="submit">
@@ -269,7 +269,7 @@
                     <c:choose>
                         <c:when test="${not empty sessionScope.user}">
                             <li class="nav-item">
-                                <a class="nav-link" href="${pageContext.request.contextPath}/view-cart">
+                                <a class="nav-link" href="<%=request.getContextPath()%>/view-cart">
                                     <i class="fas fa-shopping-cart"></i> Cart
                                     <span class="badge rounded-pill badge-accent">
                                         ${sessionScope.cartCount != null ? sessionScope.cartCount : 0}
@@ -281,21 +281,20 @@
                                     <i class="fas fa-user-circle me-1"></i> ${sessionScope.username}
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdown">
-                                    <li><a class="dropdown-item" href="${pageContext.request.contextPath}/update-profile">My Profile</a></li>
-                                    <li><a class="dropdown-item" href="${pageContext.request.contextPath}/order-history">My Orders</a></li>
-                                    <li><a class="dropdown-item" href="${pageContext.request.contextPath}/user-reviews">My Reviews</a></li>
+                                    <li><a class="dropdown-item" href="<%=request.getContextPath()%>/update-profile">My Profile</a></li>
+                                    <li><a class="dropdown-item" href="<%=request.getContextPath()%>/order-history">My Orders</a></li>
+                                    <li><a class="dropdown-item" href="<%=request.getContextPath()%>/user-reviews">My Reviews</a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="${pageContext.request.contextPath}/logout">Logout</a></li>
+                                    <li><a class="dropdown-item" href="<%=request.getContextPath()%>/logout">Logout</a></li>
                                 </ul>
                             </li>
                         </c:when>
                         <c:otherwise>
-                            <!-- Just use the absolute path -->
                             <li class="nav-item">
-                                <a class="nav-link" href="/onlinebookstore/user/login.jsp">Login</a>
+                                <a class="nav-link" href="<%=request.getContextPath()%>/login">Login</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="/onlinebookstore/user/register.jsp">Register</a>
+                                <a class="nav-link" href="<%=request.getContextPath()%>/register">Register</a>
                             </li>
                         </c:otherwise>
                     </c:choose>
@@ -330,7 +329,7 @@
         <div class="hero-content">
             <h1>Discover Your Next Favorite Book</h1>
             <p>Explore our vast collection of books from bestsellers to classics. Find your perfect read and get it delivered to your doorstep.</p>
-            <a href="${pageContext.request.contextPath}/search-book" class="btn btn-accent btn-lg">
+            <a href="<%=request.getContextPath()%>/search-book" class="btn btn-accent btn-lg">
                 <i class="fas fa-book me-2"></i> Browse Books
             </a>
         </div>
@@ -471,253 +470,6 @@
         </div>
     </section>
 
-    <!-- Latest Books Section -->
-    <section class="py-5">
-        <div class="container">
-            <h2 class="section-title">Latest Arrivals</h2>
-            <div class="row">
-                <!-- Latest Book 1 -->
-                <div class="col-md-3 col-6 mb-4">
-                    <div class="card book-card h-100">
-                        <img src="https://images.unsplash.com/photo-1589998059171-988d887df646?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80" class="card-img-top" alt="Book Cover">
-                        <div class="card-body">
-                            <h5 class="card-title">The Midnight Library</h5>
-                            <p class="text-muted">Matt Haig</p>
-                            <div class="rating mb-2">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star-half-alt"></i>
-                                <span class="ms-1">4.5</span>
-                            </div>
-                            <span class="badge bg-success mb-2">New</span>
-                            <span class="d-block price mt-2">$16.99</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Latest Book 2 -->
-                <div class="col-md-3 col-6 mb-4">
-                    <div class="card book-card h-100">
-                        <img src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80" class="card-img-top" alt="Book Cover">
-                        <div class="card-body">
-                            <h5 class="card-title">Atomic Habits</h5>
-                            <p class="text-muted">James Clear</p>
-                            <div class="rating mb-2">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <span class="ms-1">5.0</span>
-                            </div>
-                            <span class="badge bg-success mb-2">New</span>
-                            <span class="d-block price mt-2">$11.99</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Latest Book 3 -->
-                <div class="col-md-3 col-6 mb-4">
-                    <div class="card book-card h-100">
-                        <img src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80" class="card-img-top" alt="Book Cover">
-                        <div class="card-body">
-                            <h5 class="card-title">Project Hail Mary</h5>
-                            <p class="text-muted">Andy Weir</p>
-                            <div class="rating mb-2">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="far fa-star"></i>
-                                <span class="ms-1">4.0</span>
-                            </div>
-                            <span class="badge bg-success mb-2">New</span>
-                            <span class="d-block price mt-2">$14.99</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Latest Book 4 -->
-                <div class="col-md-3 col-6 mb-4">
-                    <div class="card book-card h-100">
-                        <img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80" class="card-img-top" alt="Book Cover">
-                        <div class="card-body">
-                            <h5 class="card-title">The Four Winds</h5>
-                            <p class="text-muted">Kristin Hannah</p>
-                            <div class="rating mb-2">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star-half-alt"></i>
-                                <i class="far fa-star"></i>
-                                <span class="ms-1">3.5</span>
-                            </div>
-                            <span class="badge bg-success mb-2">New</span>
-                            <span class="d-block price mt-2">$13.99</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Testimonials Section -->
-    <section class="py-5" style="background-color: var(--secondary-dark);">
-        <div class="container">
-            <h2 class="section-title">What Our Customers Say</h2>
-            <div class="row">
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <img src="https://randomuser.me/api/portraits/women/32.jpg" class="rounded-circle me-3" width="60" alt="Customer">
-                                <div>
-                                    <h5 class="card-title mb-0">Sarah Johnson</h5>
-                                    <div class="rating">
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <p class="card-text">"I've been buying books from BookVerse for over a year now. Their selection is amazing and delivery is always on time. Highly recommend!"</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <img src="https://randomuser.me/api/portraits/men/44.jpg" class="rounded-circle me-3" width="60" alt="Customer">
-                                <div>
-                                    <h5 class="card-title mb-0">Michael Chen</h5>
-                                    <div class="rating">
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star-half-alt"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <p class="card-text">"The recommendation system is spot on! Found so many books I wouldn't have discovered otherwise. Customer service is excellent too."</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <img src="https://randomuser.me/api/portraits/women/68.jpg" class="rounded-circle me-3" width="60" alt="Customer">
-                                <div>
-                                    <h5 class="card-title mb-0">Emily Rodriguez</h5>
-                                    <div class="rating">
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="far fa-star"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            <p class="card-text">"As an avid reader, I appreciate the wide range of genres available. The prices are competitive and the regular sales are great!"</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Newsletter Section -->
-    <section class="py-5">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-body text-center py-5">
-                            <h3 class="card-title">Subscribe to Our Newsletter</h3>
-                            <p class="card-text">Stay updated with our latest book releases, promotions, and literary events.</p>
-                            <form class="row g-3 justify-content-center">
-                                <div class="col-md-8">
-                                    <input type="email" class="form-control" placeholder="Your email address" style="background-color: var(--secondary-dark); color: var(--text-primary); border-color: var(--border-color);">
-                                </div>
-                                <div class="col-auto">
-                                    <button type="submit" class="btn btn-accent">Subscribe</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section id="contact" class="py-5" style="background-color: var(--secondary-dark);">
-        <div class="container">
-            <h2 class="section-title">Contact Us</h2>
-            <div class="row">
-                <div class="col-md-6 mb-4">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h3 class="card-title mb-4">Get In Touch</h3>
-                            <form>
-                                <div class="mb-3">
-                                    <label for="name" class="form-label">Name</label>
-                                    <input type="text" class="form-control" id="name" placeholder="Your name" style="background-color: var(--card-bg); color: var(--text-primary); border-color: var(--border-color);">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="email" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="email" placeholder="Your email" style="background-color: var(--card-bg); color: var(--text-primary); border-color: var(--border-color);">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="subject" class="form-label">Subject</label>
-                                    <input type="text" class="form-control" id="subject" placeholder="Subject" style="background-color: var(--card-bg); color: var(--text-primary); border-color: var(--border-color);">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="message" class="form-label">Message</label>
-                                    <textarea class="form-control" id="message" rows="4" placeholder="Your message" style="background-color: var(--card-bg); color: var(--text-primary); border-color: var(--border-color);"></textarea>
-                                </div>
-                                <button type="submit" class="btn btn-accent">Send Message</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 mb-4">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h3 class="card-title mb-4">Our Information</h3>
-                            <div class="mb-4">
-                                <h5><i class="fas fa-map-marker-alt me-2" style="color: var(--accent-color);"></i> Address</h5>
-                                <p class="ms-4">123 Book Street, Literary Lane<br>Reading City, RC 10101</p>
-                            </div>
-                            <div class="mb-4">
-                                <h5><i class="fas fa-phone me-2" style="color: var(--accent-color);"></i> Phone</h5>
-                                <p class="ms-4">+1 (555) 123-4567</p>
-                            </div>
-                            <div class="mb-4">
-                                <h5><i class="fas fa-envelope me-2" style="color: var(--accent-color);"></i> Email</h5>
-                                <p class="ms-4">info@bookverse.com</p>
-                            </div>
-                            <div class="mb-4">
-                                <h5><i class="fas fa-clock me-2" style="color: var(--accent-color);"></i> Business Hours</h5>
-                                <p class="ms-4">
-                                    Monday - Friday: 9am - 8pm<br>
-                                    Saturday: 10am - 6pm<br>
-                                    Sunday: Closed
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- Footer -->
     <footer>
         <div class="container">
@@ -735,9 +487,9 @@
                 <div class="col-md-2 mb-4">
                     <h5 class="mb-3 text-white">Quick Links</h5>
                     <ul class="list-unstyled footer-links">
-                        <li><a href="${pageContext.request.contextPath}/">Home</a></li>
-                        <li><a href="${pageContext.request.contextPath}/search-book">Books</a></li>
-                        <li><a href="${pageContext.request.contextPath}/view-recommendations">Recommendations</a></li>
+                        <li><a href="<%=request.getContextPath()%>/">Home</a></li>
+                        <li><a href="<%=request.getContextPath()%>/search-book">Books</a></li>
+                        <li><a href="<%=request.getContextPath()%>/view-recommendations">Recommendations</a></li>
                         <li><a href="#contact">Contact</a></li>
                     </ul>
                 </div>

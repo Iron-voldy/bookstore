@@ -36,7 +36,7 @@ public class RegisterServlet extends HttpServlet {
         }
 
         // Forward to the registration page
-        request.getRequestDispatcher("/register.jsp").forward(request, response);
+        request.getRequestDispatcher("/user/register.jsp").forward(request, response);
     }
 
     /**
@@ -71,7 +71,7 @@ public class RegisterServlet extends HttpServlet {
             request.setAttribute("fullName", fullName);
             request.setAttribute("username", username);
             request.setAttribute("email", email);
-            request.getRequestDispatcher("/register.jsp").forward(request, response);
+            request.getRequestDispatcher("/user/register.jsp").forward(request, response);
             return;
         }
 
@@ -81,7 +81,7 @@ public class RegisterServlet extends HttpServlet {
             request.setAttribute("fullName", fullName);
             request.setAttribute("username", username);
             request.setAttribute("email", email);
-            request.getRequestDispatcher("/register.jsp").forward(request, response);
+            request.getRequestDispatcher("/user/register.jsp").forward(request, response);
             return;
         }
 
@@ -91,7 +91,7 @@ public class RegisterServlet extends HttpServlet {
             request.setAttribute("fullName", fullName);
             request.setAttribute("username", username);
             request.setAttribute("email", email);
-            request.getRequestDispatcher("/register.jsp").forward(request, response);
+            request.getRequestDispatcher("/user/register.jsp").forward(request, response);
             return;
         }
 
@@ -100,7 +100,7 @@ public class RegisterServlet extends HttpServlet {
             request.setAttribute("errorMessage", "Username must be 3-20 characters and can only contain letters, numbers, and underscores");
             request.setAttribute("fullName", fullName);
             request.setAttribute("email", email);
-            request.getRequestDispatcher("/register.jsp").forward(request, response);
+            request.getRequestDispatcher("/user/register.jsp").forward(request, response);
             return;
         }
 
@@ -109,7 +109,7 @@ public class RegisterServlet extends HttpServlet {
             request.setAttribute("errorMessage", "Invalid email format");
             request.setAttribute("fullName", fullName);
             request.setAttribute("username", username);
-            request.getRequestDispatcher("/register.jsp").forward(request, response);
+            request.getRequestDispatcher("/user/register.jsp").forward(request, response);
             return;
         }
 
@@ -119,7 +119,7 @@ public class RegisterServlet extends HttpServlet {
             request.setAttribute("fullName", fullName);
             request.setAttribute("username", username);
             request.setAttribute("email", email);
-            request.getRequestDispatcher("/register.jsp").forward(request, response);
+            request.getRequestDispatcher("/user/register.jsp").forward(request, response);
             return;
         }
 
@@ -132,7 +132,7 @@ public class RegisterServlet extends HttpServlet {
                 request.setAttribute("errorMessage", "Username already exists");
                 request.setAttribute("fullName", fullName);
                 request.setAttribute("email", email);
-                request.getRequestDispatcher("/register.jsp").forward(request, response);
+                request.getRequestDispatcher("/user/register.jsp").forward(request, response);
                 return;
             }
 
@@ -163,7 +163,7 @@ public class RegisterServlet extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/login");
                 } else {
                     request.setAttribute("errorMessage", "Registration failed. Please try again.");
-                    request.getRequestDispatcher("/register.jsp").forward(request, response);
+                    request.getRequestDispatcher("/user/register.jsp").forward(request, response);
                 }
             } else {
                 // Create regular user
@@ -183,13 +183,13 @@ public class RegisterServlet extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/login");
                 } else {
                     request.setAttribute("errorMessage", "Registration failed. Please try again.");
-                    request.getRequestDispatcher("/register.jsp").forward(request, response);
+                    request.getRequestDispatcher("/user/register.jsp").forward(request, response);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("errorMessage", "An error occurred during registration: " + e.getMessage());
-            request.getRequestDispatcher("/register.jsp").forward(request, response);
+            request.getRequestDispatcher("/user/register.jsp").forward(request, response);
         }
     }
 }
