@@ -1,5 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page import="com.bookstore.model.user.User" %>
+<%@ page import="com.bookstore.model.user.PremiumUser" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -226,9 +228,34 @@
         .alert-warning {
             border-left: 4px solid var(--warning-color);
         }
+
+        .premium-badge {
+            background: linear-gradient(135deg, #B68C1A, #FFD700);
+            color: #333;
+            padding: 3px 8px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
+    <%
+        // Get the user object from session
+        User currentUser = (User)session.getAttribute("user");
+        boolean isLoggedIn = (currentUser != null);
+        boolean isPremium = false;
+
+        if (isLoggedIn) {
+            isPremium = (currentUser instanceof PremiumUser);
+            System.out.println("Index.jsp: User is logged in: " + currentUser.getUsername());
+        } else {
+            System.out.println("Index.jsp: No user in session");
+        }
+    %>
+
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container">
@@ -266,38 +293,41 @@
 
                 <!-- User Menu -->
                 <ul class="navbar-nav ms-auto">
-                    <c:choose>
-                        <c:when test="${not empty sessionScope.user}">
-                            <li class="nav-item">
-                                <a class="nav-link" href="<%=request.getContextPath()%>/view-cart">
-                                    <i class="fas fa-shopping-cart"></i> Cart
-                                    <span class="badge rounded-pill badge-accent">
-                                        ${sessionScope.cartCount != null ? sessionScope.cartCount : 0}
-                                    </span>
-                                </a>
-                            </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-user-circle me-1"></i> ${sessionScope.username}
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdown">
-                                    <li><a class="dropdown-item" href="<%=request.getContextPath()%>/update-profile">My Profile</a></li>
-                                    <li><a class="dropdown-item" href="<%=request.getContextPath()%>/order-history">My Orders</a></li>
-                                    <li><a class="dropdown-item" href="<%=request.getContextPath()%>/user-reviews">My Reviews</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="<%=request.getContextPath()%>/logout">Logout</a></li>
-                                </ul>
-                            </li>
-                        </c:when>
-                        <c:otherwise>
-                            <li class="nav-item">
-                                <a class="nav-link" href="<%=request.getContextPath()%>/login">Login</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="<%=request.getContextPath()%>/register">Register</a>
-                            </li>
-                        </c:otherwise>
-                    </c:choose>
+                    <% if (isLoggedIn) { %>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<%=request.getContextPath()%>/view-cart">
+                                <i class="fas fa-shopping-cart"></i> Cart
+                                <span class="badge rounded-pill" style="background-color: var(--accent-color);">
+                                    <%
+                                    Integer cartCount = (Integer)session.getAttribute("cartCount");
+                                    out.print(cartCount != null ? cartCount : 0);
+                                    %>
+                                </span>
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle me-1"></i> <%= currentUser.getUsername() %>
+                                <% if (isPremium) { %>
+                                    <span class="premium-badge">PREMIUM</span>
+                                <% } %>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" href="<%=request.getContextPath()%>/user/profile.jsp">My Profile</a></li>
+                                <li><a class="dropdown-item" href="<%=request.getContextPath()%>/order-history">My Orders</a></li>
+                                <li><a class="dropdown-item" href="<%=request.getContextPath()%>/user-reviews">My Reviews</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="<%=request.getContextPath()%>/logout">Logout</a></li>
+                            </ul>
+                        </li>
+                    <% } else { %>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<%=request.getContextPath()%>/login">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<%=request.getContextPath()%>/register">Register</a>
+                        </li>
+                    <% } %>
                 </ul>
             </div>
         </div>
