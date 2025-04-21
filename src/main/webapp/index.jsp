@@ -290,11 +290,12 @@
                             </li>
                         </c:when>
                         <c:otherwise>
+                            <!-- Just use the absolute path -->
                             <li class="nav-item">
-                                <a class="nav-link" href="${pageContext.request.contextPath}/login">Login</a>
+                                <a class="nav-link" href="/onlinebookstore/user/login.jsp">Login</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="${pageContext.request.contextPath}/register">Register</a>
+                                <a class="nav-link" href="/onlinebookstore/user/register.jsp">Register</a>
                             </li>
                         </c:otherwise>
                     </c:choose>
