@@ -152,11 +152,6 @@ public class BookImageManager {
         return imageFile.getAbsolutePath();
     }
 
-    /**
-     * Check if a file extension is allowed
-     * @param extension the file extension to check
-     * @return true if allowed, false otherwise
-     */
     private boolean isAllowedExtension(String extension) {
         for (String allowed : ALLOWED_EXTENSIONS) {
             if (allowed.equalsIgnoreCase(extension)) {
