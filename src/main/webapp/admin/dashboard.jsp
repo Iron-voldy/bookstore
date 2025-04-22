@@ -1,6 +1,19 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page import="com.bookstore.model.admin.Admin" %>
+<%@ page import="com.bookstore.model.admin.AdminManager" %>
+<%@ page import="com.bookstore.model.book.Book" %>
+<%@ page import="com.bookstore.model.book.BookManager" %>
+<%@ page import="com.bookstore.model.book.EBook" %>
+<%@ page import="com.bookstore.model.book.PhysicalBook" %>
+<%@ page import="com.bookstore.model.user.User" %>
+<%@ page import="com.bookstore.model.user.UserManager" %>
+<%@ page import="com.bookstore.model.user.PremiumUser" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.util.ArrayList" %>
+<%@ page import="java.util.Date" %>
+<%@ page import="java.text.SimpleDateFormat" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -150,6 +163,101 @@
     </style>
 </head>
 <body>
+    <%
+        // Get admin information from session
+        String adminId = (String) session.getAttribute("adminId");
+        String adminUsername = (String) session.getAttribute("adminUsername");
+        Boolean isSuperAdmin = (Boolean) session.getAttribute("isSuperAdmin");
+
+        if (adminId == null) {
+            response.sendRedirect(request.getContextPath() + "/admin/login");
+            return;
+        }
+
+        // Initialize data managers
+        AdminManager adminManager = new AdminManager(application);
+        BookManager bookManager = new BookManager(application);
+        UserManager userManager = new UserManager(application);
+
+        // Get admin object
+        Admin admin = adminManager.getAdminById(adminId);
+
+        // Get book statistics
+        Book[] allBooks = bookManager.getAllBooks();
+        int totalBooks = allBooks != null ? allBooks.length : 0;
+
+        // Count physical books and ebooks
+        int physicalBookCount = 0;
+        int ebookCount = 0;
+        int featuredBookCount = 0;
+        int lowStockCount = 0; // Books with quantity <= 5
+
+        if (allBooks != null) {
+            for (Book book : allBooks) {
+                if (book instanceof PhysicalBook) {
+                    physicalBookCount++;
+                    if (book.getQuantity() <= 5) {
+                        lowStockCount++;
+                    }
+                } else if (book instanceof EBook) {
+                    ebookCount++;
+                }
+
+                if (book.isFeatured()) {
+                    featuredBookCount++;
+                }
+            }
+        }
+
+        // User statistics
+        int totalUsers = userManager.getUserCount();
+        int premiumUserCount = userManager.getPremiumUserCount();
+        int regularUserCount = totalUsers - premiumUserCount;
+
+        // Admin statistics
+        int totalAdmins = adminManager.getAdminCount();
+        int superAdminCount = adminManager.getSuperAdminCount();
+        int regularAdminCount = totalAdmins - superAdminCount;
+
+        // Format for last login date
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM d, yyyy 'at' h:mm a");
+
+        // Get recent activities (in a real app, this would come from an activity log)
+        // For now, we'll create them based on book and user data
+        List<String> activityTypes = new ArrayList<>();
+        List<String> activityDescriptions = new ArrayList<>();
+        List<String> activityUsers = new ArrayList<>();
+        List<String> activityTimes = new ArrayList<>();
+
+        // Add recent book additions (newest first)
+        if (allBooks != null && allBooks.length > 0) {
+            // Sort books by added date (descending)
+            java.util.Arrays.sort(allBooks, (b1, b2) ->
+                b2.getAddedDate().compareTo(b1.getAddedDate())
+            );
+
+            // Add the 5 most recent books
+            for (int i = 0; i < Math.min(5, allBooks.length); i++) {
+                Book book = allBooks[i];
+                activityTypes.add("book-add");
+                activityDescriptions.add("New book \"" + book.getTitle() + "\" added");
+                activityUsers.add(adminUsername); // Assuming the current admin added them
+
+                // Format the time based on how long ago
+                long diffInMillis = System.currentTimeMillis() - book.getAddedDate().getTime();
+                long diffInDays = diffInMillis / (24 * 60 * 60 * 1000);
+
+                if (diffInDays == 0) {
+                    activityTimes.add("Today");
+                } else if (diffInDays == 1) {
+                    activityTimes.add("Yesterday");
+                } else {
+                    activityTimes.add(diffInDays + " days ago");
+                }
+            }
+        }
+    %>
+
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
@@ -182,10 +290,10 @@
                 <ul class="navbar-nav">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle me-1"></i> ${sessionScope.adminUsername}
-                            <c:if test="${sessionScope.isSuperAdmin}">
+                            <i class="fas fa-user-circle me-1"></i> <%= adminUsername %>
+                            <% if (isSuperAdmin != null && isSuperAdmin) { %>
                                 <span class="badge bg-warning text-dark ms-1">Super Admin</span>
-                            </c:if>
+                            <% } %>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
                             <li><a class="dropdown-item" href="<%=request.getContextPath()%>/admin/profile.jsp">My Profile</a></li>
@@ -221,17 +329,14 @@
         <div class="welcome-section">
             <div class="row align-items-center">
                 <div class="col-md-9">
-                    <h1 class="mb-2">Welcome back, ${admin.fullName}!</h1>
+                    <h1 class="mb-2">Welcome back, <%= admin != null ? admin.getFullName() : adminUsername %>!</h1>
                     <p class="text-muted mb-0">
                         <i class="far fa-clock me-1"></i> Last login:
-                        <c:choose>
-                            <c:when test="${admin.lastLoginDate != null}">
-                                <fmt:formatDate value="${admin.lastLoginDate}" pattern="MMMM d, yyyy 'at' h:mm a" />
-                            </c:when>
-                            <c:otherwise>
-                                First time login
-                            </c:otherwise>
-                        </c:choose>
+                        <% if (admin != null && admin.getLastLoginDate() != null) { %>
+                            <%= dateFormat.format(admin.getLastLoginDate()) %>
+                        <% } else { %>
+                            First time login
+                        <% } %>
                     </p>
                 </div>
                 <div class="col-md-3 text-md-end mt-3 mt-md-0">
@@ -251,20 +356,20 @@
                     <div class="stat-icon" style="color: var(--accent-color);">
                         <i class="fas fa-book"></i>
                     </div>
-                    <div class="stat-number">${totalBooks}</div>
+                    <div class="stat-number"><%= totalBooks %></div>
                     <div class="stat-title">Total Books</div>
                     <div class="mt-3">
                         <div class="d-flex justify-content-between">
                             <small>Physical Books:</small>
-                            <small>${physicalBookCount}</small>
+                            <small><%= physicalBookCount %></small>
                         </div>
                         <div class="d-flex justify-content-between">
                             <small>E-Books:</small>
-                            <small>${ebookCount}</small>
+                            <small><%= ebookCount %></small>
                         </div>
                         <div class="d-flex justify-content-between">
                             <small>Featured:</small>
-                            <small>${featuredBookCount}</small>
+                            <small><%= featuredBookCount %></small>
                         </div>
                     </div>
                 </div>
@@ -276,16 +381,16 @@
                     <div class="stat-icon" style="color: #4caf50;">
                         <i class="fas fa-users"></i>
                     </div>
-                    <div class="stat-number">${totalUsers}</div>
+                    <div class="stat-number"><%= totalUsers %></div>
                     <div class="stat-title">Total Users</div>
                     <div class="mt-3">
                         <div class="d-flex justify-content-between">
                             <small>Premium Users:</small>
-                            <small>${premiumUserCount}</small>
+                            <small><%= premiumUserCount %></small>
                         </div>
                         <div class="d-flex justify-content-between">
                             <small>Regular Users:</small>
-                            <small>${regularUserCount}</small>
+                            <small><%= regularUserCount %></small>
                         </div>
                     </div>
                 </div>
@@ -318,16 +423,16 @@
                     <div class="stat-icon" style="color: #2196F3;">
                         <i class="fas fa-user-shield"></i>
                     </div>
-                    <div class="stat-number">${totalAdmins}</div>
+                    <div class="stat-number"><%= totalAdmins %></div>
                     <div class="stat-title">Administrators</div>
                     <div class="mt-3">
                         <div class="d-flex justify-content-between">
                             <small>Super Admins:</small>
-                            <small>${superAdminCount}</small>
+                            <small><%= superAdminCount %></small>
                         </div>
                         <div class="d-flex justify-content-between">
                             <small>Regular Admins:</small>
-                            <small>${regularAdminCount}</small>
+                            <small><%= regularAdminCount %></small>
                         </div>
                     </div>
                 </div>
@@ -363,7 +468,7 @@
                                     <i class="fas fa-clipboard-list me-2"></i> View Orders
                                 </a>
                             </div>
-                            <c:if test="${sessionScope.isSuperAdmin}">
+                            <% if (isSuperAdmin != null && isSuperAdmin) { %>
                                 <div class="col-6">
                                     <a href="<%=request.getContextPath()%>/admin/manage-admins" class="btn btn-outline-light w-100">
                                         <i class="fas fa-user-shield me-2"></i> Manage Admins
@@ -374,7 +479,7 @@
                                         <i class="fas fa-cogs me-2"></i> System Settings
                                     </a>
                                 </div>
-                            </c:if>
+                            <% } %>
                         </div>
                     </div>
                 </div>
@@ -388,7 +493,7 @@
                     </div>
                     <div class="card-body">
                         <div class="alert alert-danger mb-3" role="alert">
-                            <i class="fas fa-exclamation-circle me-2"></i> ${lowStockCount} books are low on stock or out of stock.
+                            <i class="fas fa-exclamation-circle me-2"></i> <%= lowStockCount %> books are low on stock or out of stock.
                         </div>
                         <a href="<%=request.getContextPath()%>/admin/manage-books.jsp?filter=out-of-stock" class="btn btn-sm btn-outline-danger mb-3">
                             <i class="fas fa-search me-1"></i> View Low Stock Books
@@ -423,67 +528,50 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- This would be populated from a database in a real system -->
+                                <%
+                                if (activityTypes.size() > 0) {
+                                    for (int i = 0; i < activityTypes.size(); i++) {
+                                        String iconClass = "";
+                                        String bgClass = "";
+
+                                        // Set icon and color based on activity type
+                                        if (activityTypes.get(i).equals("book-add")) {
+                                            iconClass = "fas fa-plus";
+                                            bgClass = "bg-success";
+                                        } else if (activityTypes.get(i).equals("book-edit")) {
+                                            iconClass = "fas fa-edit";
+                                            bgClass = "bg-primary";
+                                        } else if (activityTypes.get(i).equals("user-add")) {
+                                            iconClass = "fas fa-user";
+                                            bgClass = "bg-info";
+                                        } else if (activityTypes.get(i).equals("order")) {
+                                            iconClass = "fas fa-shopping-cart";
+                                            bgClass = "bg-warning";
+                                        } else if (activityTypes.get(i).equals("book-delete")) {
+                                            iconClass = "fas fa-trash";
+                                            bgClass = "bg-danger";
+                                        }
+                                %>
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <div class="activity-icon bg-success">
-                                                <i class="fas fa-plus"></i>
+                                            <div class="activity-icon <%= bgClass %>">
+                                                <i class="<%= iconClass %>"></i>
                                             </div>
-                                            <div>New book "The Silent Patient" added</div>
+                                            <div><%= activityDescriptions.get(i) %></div>
                                         </div>
                                     </td>
-                                    <td>admin</td>
-                                    <td class="activity-time">Today, 10:24 AM</td>
+                                    <td><%= activityUsers.get(i) %></td>
+                                    <td class="activity-time"><%= activityTimes.get(i) %></td>
                                 </tr>
+                                <%
+                                    }
+                                } else {
+                                %>
                                 <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="activity-icon bg-primary">
-                                                <i class="fas fa-edit"></i>
-                                            </div>
-                                            <div>Book "The Great Gatsby" updated</div>
-                                        </div>
-                                    </td>
-                                    <td>john_admin</td>
-                                    <td class="activity-time">Today, 9:15 AM</td>
+                                    <td colspan="3" class="text-center">No recent activities found</td>
                                 </tr>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="activity-icon bg-info">
-                                                <i class="fas fa-user"></i>
-                                            </div>
-                                            <div>New user "janesmith" registered</div>
-                                        </div>
-                                    </td>
-                                    <td>System</td>
-                                    <td class="activity-time">Yesterday, 3:45 PM</td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="activity-icon bg-warning">
-                                                <i class="fas fa-shopping-cart"></i>
-                                            </div>
-                                            <div>New order #1234 placed</div>
-                                        </div>
-                                    </td>
-                                    <td>janesmith</td>
-                                    <td class="activity-time">Yesterday, 2:30 PM</td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="activity-icon bg-danger">
-                                                <i class="fas fa-trash"></i>
-                                            </div>
-                                            <div>Book "Old Title" removed</div>
-                                        </div>
-                                    </td>
-                                    <td>admin</td>
-                                    <td class="activity-time">2 days ago</td>
-                                </tr>
+                                <% } %>
                             </tbody>
                         </table>
                     </div>

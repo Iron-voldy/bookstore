@@ -5,6 +5,8 @@
 <%@ page import="com.bookstore.model.book.BookManager" %>
 <%@ page import="com.bookstore.model.book.EBook" %>
 <%@ page import="com.bookstore.model.book.PhysicalBook" %>
+<%@ page import="java.util.Date" %>
+<%@ page import="java.text.SimpleDateFormat" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -164,6 +166,15 @@
     </style>
 </head>
 <body>
+    <%
+        // Ensure admin is logged in
+        String adminId = (String) session.getAttribute("adminId");
+        if (adminId == null) {
+            response.sendRedirect(request.getContextPath() + "/admin/login");
+            return;
+        }
+    %>
+
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
@@ -187,12 +198,25 @@
                     <li class="nav-item">
                         <a class="nav-link" href="<%=request.getContextPath()%>/admin/manage-orders.jsp">Orders</a>
                     </li>
+                    <% if ((Boolean)session.getAttribute("isSuperAdmin") != null && (Boolean)session.getAttribute("isSuperAdmin")) { %>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<%=request.getContextPath()%>/admin/manage-admins">Administrators</a>
+                    </li>
+                    <% } %>
                 </ul>
                 <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="<%=request.getContextPath()%>/logout">
-                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle me-1"></i> ${sessionScope.adminUsername}
+                            <% if ((Boolean)session.getAttribute("isSuperAdmin") != null && (Boolean)session.getAttribute("isSuperAdmin")) { %>
+                            <span class="badge bg-warning text-dark ms-1">Super Admin</span>
+                            <% } %>
                         </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/admin/profile.jsp">My Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/admin/logout">Logout</a></li>
+                        </ul>
                     </li>
                 </ul>
             </div>
@@ -220,7 +244,7 @@
 
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="fas fa-books me-2"></i> Manage Books</h2>
+            <h2><i class="fas fa-book me-2"></i> Manage Books</h2>
             <a href="<%=request.getContextPath()%>/admin/add-book" class="btn btn-accent">
                 <i class="fas fa-plus-circle me-1"></i> Add New Book
             </a>
@@ -256,6 +280,7 @@
                                 <th>Type</th>
                                 <th>Price</th>
                                 <th>Stock</th>
+                                <th>Featured</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -264,6 +289,7 @@
                                 // Get all books from database
                                 BookManager bookManager = new BookManager(application);
                                 Book[] books = bookManager.getAllBooks();
+                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
                                 if (books != null && books.length > 0) {
                                     for (Book book : books) {
@@ -283,6 +309,12 @@
                                         String coverPath = request.getContextPath() + "/book-covers/" + book.getCoverImagePath();
                                         if (book.getCoverImagePath() == null || book.getCoverImagePath().equals("default_cover.jpg")) {
                                             coverPath = request.getContextPath() + "/book-covers/default_cover.jpg";
+                                        }
+
+                                        // Format added date
+                                        String addedDate = "";
+                                        if (book.getAddedDate() != null) {
+                                            addedDate = sdf.format(book.getAddedDate());
                                         }
                             %>
                             <tr>
@@ -306,15 +338,22 @@
                                     <% } %>
                                 </td>
                                 <td>
+                                    <% if (book.isFeatured()) { %>
+                                        <span class="badge bg-warning">Featured</span>
+                                    <% } else { %>
+                                        <span class="badge bg-secondary">No</span>
+                                    <% } %>
+                                </td>
+                                <td>
                                     <div class="btn-group btn-group-sm">
                                         <a href="<%=request.getContextPath()%>/admin/update-book?id=<%= book.getId() %>" class="btn btn-outline-light">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <button type="button" class="btn btn-outline-danger"
-                                                onclick="confirmDelete('<%= book.getId() %>', '<%= book.getTitle() %>')">
+                                                onclick="confirmDelete('<%= book.getId() %>', '<%= book.getTitle().replace("'", "\\'") %>')">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
-                                        <a href="<%=request.getContextPath()%>/book-details?id=<%= book.getId() %>" class="btn btn-outline-info">
+                                        <a href="<%=request.getContextPath()%>/book-details?id=<%= book.getId() %>" class="btn btn-outline-info" target="_blank">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                     </div>
@@ -403,8 +442,7 @@
             } else if (filter === 'ebook') {
                 table.column(4).search('E-Book').draw();
             } else if (filter === 'featured') {
-                // Would need additional column for featured status
-                table.search('Featured').draw();
+                table.column(7).search('Featured').draw();
             } else if (filter === 'out-of-stock') {
                 table.column(6).search('Out of Stock').draw();
             }
