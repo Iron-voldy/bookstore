@@ -75,9 +75,8 @@ public class BookManager {
                 if (file.getParentFile() != null) {
                     file.getParentFile().mkdirs();
                 }
-                file.createNewFile();
-                System.out.println("Created books file: " + dataFilePath);
-
+                boolean created = file.createNewFile();
+                System.out.println("Created books file: " + dataFilePath + " - Success: " + created);
                 return;
             } catch (IOException e) {
                 System.err.println("Error creating books file: " + e.getMessage());
@@ -86,28 +85,43 @@ public class BookManager {
             }
         }
 
+        // Check if file is readable and not empty
+        if (!file.canRead() || file.length() == 0) {
+            System.out.println("Books file is empty or not readable: " + dataFilePath);
+            return;
+        }
+
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
+            int booksLoaded = 0;
+
             while ((line = reader.readLine()) != null) {
                 if (line.trim().isEmpty()) {
                     continue;
                 }
 
                 Book book = null;
-                if (line.startsWith("BOOK,")) {
-                    book = Book.fromFileString(line);
-                } else if (line.startsWith("EBOOK,")) {
-                    book = EBook.fromFileString(line);
-                } else if (line.startsWith("PHYSICAL,")) {
-                    book = PhysicalBook.fromFileString(line);
-                }
+                try {
+                    if (line.startsWith("BOOK,")) {
+                        book = Book.fromFileString(line);
+                    } else if (line.startsWith("EBOOK,")) {
+                        book = EBook.fromFileString(line);
+                    } else if (line.startsWith("PHYSICAL,")) {
+                        book = PhysicalBook.fromFileString(line);
+                    }
 
-                if (book != null) {
-                    books.add(book);
-                    System.out.println("Loaded book: " + book.getTitle());
+                    if (book != null) {
+                        books.add(book);
+                        booksLoaded++;
+                        System.out.println("Loaded book: " + book.getTitle());
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error parsing book line: " + line);
+                    e.printStackTrace();
                 }
             }
-            System.out.println("Total books loaded: " + books.size());
+
+            System.out.println("Total books loaded: " + booksLoaded);
         } catch (IOException e) {
             System.err.println("Error loading books: " + e.getMessage());
             e.printStackTrace();
