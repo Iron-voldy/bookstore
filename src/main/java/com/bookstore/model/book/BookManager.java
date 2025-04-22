@@ -78,9 +78,6 @@ public class BookManager {
                 file.createNewFile();
                 System.out.println("Created books file: " + dataFilePath);
 
-                // Add some sample books initially
-                addSampleBooks();
-
                 return;
             } catch (IOException e) {
                 System.err.println("Error creating books file: " + e.getMessage());
@@ -179,84 +176,6 @@ public class BookManager {
             return false;
         }
     }
-
-    /**
-     * Add sample books (for initial setup)
-     */
-    private void addSampleBooks() {
-        // Sample physical books
-        PhysicalBook book1 = new PhysicalBook();
-        book1.setTitle("The Great Gatsby");
-        book1.setAuthor("F. Scott Fitzgerald");
-        book1.setIsbn("9780743273565");
-        book1.setPublisher("Scribner");
-        book1.setPublicationDate(new Date(70, 3, 10)); // April 10, 1970
-        book1.setGenre("Fiction");
-        book1.setDescription("A classic novel about the American Dream set in the Jazz Age.");
-        book1.setPrice(14.99);
-        book1.setQuantity(50);
-        book1.setCoverImagePath("the_great_gatsby.jpg");
-        book1.setPageCount(180);
-        book1.setBinding("Paperback");
-        book1.setWeightKg(0.3);
-        book1.setDimensions("5.25 x 8 inches");
-        book1.setFeatured(true);
-
-        PhysicalBook book2 = new PhysicalBook();
-        book2.setTitle("To Kill a Mockingbird");
-        book2.setAuthor("Harper Lee");
-        book2.setIsbn("9780061120084");
-        book2.setPublisher("Harper Perennial");
-        book2.setPublicationDate(new Date(60, 6, 11)); // July 11, 1960
-        book2.setGenre("Fiction");
-        book2.setDescription("A powerful story of racial injustice and moral growth in the American South.");
-        book2.setPrice(15.99);
-        book2.setQuantity(35);
-        book2.setCoverImagePath("to_kill_a_mockingbird.jpg");
-        book2.setPageCount(336);
-        book2.setBinding("Paperback");
-        book2.setWeightKg(0.4);
-        book2.setDimensions("5.31 x 8 inches");
-
-        // Sample e-books
-        EBook ebook1 = new EBook();
-        ebook1.setTitle("Dune");
-        ebook1.setAuthor("Frank Herbert");
-        ebook1.setIsbn("9780441172719");
-        ebook1.setPublisher("Ace Books");
-        ebook1.setPublicationDate(new Date(65, 7, 1)); // August 1, 1965
-        ebook1.setGenre("Science Fiction");
-        ebook1.setDescription("A science fiction masterpiece about politics, religion, and ecology on a desert planet.");
-        ebook1.setPrice(12.99);
-        ebook1.setQuantity(999);
-        ebook1.setCoverImagePath("dune.jpg");
-        ebook1.setFileFormat("EPUB");
-        ebook1.setFileSizeMB(3.5);
-        ebook1.setDownloadLink("/download/ebooks/dune.epub");
-        ebook1.setFeatured(true);
-
-        EBook ebook2 = new EBook();
-        ebook2.setTitle("The Hobbit");
-        ebook2.setAuthor("J.R.R. Tolkien");
-        ebook2.setIsbn("9780547951973");
-        ebook2.setPublisher("Houghton Mifflin");
-        ebook2.setPublicationDate(new Date(37, 8, 21)); // September 21, 1937
-        ebook2.setGenre("Fantasy");
-        ebook2.setDescription("A fantasy adventure about a hobbit who embarks on a quest to reclaim a treasure guarded by a dragon.");
-        ebook2.setPrice(9.99);
-        ebook2.setQuantity(999);
-        ebook2.setCoverImagePath("the_hobbit.jpg");
-        ebook2.setFileFormat("PDF");
-        ebook2.setFileSizeMB(5.2);
-        ebook2.setDownloadLink("/download/ebooks/hobbit.pdf");
-
-        // Add books to collection
-        addBook(book1);
-        addBook(book2);
-        addBook(ebook1);
-        addBook(ebook2);
-    }
-
     /**
      * Get book by ID
      */
