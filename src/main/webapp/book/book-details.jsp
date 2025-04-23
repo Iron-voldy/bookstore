@@ -584,7 +584,7 @@
                                     <i class="fas fa-heart me-2"></i> In Wishlist
                                 </button>
                             <% } else { %>
-                                <a href="${pageContext.request.contextPath}/wishlist-item?action=select-wishlist&bookId=<%= book.getId() %>" class="btn btn-outline-light">
+                                <a href="<%=request.getContextPath()%>/wishlist-item?action=select-wishlist&bookId=<%= book.getId() %>" class="btn btn-outline-light">
                                     <i class="far fa-heart me-2"></i> Add to Wishlist
                                 </a>
                             <% } %>
