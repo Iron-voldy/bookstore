@@ -2,6 +2,8 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page import="com.bookstore.model.user.User" %>
 <%@ page import="com.bookstore.model.user.PremiumUser" %>
+<%@ page import="com.bookstore.model.book.Book" %>
+<%@ page import="com.bookstore.model.book.BookManager" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -254,6 +256,14 @@
         } else {
             System.out.println("Index.jsp: No user in session");
         }
+
+        // Get featured books for the homepage
+        BookManager bookManager = new BookManager(application);
+        Book[] featuredBooks = bookManager.getFeaturedBooks();
+        // If no featured books, get some top rated books
+        if (featuredBooks == null || featuredBooks.length == 0) {
+            featuredBooks = bookManager.getTopRatedBooks(3);
+        }
     %>
 
     <!-- Navbar -->
@@ -271,10 +281,10 @@
                         <a class="nav-link active" href="<%=request.getContextPath()%>/">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<%=request.getContextPath()%>/search-book">Books</a>
+                        <a class="nav-link" href="<%=request.getContextPath()%>/books">Books</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<%=request.getContextPath()%>/view-recommendations">Recommendations</a>
+                        <a class="nav-link" href="<%=request.getContextPath()%>/top-books">Top Books</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#contact">Contact</a>
@@ -282,9 +292,9 @@
                 </ul>
 
                 <!-- Search Form -->
-                <form class="d-flex mx-auto" action="<%=request.getContextPath()%>/search-book" method="get">
+                <form class="d-flex mx-auto" action="<%=request.getContextPath()%>/books" method="get">
                     <div class="input-group">
-                        <input class="form-control" type="search" name="searchQuery" placeholder="Search books..." aria-label="Search" style="background-color: var(--secondary-dark); color: var(--text-primary); border-color: var(--border-color);">
+                        <input class="form-control" type="search" name="search" placeholder="Search books..." aria-label="Search" style="background-color: var(--secondary-dark); color: var(--text-primary); border-color: var(--border-color);">
                         <button class="btn btn-outline-light" type="submit">
                             <i class="fas fa-search"></i>
                         </button>
@@ -359,7 +369,7 @@
         <div class="hero-content">
             <h1>Discover Your Next Favorite Book</h1>
             <p>Explore our vast collection of books from bestsellers to classics. Find your perfect read and get it delivered to your doorstep.</p>
-            <a href="<%=request.getContextPath()%>/search-book" class="btn btn-accent btn-lg">
+            <a href="<%=request.getContextPath()%>/books" class="btn btn-accent btn-lg">
                 <i class="fas fa-book me-2"></i> Browse Books
             </a>
         </div>
@@ -370,6 +380,52 @@
         <div class="container">
             <h2 class="section-title">Featured Books</h2>
             <div class="row">
+                <%
+                // Display featured books from database
+                if (featuredBooks != null && featuredBooks.length > 0) {
+                    for (int i = 0; i < Math.min(3, featuredBooks.length); i++) {
+                        Book book = featuredBooks[i];
+                        String coverPath = request.getContextPath() + "/book-covers/" + book.getCoverImagePath();
+                        if (book.getCoverImagePath() == null || book.getCoverImagePath().equals("default_cover.jpg")) {
+                            coverPath = request.getContextPath() + "/book-covers/default_cover.jpg";
+                        }
+                %>
+                <!-- Featured Book -->
+                <div class="col-md-4 mb-4">
+                    <div class="card book-card">
+                        <img src="<%= coverPath %>" class="card-img-top" alt="<%= book.getTitle() %> Cover">
+                        <div class="card-body">
+                            <h5 class="card-title"><%= book.getTitle() %></h5>
+                            <p class="text-muted"><%= book.getAuthor() %></p>
+                            <div class="rating mb-2">
+                                <%
+                                    double rating = book.getAverageRating();
+                                    for (int j = 1; j <= 5; j++) {
+                                        if (j <= rating) {
+                                %>
+                                    <i class="fas fa-star"></i>
+                                <% } else if (j - 0.5 <= rating) { %>
+                                    <i class="fas fa-star-half-alt"></i>
+                                <% } else { %>
+                                    <i class="far fa-star"></i>
+                                <% } } %>
+                                <span class="ms-1"><%= String.format("%.1f", rating) %></span>
+                            </div>
+                            <p class="card-text"><%= book.getDescription() != null ?
+                                (book.getDescription().length() > 100 ? book.getDescription().substring(0, 100) + "..." : book.getDescription())
+                                : "No description available." %></p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <span class="price">$<%= String.format("%.2f", book.getPrice()) %></span>
+                                <a href="<%=request.getContextPath()%>/book-details?id=<%= book.getId() %>" class="btn btn-sm btn-accent">
+                                    <i class="fas fa-info-circle me-1"></i> View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <% }
+                } else { %>
+                <!-- Default Featured Books when none in database -->
                 <!-- Featured Book 1 -->
                 <div class="col-md-4 mb-4">
                     <div class="card book-card">
@@ -447,6 +503,7 @@
                         </div>
                     </div>
                 </div>
+                <% } %>
             </div>
         </div>
     </section>
@@ -456,13 +513,60 @@
         <div class="container">
             <h2 class="section-title">Browse by Category</h2>
             <div class="row">
+                <%
+                // Get all genres for category browsing
+                java.util.Set<String> genres = new java.util.TreeSet<>();
+                Book[] allBooks = bookManager.getAllBooks();
+                for (Book book : allBooks) {
+                    if (book.getGenre() != null && !book.getGenre().isEmpty()) {
+                        genres.add(book.getGenre());
+                    }
+                }
+
+                // Display genre categories - either from database or defaults
+                if (genres != null && !genres.isEmpty()) {
+                    int count = 0;
+                    for (String genre : genres) {
+                        if (count >= 4) break; // Limit to 4 categories
+
+                        // Generate an icon based on the genre name
+                        String iconClass = "fas fa-book"; // Default icon
+                        if (genre.toLowerCase().contains("fiction")) {
+                            iconClass = "fas fa-book";
+                        } else if (genre.toLowerCase().contains("science")) {
+                            iconClass = "fas fa-atom";
+                        } else if (genre.toLowerCase().contains("romance")) {
+                            iconClass = "fas fa-heart";
+                        } else if (genre.toLowerCase().contains("tech")) {
+                            iconClass = "fas fa-laptop-code";
+                        } else if (genre.toLowerCase().contains("mystery") || genre.toLowerCase().contains("thriller")) {
+                            iconClass = "fas fa-search";
+                        } else if (genre.toLowerCase().contains("history")) {
+                            iconClass = "fas fa-landmark";
+                        }
+                %>
+                <div class="col-md-3 col-6 mb-4">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <i class="<%= iconClass %> fa-3x mb-3" style="color: var(--accent-color);"></i>
+                            <h5 class="card-title"><%= genre %></h5>
+                            <p class="card-text">Explore <%= genre.toLowerCase() %> books</p>
+                            <a href="<%=request.getContextPath()%>/genre?genre=<%= genre %>" class="btn btn-sm btn-accent">Browse</a>
+                        </div>
+                    </div>
+                </div>
+                <%
+                        count++;
+                    }
+                } else {
+                %>
                 <div class="col-md-3 col-6 mb-4">
                     <div class="card text-center">
                         <div class="card-body">
                             <i class="fas fa-book fa-3x mb-3" style="color: var(--accent-color);"></i>
                             <h5 class="card-title">Fiction</h5>
                             <p class="card-text">Explore worlds of imagination</p>
-                            <a href="#" class="btn btn-sm btn-accent">Browse</a>
+                            <a href="<%=request.getContextPath()%>/books?genre=Fiction" class="btn btn-sm btn-accent">Browse</a>
                         </div>
                     </div>
                 </div>
@@ -472,7 +576,7 @@
                             <i class="fas fa-atom fa-3x mb-3" style="color: var(--accent-color);"></i>
                             <h5 class="card-title">Science</h5>
                             <p class="card-text">Discover the universe</p>
-                            <a href="#" class="btn btn-sm btn-accent">Browse</a>
+                            <a href="<%=request.getContextPath()%>/books?genre=Science" class="btn btn-sm btn-accent">Browse</a>
                         </div>
                     </div>
                 </div>
@@ -482,7 +586,7 @@
                             <i class="fas fa-heart fa-3x mb-3" style="color: var(--accent-color);"></i>
                             <h5 class="card-title">Romance</h5>
                             <p class="card-text">Love stories that captivate</p>
-                            <a href="#" class="btn btn-sm btn-accent">Browse</a>
+                            <a href="<%=request.getContextPath()%>/books?genre=Romance" class="btn btn-sm btn-accent">Browse</a>
                         </div>
                     </div>
                 </div>
@@ -492,10 +596,11 @@
                             <i class="fas fa-laptop-code fa-3x mb-3" style="color: var(--accent-color);"></i>
                             <h5 class="card-title">Technology</h5>
                             <p class="card-text">The future of innovation</p>
-                            <a href="#" class="btn btn-sm btn-accent">Browse</a>
+                            <a href="<%=request.getContextPath()%>/books?genre=Technology" class="btn btn-sm btn-accent">Browse</a>
                         </div>
                     </div>
                 </div>
+                <% } %>
             </div>
         </div>
     </section>
@@ -518,20 +623,34 @@
                     <h5 class="mb-3 text-white">Quick Links</h5>
                     <ul class="list-unstyled footer-links">
                         <li><a href="<%=request.getContextPath()%>/">Home</a></li>
-                        <li><a href="<%=request.getContextPath()%>/search-book">Books</a></li>
-                        <li><a href="<%=request.getContextPath()%>/view-recommendations">Recommendations</a></li>
+                        <li><a href="<%=request.getContextPath()%>/books">Books</a></li>
+                        <li><a href="<%=request.getContextPath()%>/top-books">Top Books</a></li>
                         <li><a href="#contact">Contact</a></li>
                     </ul>
                 </div>
                 <div class="col-md-2 mb-4">
                     <h5 class="mb-3 text-white">Categories</h5>
                     <ul class="list-unstyled footer-links">
-                        <li><a href="#">Fiction</a></li>
-                        <li><a href="#">Non-Fiction</a></li>
-                        <li><a href="#">Science</a></li>
-                        <li><a href="#">Biography</a></li>
-                        <li><a href="#">Technology</a></li>
-                        <li><a href="#">Children</a></li>
+                        <%
+                        // Display genre links in footer
+                        if (genres != null && !genres.isEmpty()) {
+                            int count = 0;
+                            for (String genre : genres) {
+                                if (count >= 6) break; // Limit to 6 genres
+                        %>
+                        <li><a href="<%=request.getContextPath()%>/genre?genre=<%= genre %>"><%= genre %></a></li>
+                        <%
+                                count++;
+                            }
+                        } else {
+                        %>
+                        <li><a href="<%=request.getContextPath()%>/books?genre=Fiction">Fiction</a></li>
+                        <li><a href="<%=request.getContextPath()%>/books?genre=Non-Fiction">Non-Fiction</a></li>
+                        <li><a href="<%=request.getContextPath()%>/books?genre=Science">Science</a></li>
+                        <li><a href="<%=request.getContextPath()%>/books?genre=Biography">Biography</a></li>
+                        <li><a href="<%=request.getContextPath()%>/books?genre=Technology">Technology</a></li>
+                        <li><a href="<%=request.getContextPath()%>/books?genre=Children">Children</a></li>
+                        <% } %>
                     </ul>
                 </div>
                 <div class="col-md-4 mb-4">

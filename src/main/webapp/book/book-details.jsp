@@ -343,6 +343,16 @@
 
         // Get related books
         Book[] relatedBooks = (Book[])request.getAttribute("relatedBooks");
+
+        // Check if book is in stock - properly determine stock status
+        boolean isInStock = false;
+        if ("ebook".equals(bookType)) {
+            // E-books are always in stock
+            isInStock = true;
+        } else {
+            // For physical books and regular books, check quantity
+            isInStock = book.getQuantity() > 0;
+        }
     %>
 
     <!-- Navbar -->
@@ -463,7 +473,7 @@
                     <% if ("ebook".equals(bookType)) { %>
                         <i class="fas fa-check-circle in-stock"></i> <span class="in-stock">Instant Download Available</span>
                     <% } else { %>
-                        <% if (book.getQuantity() > 0) { %>
+                        <% if (isInStock) { %>
                             <i class="fas fa-check-circle in-stock"></i> <span class="in-stock">In Stock (<%= book.getQuantity() %> available)</span>
                         <% } else { %>
                             <i class="fas fa-times-circle out-of-stock"></i> <span class="out-of-stock">Out of Stock</span>
@@ -476,7 +486,7 @@
                     <input type="hidden" name="bookId" value="<%= book.getId() %>">
 
                     <!-- Quantity Selector (only for physical books that are in stock) -->
-                    <% if ("physical".equals(bookType) && book.getQuantity() > 0) { %>
+                    <% if ("physical".equals(bookType) && isInStock) { %>
                         <div class="quantity-selector">
                             <button type="button" onclick="decreaseQuantity()">-</button>
                             <input type="number" id="quantity" name="quantity" value="1" min="1" max="<%= book.getQuantity() %>">
@@ -488,7 +498,7 @@
 
                     <!-- Add to Cart Button -->
                     <div class="d-grid gap-2">
-                        <% if (("physical".equals(bookType) && book.getQuantity() > 0) || "ebook".equals(bookType)) { %>
+                        <% if (isInStock) { %>
                             <button type="submit" class="btn btn-accent btn-lg">
                                 <i class="fas fa-cart-plus me-2"></i> Add to Cart
                             </button>
