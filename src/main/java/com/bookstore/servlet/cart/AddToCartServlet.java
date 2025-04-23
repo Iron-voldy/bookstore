@@ -13,6 +13,7 @@ import javax.servlet.http.HttpSession;
 import com.bookstore.model.book.Book;
 import com.bookstore.model.book.BookManager;
 import com.bookstore.model.book.EBook;
+import com.bookstore.model.cart.CartManager;
 
 /**
  * Servlet for handling adding books to the shopping cart
@@ -83,7 +84,7 @@ public class AddToCartServlet extends HttpServlet {
             }
         }
 
-        // Get book from database
+        // Get book from database to verify it exists
         BookManager bookManager = new BookManager(getServletContext());
         Book book = bookManager.getBookById(bookId);
 
@@ -113,46 +114,48 @@ public class AddToCartServlet extends HttpServlet {
             return;
         }
 
-        // Get or create shopping cart
-        HttpSession session = request.getSession();
-        Map<String, Integer> cart = (Map<String, Integer>) session.getAttribute("cart");
+        // Get the current session
+        HttpSession session = request.getSession(true);
 
-        if (cart == null) {
-            // Create new cart if none exists
-            cart = new HashMap<>();
-            session.setAttribute("cart", cart);
+        // Get or create user ID (for guest users)
+        String userId = (String) session.getAttribute("userId");
+        if (userId == null) {
+            // Create a cart ID for anonymous users
+            userId = CartManager.generateCartId();
+            session.setAttribute("cartId", userId);
         }
 
-        // Add book to cart or update quantity
-        if (cart.containsKey(bookId)) {
-            // Book already in cart, update quantity
-            int currentQuantity = cart.get(bookId);
+        // Get CartManager and add item to cart
+        CartManager cartManager = new CartManager(getServletContext());
 
-            // Check if updating quantity would exceed available stock
-            if (!(book instanceof EBook) && (currentQuantity + quantity) > book.getQuantity()) {
-                // Can't add more than available stock
-                session.setAttribute("errorMessage", "Cannot add more copies than available in stock");
-                response.sendRedirect(request.getContextPath() + "/book-details?id=" + bookId);
-                return;
-            }
+        // First make sure the cart has a session map for backward compatibility
+        Map<String, Integer> sessionCart = (Map<String, Integer>) session.getAttribute("cart");
+        if (sessionCart == null) {
+            sessionCart = new HashMap<>();
+            session.setAttribute("cart", sessionCart);
+        }
 
-            cart.put(bookId, currentQuantity + quantity);
+        // Add to persistent cart
+        boolean success = cartManager.addToCart(userId, bookId, quantity);
+
+        // Also update session cart for backward compatibility
+        if (success) {
+            // Update session cart
+            int currentQuantity = sessionCart.getOrDefault(bookId, 0);
+            sessionCart.put(bookId, currentQuantity + quantity);
+
+            // Update cart count
+            int cartCount = cartManager.getCartItemCount(userId);
+            session.setAttribute("cartCount", cartCount);
+
+            // Set success message
+            session.setAttribute("successMessage", book.getTitle() + " added to your cart");
         } else {
-            // New book in cart
-            cart.put(bookId, quantity);
+            // Set error message
+            session.setAttribute("errorMessage", "Failed to add " + book.getTitle() + " to your cart");
         }
 
-        // Update cart count for display in header
-        int cartCount = 0;
-        for (int itemQuantity : cart.values()) {
-            cartCount += itemQuantity;
-        }
-        session.setAttribute("cartCount", cartCount);
-
-        // Set success message
-        session.setAttribute("successMessage", book.getTitle() + " added to your cart");
-
-        // Redirect back to book details
-        response.sendRedirect(request.getContextPath() + "/book-details?id=" + bookId);
+        // Redirect to cart page instead of book details
+        response.sendRedirect(request.getContextPath() + "/cart");
     }
 }

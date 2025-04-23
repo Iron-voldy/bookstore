@@ -6,6 +6,7 @@
 <%@ page import="com.bookstore.model.book.EBook" %>
 <%@ page import="com.bookstore.model.book.PhysicalBook" %>
 <%@ page import="java.text.SimpleDateFormat" %>
+<%@ page import="com.bookstore.model.cart.CartManager" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,6 +22,27 @@
         }
 
         String bookType = (String)request.getAttribute("bookType");
+
+        // Initialize cart count for the header
+        Integer cartCount = (Integer) session.getAttribute("cartCount");
+        if (cartCount == null) {
+            // Get user ID or guest cart ID
+            String userId = (String) session.getAttribute("userId");
+            String cartId = (String) session.getAttribute("cartId");
+
+            // Use either user ID or cart ID
+            String effectiveId = userId != null ? userId : cartId;
+
+            if (effectiveId != null) {
+                // Get cart count from CartManager
+                CartManager cartManager = new CartManager(application);
+                cartCount = cartManager.getCartItemCount(effectiveId);
+                session.setAttribute("cartCount", cartCount);
+            } else {
+                cartCount = 0;
+                session.setAttribute("cartCount", 0);
+            }
+        }
     %>
 
     <title><%= book.getTitle() %> - BookVerse</title>
@@ -303,6 +325,20 @@
         .tab-content {
             padding: 20px 0;
         }
+
+        .alert-custom {
+            background-color: var(--secondary-dark);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .alert-success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .alert-danger {
+            border-left: 4px solid var(--danger-color);
+        }
     </style>
 </head>
 <body>
@@ -392,7 +428,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="<%=request.getContextPath()%>/cart">
                             <i class="fas fa-shopping-cart"></i>
-                            <span class="badge bg-accent rounded-pill">0</span>
+                            <% if (cartCount > 0) { %>
+                            <span class="badge bg-accent rounded-pill"><%= cartCount %></span>
+                            <% } %>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -408,6 +446,23 @@
 
     <!-- Main Content -->
     <div class="container my-5">
+        <!-- Flash Messages -->
+        <c:if test="${not empty sessionScope.successMessage}">
+            <div class="alert alert-custom alert-success alert-dismissible fade show mb-4" role="alert">
+                <i class="fas fa-check-circle me-2"></i> ${sessionScope.successMessage}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <c:remove var="successMessage" scope="session" />
+        </c:if>
+
+        <c:if test="${not empty sessionScope.errorMessage}">
+            <div class="alert alert-custom alert-danger alert-dismissible fade show mb-4" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i> ${sessionScope.errorMessage}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <c:remove var="errorMessage" scope="session" />
+        </c:if>
+
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">

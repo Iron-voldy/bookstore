@@ -7,6 +7,7 @@
 <%@ page import="com.bookstore.model.book.BookManager" %>
 <%@ page import="com.bookstore.model.book.EBook" %>
 <%@ page import="com.bookstore.model.book.PhysicalBook" %>
+<%@ page import="com.bookstore.model.cart.CartManager" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -207,50 +208,41 @@
 </head>
 <body>
     <%
-    // Get cart from session
-    Map<String, Integer> cart = (Map<String, Integer>) session.getAttribute("cart");
+    // Get user ID or guest cart ID
+    String userId = (String) session.getAttribute("userId");
+    String cartId = (String) session.getAttribute("cartId");
 
-    // Initialize cart if null
-    if (cart == null) {
+    // Use either user ID or cart ID
+    String effectiveId = userId != null ? userId : cartId;
+
+    // Initialize cart if needed
+    CartManager cartManager = new CartManager(application);
+
+    Map<String, Integer> cart;
+    Map<String, Book> cartBooks;
+    double cartTotal;
+    int cartCount;
+
+    if (effectiveId != null) {
+        // Get cart from CartManager
+        cart = cartManager.getUserCart(effectiveId);
+        cartBooks = cartManager.getCartBookDetails(effectiveId);
+        cartTotal = cartManager.getCartTotal(effectiveId);
+        cartCount = cartManager.getCartItemCount(effectiveId);
+    } else {
+        // No cart yet, use empty values
         cart = new HashMap<>();
-        session.setAttribute("cart", cart);
+        cartBooks = new HashMap<>();
+        cartTotal = 0.0;
+        cartCount = 0;
+
+        // Create a cart ID for future use
+        effectiveId = CartManager.generateCartId();
+        session.setAttribute("cartId", effectiveId);
     }
 
-    // Get book manager to retrieve book details
-    BookManager bookManager = new BookManager(application);
-
-    // Calculate cart total and count
-    double cartTotal = 0.0;
-    int cartCount = 0;
-
-    // Map to store book objects by ID for easy access
-    Map<String, Book> cartBooks = new HashMap<>();
-
-    // Process cart items
-    if (!cart.isEmpty()) {
-        for (Map.Entry<String, Integer> entry : cart.entrySet()) {
-            String bookId = entry.getKey();
-            int quantity = entry.getValue();
-
-            // Get book from database
-            Book book = bookManager.getBookById(bookId);
-
-            if (book != null) {
-                // Store book for later use
-                cartBooks.put(bookId, book);
-
-                // Calculate item total
-                double itemPrice = book.getDiscountedPrice();
-                double itemTotal = itemPrice * quantity;
-
-                // Add to cart total
-                cartTotal += itemTotal;
-                cartCount += quantity;
-            }
-        }
-    }
-
-    // Update cart count in session
+    // Update session values for compatibility
+    session.setAttribute("cart", cart);
     session.setAttribute("cartCount", cartCount);
     %>
 
@@ -291,7 +283,9 @@
                     <li class="nav-item">
                         <a class="nav-link active" href="<%=request.getContextPath()%>/cart">
                             <i class="fas fa-shopping-cart"></i>
+                            <% if (cartCount > 0) { %>
                             <span class="badge bg-accent rounded-pill"><%= cartCount %></span>
+                            <% } %>
                         </a>
                     </li>
                     <li class="nav-item">

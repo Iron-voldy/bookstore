@@ -12,6 +12,7 @@ import javax.servlet.http.HttpSession;
 
 import com.bookstore.model.book.Book;
 import com.bookstore.model.book.BookManager;
+import com.bookstore.model.cart.CartManager;
 
 /**
  * Servlet for displaying the shopping cart
@@ -28,35 +29,39 @@ public class CartServlet extends HttpServlet {
             throws ServletException, IOException {
 
         // Get session
-        HttpSession session = request.getSession();
+        HttpSession session = request.getSession(true);
 
-        // Get or initialize cart
-        Map<String, Integer> cart = (Map<String, Integer>) session.getAttribute("cart");
-        if (cart == null) {
-            cart = new HashMap<>();
-            session.setAttribute("cart", cart);
+        // Get user ID or guest cart ID
+        String userId = (String) session.getAttribute("userId");
+        String cartId = (String) session.getAttribute("cartId");
+
+        // Use either user ID or cart ID
+        String effectiveId = userId != null ? userId : cartId;
+
+        // Create a new cart ID if needed (for new users)
+        if (effectiveId == null) {
+            effectiveId = CartManager.generateCartId();
+            session.setAttribute("cartId", effectiveId);
         }
 
-        // Get book details for items in cart
-        BookManager bookManager = new BookManager(getServletContext());
-        Map<String, Book> cartBooks = new HashMap<>();
-        double cartTotal = 0.0;
+        // Get CartManager
+        CartManager cartManager = new CartManager(getServletContext());
 
-        for (Map.Entry<String, Integer> entry : cart.entrySet()) {
-            String bookId = entry.getKey();
-            int quantity = entry.getValue();
+        // Get cart details
+        Map<String, Integer> cart = cartManager.getUserCart(effectiveId);
+        Map<String, Book> cartBooks = cartManager.getCartBookDetails(effectiveId);
+        double cartTotal = cartManager.getCartTotal(effectiveId);
+        int cartCount = cartManager.getCartItemCount(effectiveId);
 
-            Book book = bookManager.getBookById(bookId);
-            if (book != null) {
-                cartBooks.put(bookId, book);
-                cartTotal += book.getDiscountedPrice() * quantity;
-            }
-        }
+        // For backward compatibility, also update the session cart
+        session.setAttribute("cart", cart);
+        session.setAttribute("cartCount", cartCount);
 
-        // Set attributes
+        // Set attributes for JSP
         request.setAttribute("cart", cart);
         request.setAttribute("cartBooks", cartBooks);
         request.setAttribute("cartTotal", cartTotal);
+        request.setAttribute("cartCount", cartCount);
 
         // Forward to cart JSP
         request.getRequestDispatcher("/cart.jsp").forward(request, response);

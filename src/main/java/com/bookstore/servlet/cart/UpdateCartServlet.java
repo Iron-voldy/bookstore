@@ -13,6 +13,7 @@ import javax.servlet.http.HttpSession;
 import com.bookstore.model.book.Book;
 import com.bookstore.model.book.BookManager;
 import com.bookstore.model.book.EBook;
+import com.bookstore.model.cart.CartManager;
 
 /**
  * Servlet for handling shopping cart updates (increase, decrease, remove items)
@@ -38,15 +39,25 @@ public class UpdateCartServlet extends HttpServlet {
             return;
         }
 
-        // Get session and cart
-        HttpSession session = request.getSession();
-        Map<String, Integer> cart = (Map<String, Integer>) session.getAttribute("cart");
+        // Get session and user/cart ID
+        HttpSession session = request.getSession(true);
+        String userId = (String) session.getAttribute("userId");
+        String cartId = (String) session.getAttribute("cartId");
 
-        // Initialize cart if it doesn't exist
-        if (cart == null) {
-            cart = new HashMap<>();
-            session.setAttribute("cart", cart);
+        // Use either user ID or cart ID
+        String effectiveId = userId != null ? userId : cartId;
+
+        // Create a new cart ID if needed (shouldn't happen here but just in case)
+        if (effectiveId == null) {
+            effectiveId = CartManager.generateCartId();
+            session.setAttribute("cartId", effectiveId);
         }
+
+        // Get CartManager
+        CartManager cartManager = new CartManager(getServletContext());
+
+        // Get current cart for reference
+        Map<String, Integer> cart = cartManager.getUserCart(effectiveId);
 
         // Get BookManager to check book availability
         BookManager bookManager = new BookManager(getServletContext());
@@ -60,6 +71,7 @@ public class UpdateCartServlet extends HttpServlet {
         }
 
         // Handle different actions
+        boolean success = false;
         switch (action) {
             case "increase":
                 // Increase quantity by 1
@@ -70,8 +82,10 @@ public class UpdateCartServlet extends HttpServlet {
                     if (!(book instanceof EBook) && currentQuantity >= book.getQuantity()) {
                         session.setAttribute("errorMessage", "Cannot add more copies than available in stock");
                     } else {
-                        cart.put(bookId, currentQuantity + 1);
-                        session.setAttribute("successMessage", "Cart updated");
+                        success = cartManager.updateCartItem(effectiveId, bookId, currentQuantity + 1);
+                        if (success) {
+                            session.setAttribute("successMessage", "Cart updated");
+                        }
                     }
                 }
                 break;
@@ -83,12 +97,16 @@ public class UpdateCartServlet extends HttpServlet {
 
                     if (currentQuantity > 1) {
                         // Decrease by 1
-                        cart.put(bookId, currentQuantity - 1);
-                        session.setAttribute("successMessage", "Cart updated");
+                        success = cartManager.updateCartItem(effectiveId, bookId, currentQuantity - 1);
+                        if (success) {
+                            session.setAttribute("successMessage", "Cart updated");
+                        }
                     } else {
                         // Remove item if quantity would be 0
-                        cart.remove(bookId);
-                        session.setAttribute("successMessage", book.getTitle() + " removed from cart");
+                        success = cartManager.removeFromCart(effectiveId, bookId);
+                        if (success) {
+                            session.setAttribute("successMessage", book.getTitle() + " removed from cart");
+                        }
                     }
                 }
                 break;
@@ -96,8 +114,10 @@ public class UpdateCartServlet extends HttpServlet {
             case "remove":
                 // Remove item completely
                 if (cart.containsKey(bookId)) {
-                    cart.remove(bookId);
-                    session.setAttribute("successMessage", book.getTitle() + " removed from cart");
+                    success = cartManager.removeFromCart(effectiveId, bookId);
+                    if (success) {
+                        session.setAttribute("successMessage", book.getTitle() + " removed from cart");
+                    }
                 }
                 break;
 
@@ -107,12 +127,16 @@ public class UpdateCartServlet extends HttpServlet {
                 break;
         }
 
-        // Update cart count
-        int cartCount = 0;
-        for (int itemQuantity : cart.values()) {
-            cartCount += itemQuantity;
+        // For backward compatibility, update the session cart
+        if (success) {
+            // Reload the cart after changes
+            cart = cartManager.getUserCart(effectiveId);
+            session.setAttribute("cart", cart);
+
+            // Update cart count
+            int cartCount = cartManager.getCartItemCount(effectiveId);
+            session.setAttribute("cartCount", cartCount);
         }
-        session.setAttribute("cartCount", cartCount);
 
         // Redirect back to cart
         response.sendRedirect(request.getContextPath() + "/cart");
