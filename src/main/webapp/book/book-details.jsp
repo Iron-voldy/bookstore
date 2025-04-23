@@ -563,10 +563,36 @@
                             </button>
                         <% } %>
 
+                        <%
+                            // Check if user is logged in
+                            boolean isUserLoggedIn = (session.getAttribute("userId") != null);
+                            boolean isInWishlist = false;
+
+                            if (isUserLoggedIn) {
+                                String userId = (String) session.getAttribute("userId");
+
+                                // Check if the book is in any wishlist
+                                com.bookstore.model.wishlist.WishlistManager wishlistManager = new com.bookstore.model.wishlist.WishlistManager(application);
+                                isInWishlist = wishlistManager.isBookInUserWishlists(userId, book.getId());
+                            }
+                        %>
+
                         <!-- Wishlist Button -->
-                        <button type="button" class="btn btn-outline-light">
-                            <i class="far fa-heart me-2"></i> Add to Wishlist
-                        </button>
+                        <% if (isUserLoggedIn) { %>
+                            <% if (isInWishlist) { %>
+                                <button type="button" class="btn btn-outline-light" disabled>
+                                    <i class="fas fa-heart me-2"></i> In Wishlist
+                                </button>
+                            <% } else { %>
+                                <a href="${pageContext.request.contextPath}/wishlist-item?action=select-wishlist&bookId=<%= book.getId() %>" class="btn btn-outline-light">
+                                    <i class="far fa-heart me-2"></i> Add to Wishlist
+                                </a>
+                            <% } %>
+                        <% } else { %>
+                            <a href="${pageContext.request.contextPath}/login" class="btn btn-outline-light">
+                                <i class="far fa-heart me-2"></i> Add to Wishlist
+                            </a>
+                        <% } %>
                     </div>
                 </form>
             </div>
