@@ -5,6 +5,11 @@
 <%@ page import="com.bookstore.model.book.EBook" %>
 <%@ page import="com.bookstore.model.book.PhysicalBook" %>
 <%@ page import="com.bookstore.model.cart.CartManager" %>
+
+<%@ page import="com.bookstore.model.user.User" %>
+<%@ page import="com.bookstore.model.user.PremiumUser" %>
+<%@ page import="com.bookstore.model.cart.CartManager" %>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -417,12 +422,32 @@
                             <% } %>
                         </a>
                     </li>
+                    <% if (isLoggedIn) { %>
+                    <!-- Logged in user menu -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle me-1"></i> <%= currentUser.getUsername() %>
+                            <% if (isPremium) { %>
+                            <span class="premium-badge">PREMIUM</span>
+                            <% } %>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="userDropdown">
+                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/user/profile.jsp">My Profile</a></li>
+                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/order-history">My Orders</a></li>
+                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/user-reviews">My Reviews</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/logout">Logout</a></li>
+                        </ul>
+                    </li>
+                    <% } else { %>
+                    <!-- Guest user menu -->
                     <li class="nav-item">
                         <a class="nav-link" href="<%=request.getContextPath()%>/login">Login</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="<%=request.getContextPath()%>/register">Register</a>
                     </li>
+                    <% } %>
                 </ul>
             </div>
         </div>

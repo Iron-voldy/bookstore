@@ -13,6 +13,7 @@ import com.bookstore.model.user.User;
 import com.bookstore.model.user.UserManager;
 import com.bookstore.model.user.PremiumUser;
 import com.bookstore.model.user.RegularUser;
+import com.bookstore.model.cart.CartManager;
 
 /**
  * Servlet for handling user login
@@ -94,9 +95,15 @@ public class LoginServlet extends HttpServlet {
             if (user != null) {
                 // Create session and add user
                 HttpSession session = request.getSession(true);
+
+                // Store the entire user object
                 session.setAttribute("user", user);
+
+                // Also store individual attributes for convenience
                 session.setAttribute("userId", user.getUserId());
                 session.setAttribute("username", user.getUsername());
+                session.setAttribute("fullName", user.getFullName());
+                session.setAttribute("email", user.getEmail());
 
                 // Print debug information
                 System.out.println("LoginServlet: Setting session attributes");
@@ -126,6 +133,17 @@ public class LoginServlet extends HttpServlet {
                 } else {
                     session.setAttribute("userType", "basic");
                     System.out.println("LoginServlet: User is Basic");
+                }
+
+                // Update cart information if available
+                String cartId = (String) session.getAttribute("cartId");
+                if (cartId != null) {
+                    // Transfer guest cart to user account
+                    CartManager cartManager = new CartManager(getServletContext());
+                    // Logic to transfer cart would go here
+                    // For now, just update the cart count
+                    int cartCount = cartManager.getCartItemCount(user.getUserId());
+                    session.setAttribute("cartCount", cartCount);
                 }
 
                 // Set remember-me cookie if requested

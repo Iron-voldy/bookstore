@@ -1,6 +1,8 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page import="com.bookstore.model.cart.CartManager" %>
+<%@ page import="com.bookstore.model.user.User" %>
+<%@ page import="com.bookstore.model.user.PremiumUser" %>
 
 <%
 // Initialize cart count if not already set
@@ -24,6 +26,12 @@ if (cartCount == null) {
     // Set in session
     session.setAttribute("cartCount", cartCount);
 }
+
+// Check if user is logged in
+User currentUser = (User) session.getAttribute("user");
+boolean isLoggedIn = (currentUser != null);
+boolean isPremium = (currentUser instanceof PremiumUser);
+String username = isLoggedIn ? currentUser.getUsername() : "";
 %>
 
 <!-- Navbar -->
@@ -83,12 +91,32 @@ if (cartCount == null) {
                         <% } %>
                     </a>
                 </li>
+                <% if (isLoggedIn) { %>
+                <!-- Logged in user menu -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle ${pageContext.request.requestURI.contains('/user/') ? 'active' : ''}" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user-circle me-1"></i> <%= username %>
+                        <% if (isPremium) { %>
+                        <span class="premium-badge">PREMIUM</span>
+                        <% } %>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="<%=request.getContextPath()%>/user/profile.jsp">My Profile</a></li>
+                        <li><a class="dropdown-item" href="<%=request.getContextPath()%>/order-history">My Orders</a></li>
+                        <li><a class="dropdown-item" href="<%=request.getContextPath()%>/user-reviews">My Reviews</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="<%=request.getContextPath()%>/logout">Logout</a></li>
+                    </ul>
+                </li>
+                <% } else { %>
+                <!-- Guest user menu -->
                 <li class="nav-item">
                     <a class="nav-link ${pageContext.request.requestURI.contains('/login') ? 'active' : ''}" href="<%=request.getContextPath()%>/login">Login</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link ${pageContext.request.requestURI.contains('/register') ? 'active' : ''}" href="<%=request.getContextPath()%>/register">Register</a>
                 </li>
+                <% } %>
             </ul>
         </div>
     </div>
