@@ -331,6 +331,17 @@
         .alert-danger {
             border-left: 4px solid var(--danger-color);
         }
+
+        .premium-badge {
+            background: linear-gradient(135deg, #B68C1A, #FFD700);
+            color: #333;
+            padding: 3px 8px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -363,6 +374,15 @@
     // If no featured books, get top rated books
     if (featuredBooks == null || featuredBooks.length == 0) {
         featuredBooks = bookManager.getTopRatedBooks(4);
+    }
+
+    // Check if user is logged in
+    User currentUser = (User) session.getAttribute("user");
+    boolean isLoggedIn = (currentUser != null);
+    boolean isPremium = false;
+
+    if (isLoggedIn && currentUser instanceof PremiumUser) {
+        isPremium = true;
     }
     %>
 
