@@ -155,12 +155,11 @@ public class WishlistManager {
      */
     private boolean saveWishlists() {
         try {
+            // Ensure directory exists
             File file = new File(wishlistFilePath);
-
-            // Ensure parent directory exists
-            File parentDir = file.getParentFile();
-            if (!parentDir.exists()) {
-                parentDir.mkdirs();
+            if (file.getParentFile() != null && !file.getParentFile().exists()) {
+                boolean created = file.getParentFile().mkdirs();
+                System.out.println("Created directory: " + file.getParentFile().getAbsolutePath() + " - Success: " + created);
             }
 
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
@@ -184,12 +183,11 @@ public class WishlistManager {
      */
     private boolean saveWishlistItems() {
         try {
+            // Ensure directory exists
             File file = new File(wishlistItemsFilePath);
-
-            // Ensure parent directory exists
-            File parentDir = file.getParentFile();
-            if (!parentDir.exists()) {
-                parentDir.mkdirs();
+            if (file.getParentFile() != null && !file.getParentFile().exists()) {
+                boolean created = file.getParentFile().mkdirs();
+                System.out.println("Created directory: " + file.getParentFile().getAbsolutePath() + " - Success: " + created);
             }
 
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {

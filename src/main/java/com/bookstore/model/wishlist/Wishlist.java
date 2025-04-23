@@ -1,4 +1,3 @@
-// File: src/main/java/com/bookstore/model/wishlist/Wishlist.java
 package com.bookstore.model.wishlist;
 
 import java.util.Date;
@@ -109,6 +108,14 @@ public class Wishlist {
     }
 
     /**
+     * Get the number of items in this wishlist
+     * @return the number of items
+     */
+    public int getItemCount() {
+        return items.size();
+    }
+
+    /**
      * Add an item to this wishlist
      * @param item the item to add
      * @return true if the item was added, false if it already exists
@@ -146,14 +153,6 @@ public class Wishlist {
             }
         }
         return false;
-    }
-
-    /**
-     * Get the number of items in this wishlist
-     * @return the number of items
-     */
-    public int getItemCount() {
-        return items.size();
     }
 
     /**
@@ -197,4 +196,3 @@ public class Wishlist {
                 '}';
     }
 }
-

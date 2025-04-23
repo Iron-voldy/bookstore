@@ -1,4 +1,3 @@
-// File: src/main/java/com/bookstore/servlet/wishlist/WishlistItemServlet.java
 package com.bookstore.servlet.wishlist;
 
 import java.io.IOException;
@@ -316,16 +315,15 @@ public class WishlistItemServlet extends HttpServlet {
                     return;
                 }
 
-                // Parse priority
-                priority = 3; // Default to medium
+                // Parse priority (default to 3 - Medium if missing or invalid)
+                priority = 3;
                 if (priorityStr != null && !priorityStr.trim().isEmpty()) {
                     try {
                         priority = Integer.parseInt(priorityStr);
-                        // Ensure priority is between 1-5
                         if (priority < 1) priority = 1;
                         if (priority > 5) priority = 5;
                     } catch (NumberFormatException e) {
-                        // Use default
+                        // Keep default value
                     }
                 }
 

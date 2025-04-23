@@ -1,4 +1,3 @@
-// File: src/main/java/com/bookstore/servlet/wishlist/WishlistServlet.java
 package com.bookstore.servlet.wishlist;
 
 import java.io.IOException;
@@ -55,6 +54,13 @@ public class WishlistServlet extends HttpServlet {
             case "list":
                 // Get all wishlists for the user
                 List<Wishlist> userWishlists = wishlistManager.getUserWishlists(userId);
+
+                // For each wishlist, load its items to get the count
+                for (Wishlist wishlist : userWishlists) {
+                    List<WishlistItem> items = wishlistManager.getWishlistItems(wishlist.getWishlistId());
+                    wishlist.setItems(items);
+                }
+
                 request.setAttribute("wishlists", userWishlists);
 
                 // Forward to wishlists page
