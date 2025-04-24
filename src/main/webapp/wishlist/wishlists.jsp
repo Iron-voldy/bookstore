@@ -1,11 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ page import="java.text.SimpleDateFormat" %>
-<%@ page import="java.util.Date" %>
-<%@ page import="com.bookstore.model.wishlist.Wishlist" %>
-<%@ page import="java.util.List" %>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,116 +8,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Wishlists - BookVerse</title>
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
     <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous">
     <!-- Custom CSS -->
     <style>
-        :root {
-            --primary-dark: #121212;
-            --secondary-dark: #1e1e1e;
-            --accent-color: #8a5cf5;
-            --accent-hover: #6e46c9;
-            --text-primary: #f5f5f5;
-            --text-secondary: #b0b0b0;
-            --danger-color: #d64045;
-            --success-color: #4caf50;
-            --warning-color: #ff9800;
-            --card-bg: #252525;
-            --border-color: #333333;
-        }
-
         body {
-            background-color: var(--primary-dark);
-            color: var(--text-primary);
+            background-color: #121212;
+            color: #f5f5f5;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
         .navbar {
-            background-color: var(--secondary-dark);
+            background-color: #1e1e1e;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         }
-
         .navbar-brand {
-            font-weight: bold;
-            color: var(--accent-color) !important;
+            color: #8a5cf5 !important;
         }
-
         .btn-accent {
-            background-color: var(--accent-color);
+            background-color: #8a5cf5;
             color: white;
             border: none;
-            transition: all 0.3s;
         }
-
         .btn-accent:hover {
-            background-color: var(--accent-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(138, 92, 245, 0.3);
+            background-color: #6e46c9;
         }
-
         .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
+            background-color: #252525;
+            border: 1px solid #333333;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            height: 100%;
-            transition: transform 0.3s;
         }
-
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
         .empty-state {
             text-align: center;
             padding: 40px 20px;
         }
-
-        .empty-state i {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            color: var(--text-secondary);
-        }
-
         .badge-public {
-            background-color: var(--accent-color);
+            background-color: #8a5cf5;
         }
-
         .badge-private {
-            background-color: var(--secondary-dark);
-            border: 1px solid var(--border-color);
+            background-color: #1e1e1e;
+            border: 1px solid #333333;
         }
-
         .alert-custom {
-            background-color: var(--secondary-dark);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
+            background-color: #1e1e1e;
+            color: #f5f5f5;
+            border: 1px solid #333333;
         }
-
         .alert-success {
-            border-left: 4px solid var(--success-color);
+            border-left: 4px solid #4caf50;
         }
-
         .alert-danger {
-            border-left: 4px solid var(--danger-color);
+            border-left: 4px solid #d64045;
         }
     </style>
 </head>
 <body>
     <!-- Include Header -->
     <jsp:include page="../includes/header.jsp" />
-
-    <!-- Debug Info - Remove in production -->
-    <%
-    System.out.println("wishlists.jsp: Processing page");
-
-    // Get wishlists and ensure it's not null
-    List<Wishlist> wishlists = (List<Wishlist>) request.getAttribute("wishlists");
-    if (wishlists == null) wishlists = new ArrayList<>();
-
-    System.out.println("wishlists.jsp: Wishlists count = " + wishlists.size());
-    %>
 
     <!-- Main Content -->
     <div class="container my-5">
@@ -141,7 +83,6 @@
             </div>
             <c:remove var="successMessage" scope="session" />
         </c:if>
-
         <c:if test="${not empty sessionScope.errorMessage}">
             <div class="alert alert-custom alert-danger alert-dismissible fade show mb-4" role="alert">
                 <i class="fas fa-exclamation-circle me-2"></i> ${sessionScope.errorMessage}
@@ -168,12 +109,12 @@
                 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                     <c:forEach var="wishlist" items="${wishlists}">
                         <div class="col">
-                            <div class="card wishlist-card">
+                            <div class="card">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <h5 class="card-title">${wishlist.name}</h5>
                                         <c:choose>
-                                            <c:when test="${wishlist.public}">
+                                            <c:when test="${wishlist.isPublic}">
                                                 <span class="badge badge-public">Public</span>
                                             </c:when>
                                             <c:otherwise>
@@ -187,7 +128,7 @@
                                                 ${wishlist.description}
                                             </c:when>
                                             <c:otherwise>
-                                                <span class="text-muted">No description</span>
+                                                No description
                                             </c:otherwise>
                                         </c:choose>
                                     </p>
@@ -198,7 +139,7 @@
                                         </small>
                                     </p>
                                     <p class="card-text">
-                                        <i class="fas fa-book me-1"></i> ${wishlist.getItemCount()} items
+                                        <i class="fas fa-book me-1"></i> ${wishlist.itemCount} items
                                     </p>
                                 </div>
                                 <div class="card-footer d-flex justify-content-between">
@@ -209,16 +150,14 @@
                                         <a href="${pageContext.request.contextPath}/wishlists?action=edit&id=${wishlist.wishlistId}" class="btn btn-outline-light">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <button type="button" class="btn btn-outline-danger"
-                                                data-bs-toggle="modal" data-bs-target="#deleteWishlistModal${wishlist.wishlistId}">
+                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal${wishlist.wishlistId}">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </div>
                                 </div>
                             </div>
-
                             <!-- Delete Confirmation Modal -->
-                            <div class="modal fade" id="deleteWishlistModal${wishlist.wishlistId}" tabindex="-1" aria-hidden="true">
+                            <div class="modal fade" id="deleteModal${wishlist.wishlistId}" tabindex="-1" aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content bg-dark text-light">
                                         <div class="modal-header">
@@ -250,7 +189,7 @@
     <!-- Include Footer -->
     <jsp:include page="../includes/footer.jsp" />
 
-    <!-- Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
 </body>
 </html>

@@ -51,11 +51,11 @@ public class WishlistServlet extends HttpServlet {
             request.setAttribute("wishlists", userWishlists);
 
             if (action == null || action.equals("list")) {
-                // Forward to wishlists page - FIX: Use the correct path to the JSP file
-                request.getRequestDispatcher("/WEB-INF/wishlist/wishlists.jsp").forward(request, response);
+                // Forward to wishlists page - Using new location outside WEB-INF
+                request.getRequestDispatcher("/wishlist/wishlists.jsp").forward(request, response);
             } else if (action.equals("create")) {
                 // Forward to create wishlist page
-                request.getRequestDispatcher("/WEB-INF/wishlist/create-wishlist.jsp").forward(request, response);
+                request.getRequestDispatcher("/wishlist/create-wishlist.jsp").forward(request, response);
             } else if (action.equals("view")) {
                 // Get wishlist ID
                 String wishlistId = request.getParameter("id");
@@ -89,8 +89,8 @@ public class WishlistServlet extends HttpServlet {
                 request.setAttribute("wishlist", wishlist);
                 request.setAttribute("wishlistItems", wishlistItems);
 
-                // Forward to wishlist details page - FIX: Use the correct path
-                request.getRequestDispatcher("/WEB-INF/wishlist/wishlist-details.jsp").forward(request, response);
+                // Forward to wishlist details page
+                request.getRequestDispatcher("/wishlist/wishlist-details.jsp").forward(request, response);
             } else if (action.equals("edit")) {
                 // Get wishlist ID
                 String wishlistId = request.getParameter("id");
@@ -117,8 +117,8 @@ public class WishlistServlet extends HttpServlet {
                 // Set attributes
                 request.setAttribute("wishlist", wishlist);
 
-                // Forward to edit wishlist page - FIX: Use the correct path
-                request.getRequestDispatcher("/WEB-INF/wishlist/edit-wishlist.jsp").forward(request, response);
+                // Forward to edit wishlist page
+                request.getRequestDispatcher("/wishlist/edit-wishlist.jsp").forward(request, response);
             } else {
                 // Invalid action, redirect to list
                 response.sendRedirect(request.getContextPath() + "/wishlists");
