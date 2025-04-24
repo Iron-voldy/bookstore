@@ -146,6 +146,22 @@
     </style>
 </head>
 <body>
+    <!-- Debug Info - Remove in production -->
+    <%
+    System.out.println("wishlist-details.jsp: Processing page");
+    if (request.getAttribute("wishlist") != null) {
+        com.bookstore.model.wishlist.Wishlist wishlist =
+            (com.bookstore.model.wishlist.Wishlist)request.getAttribute("wishlist");
+        System.out.println("wishlist-details.jsp: Wishlist name = " + wishlist.getName());
+        System.out.println("wishlist-details.jsp: Wishlist items count = " + wishlist.getItemCount());
+    }
+    if (request.getAttribute("wishlistItems") != null) {
+        java.util.Map<com.bookstore.model.wishlist.WishlistItem, com.bookstore.model.book.Book> items =
+            (java.util.Map<com.bookstore.model.wishlist.WishlistItem, com.bookstore.model.book.Book>)request.getAttribute("wishlistItems");
+        System.out.println("wishlist-details.jsp: Wishlist items map size = " + items.size());
+    }
+    %>
+
     <!-- Include Header -->
     <jsp:include page="../includes/header.jsp" />
 
@@ -246,7 +262,14 @@
                         <c:set var="book" value="${entry.value}" />
                         <div class="col">
                             <div class="card book-card">
-                                <img src="${pageContext.request.contextPath}/book-covers/${book.coverImagePath}" class="book-cover" alt="${book.title}">
+                                <c:choose>
+                                    <c:when test="${not empty book.coverImagePath}">
+                                        <img src="${pageContext.request.contextPath}/book-covers/${book.coverImagePath}" class="book-cover" alt="${book.title}">
+                                    </c:when>
+                                    <c:otherwise>
+                                        <img src="${pageContext.request.contextPath}/book-covers/default_cover.jpg" class="book-cover" alt="${book.title}">
+                                    </c:otherwise>
+                                </c:choose>
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <h5 class="card-title">${book.title}</h5>
@@ -287,7 +310,7 @@
                                         <span class="ms-1">(${book.averageRating})</span>
                                     </div>
 
-                                    <p class="card-text fw-bold" style="color: var(--accent-color);">$${book.price}</p>
+                                    <p class="card-text fw-bold" style="color: var(--accent-color);">${book.price}</p>
 
                                     <c:if test="${not empty item.notes}">
                                         <div class="notes mt-2 small">

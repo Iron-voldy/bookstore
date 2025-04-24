@@ -77,6 +77,11 @@ public class WishlistManager {
         // Create the file if it doesn't exist
         if (!file.exists()) {
             try {
+                // Ensure directory exists
+                File parent = file.getParentFile();
+                if (parent != null && !parent.exists()) {
+                    parent.mkdirs();
+                }
                 file.createNewFile();
                 System.out.println("Created wishlists file: " + wishlistFilePath);
                 return;
@@ -113,6 +118,11 @@ public class WishlistManager {
         // Create the file if it doesn't exist
         if (!file.exists()) {
             try {
+                // Ensure directory exists
+                File parent = file.getParentFile();
+                if (parent != null && !parent.exists()) {
+                    parent.mkdirs();
+                }
                 file.createNewFile();
                 System.out.println("Created wishlist items file: " + wishlistItemsFilePath);
                 return;
@@ -157,9 +167,10 @@ public class WishlistManager {
         try {
             // Ensure directory exists
             File file = new File(wishlistFilePath);
-            if (file.getParentFile() != null && !file.getParentFile().exists()) {
-                boolean created = file.getParentFile().mkdirs();
-                System.out.println("Created directory: " + file.getParentFile().getAbsolutePath() + " - Success: " + created);
+            File parent = file.getParentFile();
+            if (parent != null && !parent.exists()) {
+                boolean created = parent.mkdirs();
+                System.out.println("Created directory: " + parent.getAbsolutePath() + " - Success: " + created);
             }
 
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
@@ -185,9 +196,10 @@ public class WishlistManager {
         try {
             // Ensure directory exists
             File file = new File(wishlistItemsFilePath);
-            if (file.getParentFile() != null && !file.getParentFile().exists()) {
-                boolean created = file.getParentFile().mkdirs();
-                System.out.println("Created directory: " + file.getParentFile().getAbsolutePath() + " - Success: " + created);
+            File parent = file.getParentFile();
+            if (parent != null && !parent.exists()) {
+                boolean created = parent.mkdirs();
+                System.out.println("Created directory: " + parent.getAbsolutePath() + " - Success: " + created);
             }
 
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
@@ -258,6 +270,13 @@ public class WishlistManager {
         List<Wishlist> userWishlists = new ArrayList<>();
         for (Wishlist wishlist : wishlists.values()) {
             if (wishlist.getUserId().equals(userId)) {
+                // Make sure each wishlist has its items loaded
+                List<WishlistItem> items = wishlistItems.get(wishlist.getWishlistId());
+                if (items != null) {
+                    wishlist.setItems(new ArrayList<>(items));
+                } else {
+                    wishlist.setItems(new ArrayList<>());
+                }
                 userWishlists.add(wishlist);
             }
         }
@@ -273,6 +292,13 @@ public class WishlistManager {
         // Look for existing default wishlist
         for (Wishlist wishlist : wishlists.values()) {
             if (wishlist.getUserId().equals(userId) && wishlist.getName().equals("My Wishlist")) {
+                // Make sure it has its items loaded
+                List<WishlistItem> items = wishlistItems.get(wishlist.getWishlistId());
+                if (items != null) {
+                    wishlist.setItems(new ArrayList<>(items));
+                } else {
+                    wishlist.setItems(new ArrayList<>());
+                }
                 return wishlist;
             }
         }
@@ -290,6 +316,14 @@ public class WishlistManager {
     public boolean updateWishlist(Wishlist wishlist) {
         if (!wishlists.containsKey(wishlist.getWishlistId())) {
             return false;
+        }
+
+        // Get existing items
+        List<WishlistItem> existingItems = wishlistItems.get(wishlist.getWishlistId());
+
+        // Preserve items when updating the wishlist
+        if (existingItems != null && !existingItems.isEmpty()) {
+            wishlist.setItems(new ArrayList<>(existingItems));
         }
 
         wishlists.put(wishlist.getWishlistId(), wishlist);
@@ -407,6 +441,18 @@ public class WishlistManager {
                 // Update the item
                 item.setNotes(notes);
                 item.setPriority(priority);
+
+                // Also update the item in the wishlist object
+                Wishlist wishlist = wishlists.get(wishlistId);
+                if (wishlist != null) {
+                    for (WishlistItem wishlistItem : wishlist.getItems()) {
+                        if (wishlistItem.getBookId().equals(bookId)) {
+                            wishlistItem.setNotes(notes);
+                            wishlistItem.setPriority(priority);
+                            break;
+                        }
+                    }
+                }
 
                 // Save changes
                 return saveWishlistItems();

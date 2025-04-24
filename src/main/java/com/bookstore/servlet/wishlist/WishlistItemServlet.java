@@ -1,6 +1,7 @@
 package com.bookstore.servlet.wishlist;
 
 import java.io.IOException;
+import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -27,16 +28,21 @@ public class WishlistItemServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        System.out.println("WishlistItemServlet: doGet called with action=" + request.getParameter("action"));
+
         // Check if user is logged in
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("userId") == null) {
             // Redirect to login page
-            session.setAttribute("errorMessage", "Please log in to manage your wishlist");
+            if (session != null) {
+                session.setAttribute("errorMessage", "Please log in to manage your wishlist");
+            }
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
         String userId = (String) session.getAttribute("userId");
+        System.out.println("WishlistItemServlet: User ID = " + userId);
 
         // Get action parameter
         String action = request.getParameter("action");
@@ -53,6 +59,8 @@ public class WishlistItemServlet extends HttpServlet {
             return;
         }
 
+        System.out.println("WishlistItemServlet: Book ID = " + bookId);
+
         // Check if book exists
         BookManager bookManager = new BookManager(getServletContext());
         Book book = bookManager.getBookById(bookId);
@@ -61,6 +69,8 @@ public class WishlistItemServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/books");
             return;
         }
+
+        System.out.println("WishlistItemServlet: Book found: " + book.getTitle());
 
         // Initialize WishlistManager
         WishlistManager wishlistManager = new WishlistManager(getServletContext());
@@ -101,8 +111,25 @@ public class WishlistItemServlet extends HttpServlet {
 
             case "select-wishlist":
                 // Get user wishlists
-                request.setAttribute("wishlists", wishlistManager.getUserWishlists(userId));
+                List<Wishlist> userWishlists = wishlistManager.getUserWishlists(userId);
+                System.out.println("WishlistItemServlet: Found " + userWishlists.size() + " wishlists for user");
+
+                // Create default wishlist if none exist
+                if (userWishlists.isEmpty()) {
+                    String wishlistId = wishlistManager.createWishlist(userId, "My Wishlist", "Default wishlist", false);
+                    if (wishlistId != null) {
+                        userWishlists = wishlistManager.getUserWishlists(userId);
+                        System.out.println("WishlistItemServlet: Created default wishlist");
+                    }
+                }
+
+                // Set request attributes for JSP
+                request.setAttribute("wishlists", userWishlists);
                 request.setAttribute("book", book);
+
+                System.out.println("WishlistItemServlet: Book title = " + book.getTitle());
+                System.out.println("WishlistItemServlet: Book cover = " + book.getCoverImagePath());
+                System.out.println("WishlistItemServlet: Forwarding to select-wishlist.jsp");
 
                 // Forward to select wishlist page
                 request.getRequestDispatcher("/wishlist/select-wishlist.jsp").forward(request, response);
@@ -205,16 +232,21 @@ public class WishlistItemServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        System.out.println("WishlistItemServlet: doPost called with action=" + request.getParameter("action"));
+
         // Check if user is logged in
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("userId") == null) {
             // Redirect to login page
-            session.setAttribute("errorMessage", "Please log in to manage your wishlist");
+            if (session != null) {
+                session.setAttribute("errorMessage", "Please log in to manage your wishlist");
+            }
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
         String userId = (String) session.getAttribute("userId");
+        System.out.println("WishlistItemServlet doPost: User ID = " + userId);
 
         // Get action parameter
         String action = request.getParameter("action");
@@ -233,6 +265,10 @@ public class WishlistItemServlet extends HttpServlet {
                 String bookId = request.getParameter("bookId");
                 String notes = request.getParameter("notes");
                 String priorityStr = request.getParameter("priority");
+
+                System.out.println("WishlistItemServlet add-to-selected: Wishlist ID = " + wishlistId);
+                System.out.println("WishlistItemServlet add-to-selected: Book ID = " + bookId);
+                System.out.println("WishlistItemServlet add-to-selected: Priority = " + priorityStr);
 
                 // Validate input
                 if (wishlistId == null || wishlistId.trim().isEmpty() ||
@@ -258,9 +294,16 @@ public class WishlistItemServlet extends HttpServlet {
                 // Get wishlist
                 Wishlist wishlist = wishlistManager.getWishlist(wishlistId);
                 if (wishlist == null) {
-                    session.setAttribute("errorMessage", "Wishlist not found");
-                    response.sendRedirect(request.getContextPath() + "/wishlists");
-                    return;
+                    // If wishlist doesn't exist, create default
+                    System.out.println("WishlistItemServlet: Wishlist not found, creating default");
+                    wishlistId = wishlistManager.createWishlist(userId, "My Wishlist", "Default wishlist", false);
+                    wishlist = wishlistManager.getWishlist(wishlistId);
+
+                    if (wishlist == null) {
+                        session.setAttribute("errorMessage", "Wishlist not found and could not create default");
+                        response.sendRedirect(request.getContextPath() + "/wishlists");
+                        return;
+                    }
                 }
 
                 // Check if user owns this wishlist
@@ -288,6 +331,7 @@ public class WishlistItemServlet extends HttpServlet {
 
                 // Add book to wishlist
                 boolean added = wishlistManager.addBookToWishlist(wishlistId, bookId, notes, priority);
+                System.out.println("WishlistItemServlet: Book added to wishlist: " + added);
 
                 if (added) {
                     session.setAttribute("successMessage", book.getTitle() + " added to wishlist");

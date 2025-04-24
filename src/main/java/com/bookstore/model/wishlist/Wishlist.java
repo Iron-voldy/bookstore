@@ -112,7 +112,7 @@ public class Wishlist {
      * @return the number of items
      */
     public int getItemCount() {
-        return items.size();
+        return items != null ? items.size() : 0;
     }
 
     /**
@@ -121,6 +121,11 @@ public class Wishlist {
      * @return true if the item was added, false if it already exists
      */
     public boolean addItem(WishlistItem item) {
+        // Initialize items list if null
+        if (items == null) {
+            items = new ArrayList<>();
+        }
+
         // Check if the book is already in the wishlist
         for (WishlistItem existingItem : items) {
             if (existingItem.getBookId().equals(item.getBookId())) {
@@ -138,6 +143,9 @@ public class Wishlist {
      * @return true if the item was removed, false if it wasn't found
      */
     public boolean removeItem(String bookId) {
+        if (items == null) {
+            return false;
+        }
         return items.removeIf(item -> item.getBookId().equals(bookId));
     }
 
@@ -147,6 +155,9 @@ public class Wishlist {
      * @return true if the book is in the wishlist
      */
     public boolean containsBook(String bookId) {
+        if (items == null) {
+            return false;
+        }
         for (WishlistItem item : items) {
             if (item.getBookId().equals(bookId)) {
                 return true;
@@ -191,7 +202,7 @@ public class Wishlist {
                 "wishlistId='" + wishlistId + '\'' +
                 ", userId='" + userId + '\'' +
                 ", name='" + name + '\'' +
-                ", itemCount=" + items.size() +
+                ", itemCount=" + getItemCount() +
                 ", isPublic=" + isPublic +
                 '}';
     }

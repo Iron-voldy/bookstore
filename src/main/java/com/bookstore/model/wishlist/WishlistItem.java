@@ -1,8 +1,6 @@
 package com.bookstore.model.wishlist;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Represents an item in a wishlist

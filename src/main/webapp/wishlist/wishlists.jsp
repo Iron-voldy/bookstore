@@ -130,6 +130,19 @@
     </style>
 </head>
 <body>
+    <!-- Debug Info - Remove in production -->
+    <%
+    System.out.println("wishlists.jsp: Processing page");
+    if (request.getAttribute("wishlists") != null) {
+        java.util.List<com.bookstore.model.wishlist.Wishlist> wishlists =
+            (java.util.List<com.bookstore.model.wishlist.Wishlist>)request.getAttribute("wishlists");
+        System.out.println("wishlists.jsp: Wishlists count = " + wishlists.size());
+        for (com.bookstore.model.wishlist.Wishlist wishlist : wishlists) {
+            System.out.println("wishlists.jsp: Wishlist name = " + wishlist.getName() + ", Items count = " + wishlist.getItemCount());
+        }
+    }
+    %>
+
     <!-- Include Header -->
     <jsp:include page="../includes/header.jsp" />
 
@@ -215,7 +228,7 @@
                                         </small>
                                     </p>
                                     <p class="card-text">
-                                        <i class="fas fa-book me-1"></i> ${wishlist.itemCount} items
+                                        <i class="fas fa-book me-1"></i> ${wishlist.getItemCount()} items
                                     </p>
                                 </div>
                                 <div class="card-footer d-flex justify-content-between">

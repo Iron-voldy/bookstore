@@ -1,6 +1,9 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page import="com.bookstore.model.book.Book" %>
+<%@ page import="com.bookstore.model.wishlist.Wishlist" %>
+<%@ page import="java.util.List" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -181,11 +184,35 @@
             margin-left: 10px;
             font-weight: 500;
         }
+
+        .go-to-wishlists {
+            margin-top: 20px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
+    <%
+    // Access the book object from request attributes
+    Book book = (Book) request.getAttribute("book");
+    List<Wishlist> wishlists = (List<Wishlist>) request.getAttribute("wishlists");
+
+    System.out.println("Direct access - Book: " + (book != null ? book.getTitle() : "null"));
+    System.out.println("Direct access - Wishlists: " + (wishlists != null ? wishlists.size() : "null"));
+    %>
+
+    <!-- Include Header -->
+    <jsp:include page="../includes/header.jsp" />
+
     <!-- Main Content -->
     <div class="container my-5">
+        <!-- Navigation to Wishlists page -->
+        <div class="go-to-wishlists mb-4">
+            <a href="<%=request.getContextPath()%>/wishlists" class="btn btn-outline-light">
+                <i class="fas fa-list me-2"></i> Go to My Wishlists
+            </a>
+        </div>
+
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb" class="mb-4">
             <ol class="breadcrumb">
@@ -197,143 +224,157 @@
 
         <h2 class="mb-4"><i class="fas fa-heart me-2"></i> Add to Wishlist</h2>
 
+        <!-- Flash Messages -->
+        <c:if test="${not empty sessionScope.errorMessage}">
+            <div class="alert alert-custom alert-danger alert-dismissible fade show mb-4" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i> ${sessionScope.errorMessage}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <c:remove var="errorMessage" scope="session" />
+        </c:if>
+
         <!-- Book Information -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <img src="<%=request.getContextPath()%>/book-covers/${book.coverImagePath}"
-                         alt="${book.title}" class="book-cover me-4">
-                    <div class="book-details">
-                        <h3>${book.title}</h3>
-                        <p class="text-muted">by ${book.author}</p>
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="rating me-2">
-                                <c:forEach begin="1" end="5" var="i">
-                                    <c:choose>
-                                        <c:when test="${i <= book.averageRating}">
-                                            <i class="fas fa-star" style="color: gold;"></i>
-                                        </c:when>
-                                        <c:when test="${i <= book.averageRating + 0.5}">
-                                            <i class="fas fa-star-half-alt" style="color: gold;"></i>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <i class="far fa-star" style="color: gold;"></i>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </c:forEach>
+        <% if (book != null) { %>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <img src="<%=request.getContextPath()%>/book-covers/<%= book.getCoverImagePath() != null ? book.getCoverImagePath() : "default_cover.jpg" %>"
+                             alt="<%= book.getTitle() %>" class="book-cover me-4">
+                        <div class="book-details">
+                            <h3><%= book.getTitle() %></h3>
+                            <p class="text-muted">by <%= book.getAuthor() %></p>
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rating me-2">
+                                    <%
+                                    double rating = book.getAverageRating();
+                                    for (int i = 1; i <= 5; i++) {
+                                        if (i <= rating) {
+                                    %>
+                                        <i class="fas fa-star" style="color: gold;"></i>
+                                    <% } else if (i - 0.5 <= rating) { %>
+                                        <i class="fas fa-star-half-alt" style="color: gold;"></i>
+                                    <% } else { %>
+                                        <i class="far fa-star" style="color: gold;"></i>
+                                    <% } } %>
+                                </div>
+                                <span class="text-muted">(<%= String.format("%.1f", rating) %>)</span>
                             </div>
-                            <span class="text-muted">(${book.averageRating})</span>
+                            <p class="price" style="color: var(--accent-color); font-weight: bold;">$<%= String.format("%.2f", book.getPrice()) %></p>
                         </div>
-                        <p class="price" style="color: var(--accent-color); font-weight: bold;">$${book.price}</p>
                     </div>
                 </div>
             </div>
-        </div>
+        <% } else { %>
+            <div class="alert alert-custom alert-danger mb-4">
+                <i class="fas fa-exclamation-circle me-2"></i> Book information not available
+            </div>
+        <% } %>
 
-        <c:choose>
-            <c:when test="${empty wishlists}">
-                <!-- No Wishlists Available -->
-                <div class="card">
-                    <div class="card-body empty-state">
-                        <i class="fas fa-heart-broken"></i>
-                        <h4>No Wishlists Yet</h4>
-                        <p>You haven't created any wishlists yet. Create your first wishlist!</p>
-                        <form action="<%=request.getContextPath()%>/wishlists" method="post">
-                            <input type="hidden" name="action" value="create">
-                            <input type="hidden" name="name" value="My Wishlist">
-                            <input type="hidden" name="isPublic" value="false">
-                            <button type="submit" class="btn btn-accent mt-3">
-                                <i class="fas fa-plus me-2"></i> Create Default Wishlist
-                            </button>
-                        </form>
-                    </div>
+        <% if (wishlists == null || wishlists.isEmpty()) { %>
+            <!-- No Wishlists Available -->
+            <div class="card">
+                <div class="card-body empty-state">
+                    <i class="fas fa-heart-broken"></i>
+                    <h4>No Wishlists Yet</h4>
+                    <p>You haven't created any wishlists yet. Create your first wishlist!</p>
+                    <form action="<%=request.getContextPath()%>/wishlists" method="post">
+                        <input type="hidden" name="action" value="create">
+                        <input type="hidden" name="name" value="My Wishlist">
+                        <input type="hidden" name="description" value="Default wishlist">
+                        <input type="hidden" name="isPublic" value="false">
+                        <button type="submit" class="btn btn-accent mt-3">
+                            <i class="fas fa-plus me-2"></i> Create Default Wishlist
+                        </button>
+                    </form>
                 </div>
-            </c:when>
-            <c:otherwise>
-                <!-- Wishlist Selection Form -->
-                <form action="<%=request.getContextPath()%>/wishlist-item" method="post">
-                    <input type="hidden" name="action" value="add-to-selected">
-                    <input type="hidden" name="bookId" value="${book.id}">
+            </div>
+        <% } else { %>
+            <!-- Wishlist Selection Form -->
+            <form action="<%=request.getContextPath()%>/wishlist-item" method="post">
+                <input type="hidden" name="action" value="add-to-selected">
+                <input type="hidden" name="bookId" value="<%= book != null ? book.getId() : "" %>">
 
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h5 class="mb-0">Select Wishlist</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <c:forEach var="wishlist" items="${wishlists}">
-                                    <div class="col-md-6 mb-3">
-                                        <div class="card wishlist-option p-3" onclick="selectWishlist('${wishlist.wishlistId}')">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <h6 class="mb-1">${wishlist.name}</h6>
-                                                    <p class="text-muted small mb-0">${wishlist.itemCount} items</p>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="wishlistId"
-                                                           id="wishlist_${wishlist.wishlistId}" value="${wishlist.wishlistId}"
-                                                           ${wishlist.name == 'My Wishlist' ? 'checked' : ''}>
-                                                </div>
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Select Wishlist</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <% for (Wishlist wishlist : wishlists) { %>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card wishlist-option p-3" onclick="selectWishlist('<%= wishlist.getWishlistId() %>')">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1"><%= wishlist.getName() %></h6>
+                                                <p class="text-muted small mb-0"><%= wishlist.getItemCount() %> items</p>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="wishlistId"
+                                                       id="wishlist_<%= wishlist.getWishlistId() %>" value="<%= wishlist.getWishlistId() %>"
+                                                       <%= wishlist.getName().equals("My Wishlist") ? "checked" : "" %>>
                                             </div>
                                         </div>
                                     </div>
-                                </c:forEach>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            <h5 class="mb-0">Additional Information</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="mb-3">
-                                <label for="notes" class="form-label">Notes (Optional)</label>
-                                <textarea class="form-control" id="notes" name="notes" rows="3"
-                                          placeholder="Add personal notes about this book"></textarea>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Priority</label>
-                                <div class="d-flex flex-column">
-                                    <div class="priority-indicator">
-                                        <div class="d-flex">
-                                            <div class="priority-dot priority-1"
-                                                 onclick="selectPriority(1)"
-                                                 id="priority-dot-1"></div>
-                                            <div class="priority-dot priority-2"
-                                                 onclick="selectPriority(2)"
-                                                 id="priority-dot-2"></div>
-                                            <div class="priority-dot priority-3"
-                                                 onclick="selectPriority(3)"
-                                                 id="priority-dot-3"></div>
-                                            <div class="priority-dot priority-4"
-                                                 onclick="selectPriority(4)"
-                                                 id="priority-dot-4"></div>
-                                            <div class="priority-dot priority-5"
-                                                 onclick="selectPriority(5)"
-                                                 id="priority-dot-5"></div>
-                                        </div>
-                                        <div class="priority-label" id="priority-label">Medium</div>
-                                    </div>
-                                    <input type="hidden" id="priority" name="priority" value="3">
                                 </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Additional Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes (Optional)</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3"
+                                      placeholder="Add personal notes about this book"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Priority</label>
+                            <div class="d-flex flex-column">
+                                <div class="priority-indicator">
+                                    <div class="d-flex">
+                                        <div class="priority-dot priority-1"
+                                             onclick="selectPriority(1)"
+                                             id="priority-dot-1"></div>
+                                        <div class="priority-dot priority-2"
+                                             onclick="selectPriority(2)"
+                                             id="priority-dot-2"></div>
+                                        <div class="priority-dot priority-3"
+                                             onclick="selectPriority(3)"
+                                             id="priority-dot-3"></div>
+                                        <div class="priority-dot priority-4"
+                                             onclick="selectPriority(4)"
+                                             id="priority-dot-4"></div>
+                                        <div class="priority-dot priority-5"
+                                             onclick="selectPriority(5)"
+                                             id="priority-dot-5"></div>
+                                    </div>
+                                    <div class="priority-label" id="priority-label">Medium</div>
+                                </div>
+                                <input type="hidden" id="priority" name="priority" value="3">
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="d-flex justify-content-between">
-                        <a href="<%=request.getContextPath()%>/book-details?id=${book.id}" class="btn btn-outline-light">
-                            <i class="fas fa-arrow-left me-2"></i> Back to Book
-                        </a>
-                        <button type="submit" class="btn btn-accent">
-                            <i class="fas fa-heart me-2"></i> Add to Wishlist
-                        </button>
-                    </div>
-                </form>
-            </c:otherwise>
-        </c:choose>
+                <div class="d-flex justify-content-between">
+                    <a href="<%=request.getContextPath()%>/book-details?id=<%= book != null ? book.getId() : "" %>" class="btn btn-outline-light">
+                        <i class="fas fa-arrow-left me-2"></i> Back to Book
+                    </a>
+                    <button type="submit" class="btn btn-accent">
+                        <i class="fas fa-heart me-2"></i> Add to Wishlist
+                    </button>
+                </div>
+            </form>
+        <% } %>
     </div>
+
+    <!-- Include Footer -->
+    <jsp:include page="../includes/footer.jsp" />
 
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
@@ -348,8 +389,10 @@
 
             // Select the chosen option and radio button
             const radioButton = document.getElementById('wishlist_' + wishlistId);
-            radioButton.checked = true;
-            radioButton.closest('.wishlist-option').classList.add('selected');
+            if (radioButton) {
+                radioButton.checked = true;
+                radioButton.closest('.wishlist-option').classList.add('selected');
+            }
         }
 
         function selectPriority(priority) {
