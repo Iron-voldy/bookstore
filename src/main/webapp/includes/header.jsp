@@ -3,6 +3,7 @@
 <%@ page import="com.bookstore.model.cart.CartManager" %>
 <%@ page import="com.bookstore.model.user.User" %>
 <%@ page import="com.bookstore.model.user.PremiumUser" %>
+<%@ page import="com.bookstore.model.wishlist.WishlistManager" %>
 
 <%
 // Initialize cart count if not already set
@@ -25,6 +26,33 @@ if (cartCount == null) {
 
     // Set in session
     session.setAttribute("cartCount", cartCount);
+}
+
+// Initialize wishlist count
+Integer wishlistCount = (Integer) session.getAttribute("wishlistCount");
+if (wishlistCount == null) {
+    String userId = (String) session.getAttribute("userId");
+
+    if (userId != null) {
+        // Get wishlist count from WishlistManager
+        WishlistManager wishlistManager = new WishlistManager(application);
+        int totalItems = 0;
+
+        // Get all wishlists for the user
+        java.util.List<com.bookstore.model.wishlist.Wishlist> userWishlists = wishlistManager.getUserWishlists(userId);
+
+        // Count all items in all wishlists
+        for (com.bookstore.model.wishlist.Wishlist wishlist : userWishlists) {
+            totalItems += wishlist.getItemCount();
+        }
+
+        wishlistCount = totalItems;
+    } else {
+        wishlistCount = 0;
+    }
+
+    // Set in session
+    session.setAttribute("wishlistCount", wishlistCount);
 }
 
 // Check if user is logged in
@@ -83,6 +111,18 @@ String username = isLoggedIn ? currentUser.getUsername() : "";
 
             <!-- User Menu -->
             <ul class="navbar-nav">
+                <% if (isLoggedIn) { %>
+                <!-- Wishlist icon (only shown for logged-in users) -->
+                <li class="nav-item">
+                    <a class="nav-link ${pageContext.request.requestURI.contains('/wishlist') ? 'active' : ''}" href="<%=request.getContextPath()%>/wishlists">
+                        <i class="fas fa-heart"></i>
+                        <% if (wishlistCount > 0) { %>
+                        <span class="badge bg-accent rounded-pill"><%= wishlistCount %></span>
+                        <% } %>
+                    </a>
+                </li>
+                <% } %>
+
                 <li class="nav-item">
                     <a class="nav-link ${pageContext.request.requestURI.contains('/cart') ? 'active' : ''}" href="<%=request.getContextPath()%>/cart">
                         <i class="fas fa-shopping-cart"></i>
@@ -103,6 +143,7 @@ String username = isLoggedIn ? currentUser.getUsername() : "";
                     <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="userDropdown">
                         <li><a class="dropdown-item" href="<%=request.getContextPath()%>/user/profile.jsp">My Profile</a></li>
                         <li><a class="dropdown-item" href="<%=request.getContextPath()%>/order-history">My Orders</a></li>
+                        <li><a class="dropdown-item" href="<%=request.getContextPath()%>/wishlists">My Wishlists</a></li>
                         <li><a class="dropdown-item" href="<%=request.getContextPath()%>/user-reviews">My Reviews</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="<%=request.getContextPath()%>/logout">Logout</a></li>
