@@ -99,22 +99,6 @@ public class Wishlist {
         this.items = items;
     }
 
-    public boolean isPublic() {
-        return isPublic;
-    }
-
-    public void setPublic(boolean isPublic) {
-        this.isPublic = isPublic;
-    }
-
-    /**
-     * Get the number of items in this wishlist
-     * @return the number of items
-     */
-    public int getItemCount() {
-        return items != null ? items.size() : 0;
-    }
-
     /**
      * Add an item to this wishlist
      * @param item the item to add
@@ -167,12 +151,32 @@ public class Wishlist {
     }
 
     /**
+     * Get the number of items in this wishlist
+     * @return the number of items
+     */
+    public int getItemCount() {
+        return items != null ? items.size() : 0;
+    }
+
+    /**
+     * Check if the wishlist is public
+     * @return true if public, false if private
+     */
+    public boolean isPublic() {
+        return isPublic;
+    }
+
+    public void setPublic(boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+
+    /**
      * Convert wishlist to string representation for file storage
      */
     public String toFileString() {
         return wishlistId + "," +
                 userId + "," +
-                name + "," +
+                name.replace(",", "{{COMMA}}") + "," +
                 (description != null ? description.replace(",", "{{COMMA}}") : "") + "," +
                 createdDate.getTime() + "," +
                 isPublic;
@@ -187,7 +191,7 @@ public class Wishlist {
             Wishlist wishlist = new Wishlist();
             wishlist.setWishlistId(parts[0]);
             wishlist.setUserId(parts[1]);
-            wishlist.setName(parts[2]);
+            wishlist.setName(parts[2].replace("{{COMMA}}", ","));
             wishlist.setDescription(parts[3].replace("{{COMMA}}", ","));
             wishlist.setCreatedDate(new Date(Long.parseLong(parts[4])));
             wishlist.setPublic(Boolean.parseBoolean(parts[5]));
