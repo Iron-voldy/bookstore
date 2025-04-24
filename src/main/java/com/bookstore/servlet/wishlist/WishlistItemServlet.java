@@ -1,7 +1,6 @@
 package com.bookstore.servlet.wishlist;
 
 import java.io.IOException;
-
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -12,7 +11,6 @@ import javax.servlet.http.HttpSession;
 import com.bookstore.model.book.Book;
 import com.bookstore.model.book.BookManager;
 import com.bookstore.model.wishlist.Wishlist;
-import com.bookstore.model.wishlist.WishlistItem;
 import com.bookstore.model.wishlist.WishlistManager;
 
 /**
@@ -145,7 +143,7 @@ public class WishlistItemServlet extends HttpServlet {
                 request.setAttribute("book", book);
 
                 // Get current notes and priority for this item
-                for (WishlistItem item : wishlistManager.getWishlistItems(wishlistId)) {
+                for (com.bookstore.model.wishlist.WishlistItem item : wishlistManager.getWishlistItems(wishlistId)) {
                     if (item.getBookId().equals(bookId)) {
                         request.setAttribute("notes", item.getNotes());
                         request.setAttribute("priority", item.getPriority());
