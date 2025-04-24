@@ -387,91 +387,10 @@
     %>
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-        <div class="container">
-            <a class="navbar-brand" href="<%=request.getContextPath()%>/">
-                <i class="fas fa-book-open me-2"></i>BookVerse
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="<%=request.getContextPath()%>/">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<%=request.getContextPath()%>/books">Books</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Categories
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/genre?genre=Fiction">Fiction</a></li>
-                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/genre?genre=Non-Fiction">Non-Fiction</a></li>
-                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/genre?genre=Mystery">Mystery</a></li>
-                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/genre?genre=Science Fiction">Science Fiction</a></li>
-                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/genre?genre=Fantasy">Fantasy</a></li>
-                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/genre?genre=Romance">Romance</a></li>
-                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/genre?genre=Thriller">Thriller</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<%=request.getContextPath()%>/top-books">Top Books</a>
-                    </li>
-                </ul>
-
-                <!-- Search Form -->
-                <form class="d-flex me-3" action="<%=request.getContextPath()%>/books" method="get">
-                    <div class="input-group">
-                        <input class="form-control" type="search" name="search" placeholder="Search books...">
-                        <button class="btn btn-outline-light" type="submit">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </form>
-
-                <!-- User Menu -->
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="<%=request.getContextPath()%>/cart">
-                            <i class="fas fa-shopping-cart"></i>
-                            <% if (cartCount > 0) { %>
-                            <span class="badge bg-accent rounded-pill"><%= cartCount %></span>
-                            <% } %>
-                        </a>
-                    </li>
-                    <% if (isLoggedIn) { %>
-                    <!-- Logged in user menu -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle me-1"></i> <%= currentUser.getUsername() %>
-                            <% if (isPremium) { %>
-                            <span class="premium-badge">PREMIUM</span>
-                            <% } %>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="userDropdown">
-                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/user/profile.jsp">My Profile</a></li>
-                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/order-history">My Orders</a></li>
-                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/user-reviews">My Reviews</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="<%=request.getContextPath()%>/logout">Logout</a></li>
-                        </ul>
-                    </li>
-                    <% } else { %>
-                    <!-- Guest user menu -->
-                    <li class="nav-item">
-                        <a class="nav-link" href="<%=request.getContextPath()%>/login">Login</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="<%=request.getContextPath()%>/register">Register</a>
-                    </li>
-                    <% } %>
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <!-- Include Header with Dynamic Navigation -->
+        <jsp:include page="/includes/header.jsp">
+            <jsp:param name="pageTitle" value="BookVerse - Your Online Bookstore" />
+        </jsp:include>
 
     <!-- Main Content -->
     <div class="container-fluid p-0">
