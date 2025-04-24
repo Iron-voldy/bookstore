@@ -3,6 +3,8 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.util.Date" %>
+<%@ page import="com.bookstore.model.wishlist.Wishlist" %>
+<%@ page import="java.util.List" %>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -26,13 +28,15 @@
     <!-- Debug Info - Remove in production -->
     <%
     System.out.println("wishlists.jsp: Processing page");
-    if (request.getAttribute("wishlists") != null) {
-        java.util.List<com.bookstore.model.wishlist.Wishlist> wishlists =
-            (java.util.List<com.bookstore.model.wishlist.Wishlist>)request.getAttribute("wishlists");
+    List<Wishlist> wishlists = (List<Wishlist>) request.getAttribute("wishlists");
+
+    if (wishlists != null) {
         System.out.println("wishlists.jsp: Wishlists count = " + wishlists.size());
-        for (com.bookstore.model.wishlist.Wishlist wishlist : wishlists) {
+        for (Wishlist wishlist : wishlists) {
             System.out.println("wishlists.jsp: Wishlist name = " + wishlist.getName() + ", Items count = " + wishlist.getItemCount());
         }
+    } else {
+        System.out.println("wishlists.jsp: No wishlists found");
     }
     %>
 
@@ -47,7 +51,7 @@
 
         <!-- Wishlists Grid -->
         <c:choose>
-            <c:when test="${empty wishlists}">
+            <c:when test="${empty wishlists or not empty requestScope['org.apache.jasper.JspRuntimeException']}">
                 <div class="card">
                     <div class="card-body empty-state">
                         <i class="fas fa-heart-broken"></i>
@@ -61,7 +65,12 @@
             </c:when>
             <c:otherwise>
                 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                    <c:forEach var="wishlist" items="${wishlists}">
+                    <c:forEach var="wishlist" items="${wishlists}" varStatus="status">
+                        <%
+                        // Additional safety check
+                        Wishlist currentWishlist = (Wishlist) pageContext.getAttribute("wishlist");
+                        if (currentWishlist != null) {
+                        %>
                         <div class="col">
                             <div class="card wishlist-card">
                                 <div class="card-body">
@@ -91,14 +100,8 @@
                                             <i class="fas fa-calendar-alt me-1"></i> Created:
                                             <%
                                             // Manual date formatting to avoid JSTL formatting issues
-                                            com.bookstore.model.wishlist.Wishlist currentWishlist =
-                                                (com.bookstore.model.wishlist.Wishlist)pageContext.getAttribute("wishlist");
-                                            if (currentWishlist != null && currentWishlist.getCreatedDate() != null) {
-                                                SimpleDateFormat sdf = new SimpleDateFormat("MMM d, yyyy");
-                                                out.print(sdf.format(currentWishlist.getCreatedDate()));
-                                            } else {
-                                                out.print("N/A");
-                                            }
+                                            SimpleDateFormat sdf = new SimpleDateFormat("MMM d, yyyy");
+                                            out.print(sdf.format(currentWishlist.getCreatedDate()));
                                             %>
                                         </small>
                                     </p>
@@ -146,6 +149,7 @@
                                 </div>
                             </div>
                         </div>
+                        <% } %>
                     </c:forEach>
                 </div>
             </c:otherwise>

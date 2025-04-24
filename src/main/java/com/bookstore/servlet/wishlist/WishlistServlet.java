@@ -1,6 +1,7 @@
 package com.bookstore.servlet.wishlist;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -37,13 +38,19 @@ public class WishlistServlet extends HttpServlet {
         WishlistManager wishlistManager = new WishlistManager(getServletContext());
 
         try {
+            // Safely get user wishlists
+            List<Wishlist> userWishlists = wishlistManager.getUserWishlists(userId);
+
+            // Log wishlists for debugging
+            System.out.println("WishlistServlet: Retrieved " + userWishlists.size() + " wishlists for user " + userId);
+            for (Wishlist wishlist : userWishlists) {
+                System.out.println("Wishlist: " + wishlist.getName() + ", Items: " + wishlist.getItemCount());
+            }
+
+            // Set wishlists in request
+            request.setAttribute("wishlists", userWishlists);
+
             if (action == null || action.equals("list")) {
-                // Get all wishlists for the user
-                List<Wishlist> userWishlists = wishlistManager.getUserWishlists(userId);
-
-                // Set wishlists in request
-                request.setAttribute("wishlists", userWishlists);
-
                 // Forward to wishlists page
                 request.getRequestDispatcher("/wishlist/wishlists.jsp").forward(request, response);
             } else if (action.equals("create")) {
@@ -72,10 +79,10 @@ public class WishlistServlet extends HttpServlet {
                     return;
                 }
 
-                // Get wishlist items with book details
+                // Get book manager to retrieve book details
                 BookManager bookManager = new BookManager(getServletContext());
 
-                // Retrieve wishlist items and corresponding books
+                // Retrieve wishlist items with book details
                 List<WishlistItem> items = wishlistManager.getWishlistItems(wishlistId);
 
                 // Prepare a map to store items and their corresponding books
@@ -127,11 +134,12 @@ public class WishlistServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/wishlists");
             }
         } catch (Exception e) {
-            // Log the error
+            // Log the error with full stack trace
+            System.err.println("WishlistServlet: Error processing request");
             e.printStackTrace();
 
             // Set error message in session
-            session.setAttribute("errorMessage", "An error occurred: " + e.getMessage());
+            session.setAttribute("errorMessage", "An unexpected error occurred: " + e.getMessage());
 
             // Redirect to wishlists page
             response.sendRedirect(request.getContextPath() + "/wishlists");
@@ -272,11 +280,12 @@ public class WishlistServlet extends HttpServlet {
                 response.sendRedirect(request.getContextPath() + "/wishlists");
             }
         } catch (Exception e) {
-            // Log the error
+            // Log the error with full stack trace
+            System.err.println("WishlistServlet: Error processing request");
             e.printStackTrace();
 
             // Set error message in session
-            session.setAttribute("errorMessage", "An error occurred: " + e.getMessage());
+            session.setAttribute("errorMessage", "An unexpected error occurred: " + e.getMessage());
 
             // Redirect to wishlists page
             response.sendRedirect(request.getContextPath() + "/wishlists");
