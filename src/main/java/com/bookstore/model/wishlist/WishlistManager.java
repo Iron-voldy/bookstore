@@ -258,7 +258,17 @@ public class WishlistManager {
      * @return the wishlist, or null if not found
      */
     public Wishlist getWishlist(String wishlistId) {
-        return wishlists.get(wishlistId);
+        Wishlist wishlist = wishlists.get(wishlistId);
+        if (wishlist != null) {
+            // Make sure the wishlist has its items loaded
+            List<WishlistItem> items = wishlistItems.get(wishlistId);
+            if (items != null) {
+                wishlist.setItems(new ArrayList<>(items));
+            } else {
+                wishlist.setItems(new ArrayList<>());
+            }
+        }
+        return wishlist;
     }
 
     /**
@@ -494,7 +504,7 @@ public class WishlistManager {
      * @return true if the book is in the wishlist
      */
     public boolean isBookInWishlist(String wishlistId, String bookId) {
-        Wishlist wishlist = wishlists.get(wishlistId);
+        Wishlist wishlist = getWishlist(wishlistId); // Use getWishlist to ensure items are loaded
         return wishlist != null && wishlist.containsBook(bookId);
     }
 
@@ -505,7 +515,7 @@ public class WishlistManager {
      */
     public Map<WishlistItem, Book> getWishlistItemsWithBooks(String wishlistId) {
         Map<WishlistItem, Book> result = new LinkedHashMap<>();
-        List<WishlistItem> items = wishlistItems.get(wishlistId);
+        List<WishlistItem> items = getWishlistItems(wishlistId); // Use getWishlistItems to get a copy
 
         if (items != null) {
             for (WishlistItem item : items) {
@@ -532,5 +542,19 @@ public class WishlistManager {
             }
         }
         return count;
+    }
+
+    /**
+     * Get the total number of items in all user's wishlists
+     * @param userId the user ID
+     * @return the total count of items
+     */
+    public int getTotalUserWishlistItemsCount(String userId) {
+        int totalItems = 0;
+        List<Wishlist> userWishlists = getUserWishlists(userId);
+        for (Wishlist wishlist : userWishlists) {
+            totalItems += wishlist.getItemCount();
+        }
+        return totalItems;
     }
 }

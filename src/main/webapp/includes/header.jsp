@@ -36,17 +36,7 @@ if (wishlistCount == null) {
     if (userId != null) {
         // Get wishlist count from WishlistManager
         WishlistManager wishlistManager = new WishlistManager(application);
-        int totalItems = 0;
-
-        // Get all wishlists for the user
-        java.util.List<com.bookstore.model.wishlist.Wishlist> userWishlists = wishlistManager.getUserWishlists(userId);
-
-        // Count all items in all wishlists
-        for (com.bookstore.model.wishlist.Wishlist wishlist : userWishlists) {
-            totalItems += wishlist.getItemCount();
-        }
-
-        wishlistCount = totalItems;
+        wishlistCount = wishlistManager.getTotalUserWishlistItemsCount(userId);
     } else {
         wishlistCount = 0;
     }
@@ -58,7 +48,11 @@ if (wishlistCount == null) {
 // Check if user is logged in
 User currentUser = (User) session.getAttribute("user");
 boolean isLoggedIn = (currentUser != null);
-boolean isPremium = (currentUser instanceof PremiumUser);
+boolean isPremium = false;
+
+if (isLoggedIn && currentUser instanceof PremiumUser) {
+    isPremium = true;
+}
 String username = isLoggedIn ? currentUser.getUsername() : "";
 %>
 
@@ -144,7 +138,23 @@ String username = isLoggedIn ? currentUser.getUsername() : "";
             margin-left: 10px;
         }
 
-        /* Additional custom styles */
+        .alert-custom {
+            background-color: var(--secondary-dark);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .alert-success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .alert-danger {
+            border-left: 4px solid var(--danger-color);
+        }
+
+        .badge.bg-accent {
+            background-color: var(--accent-color);
+        }
     </style>
 
     <!-- Specific page title can be set dynamically -->
@@ -289,7 +299,12 @@ String username = isLoggedIn ? currentUser.getUsername() : "";
             </div>
             <c:remove var="errorMessage" scope="session" />
         </c:if>
-    </div>
 
-    <!-- Main Content Placeholder -->
-    <%= request.getAttribute("pageContent") != null ? request.getAttribute("pageContent") : "" %>
+        <c:if test="${not empty sessionScope.infoMessage}">
+            <div class="alert alert-custom alert-info alert-dismissible fade show" role="alert">
+                <i class="fas fa-info-circle me-2"></i> ${sessionScope.infoMessage}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <c:remove var="infoMessage" scope="session" />
+        </c:if>
+    </div>

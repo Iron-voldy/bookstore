@@ -83,17 +83,7 @@ public class WishlistServlet extends HttpServlet {
                 BookManager bookManager = new BookManager(getServletContext());
 
                 // Retrieve wishlist items with book details
-                List<WishlistItem> items = wishlistManager.getWishlistItems(wishlistId);
-
-                // Prepare a map to store items and their corresponding books
-                java.util.Map<WishlistItem, Book> wishlistItems = new java.util.LinkedHashMap<>();
-
-                for (WishlistItem item : items) {
-                    Book book = bookManager.getBookById(item.getBookId());
-                    if (book != null) {
-                        wishlistItems.put(item, book);
-                    }
-                }
+                java.util.Map<WishlistItem, Book> wishlistItems = wishlistManager.getWishlistItemsWithBooks(wishlistId);
 
                 // Set attributes
                 request.setAttribute("wishlist", wishlist);

@@ -146,22 +146,6 @@
     </style>
 </head>
 <body>
-    <!-- Debug Info - Remove in production -->
-    <%
-    System.out.println("wishlist-details.jsp: Processing page");
-    if (request.getAttribute("wishlist") != null) {
-        com.bookstore.model.wishlist.Wishlist wishlist =
-            (com.bookstore.model.wishlist.Wishlist)request.getAttribute("wishlist");
-        System.out.println("wishlist-details.jsp: Wishlist name = " + wishlist.getName());
-        System.out.println("wishlist-details.jsp: Wishlist items count = " + wishlist.getItemCount());
-    }
-    if (request.getAttribute("wishlistItems") != null) {
-        java.util.Map<com.bookstore.model.wishlist.WishlistItem, com.bookstore.model.book.Book> items =
-            (java.util.Map<com.bookstore.model.wishlist.WishlistItem, com.bookstore.model.book.Book>)request.getAttribute("wishlistItems");
-        System.out.println("wishlist-details.jsp: Wishlist items map size = " + items.size());
-    }
-    %>
-
     <!-- Include Header -->
     <jsp:include page="../includes/header.jsp" />
 
@@ -240,7 +224,12 @@
         </c:if>
 
         <!-- Wishlist Items -->
-        <h3 class="mb-4"><i class="fas fa-book me-2"></i> Items</h3>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3><i class="fas fa-book me-2"></i> Items (${wishlist.itemCount})</h3>
+            <a href="${pageContext.request.contextPath}/books" class="btn btn-accent">
+                <i class="fas fa-plus me-2"></i> Add More Books
+            </a>
+        </div>
 
         <c:choose>
             <c:when test="${empty wishlistItems}">
@@ -310,7 +299,7 @@
                                         <span class="ms-1">(${book.averageRating})</span>
                                     </div>
 
-                                    <p class="card-text fw-bold" style="color: var(--accent-color);">${book.price}</p>
+                                    <p class="card-text fw-bold" style="color: var(--accent-color);">$${book.price}</p>
 
                                     <c:if test="${not empty item.notes}">
                                         <div class="notes mt-2 small">
@@ -365,5 +354,8 @@
 
     <!-- Include Footer -->
     <jsp:include page="../includes/footer.jsp" />
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -18,7 +18,95 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <style>
-        /* Your existing CSS styles */
+        :root {
+            --primary-dark: #121212;
+            --secondary-dark: #1e1e1e;
+            --accent-color: #8a5cf5;
+            --accent-hover: #6e46c9;
+            --text-primary: #f5f5f5;
+            --text-secondary: #b0b0b0;
+            --danger-color: #d64045;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --card-bg: #252525;
+            --border-color: #333333;
+        }
+
+        body {
+            background-color: var(--primary-dark);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background-color: var(--secondary-dark);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            color: var(--accent-color) !important;
+        }
+
+        .btn-accent {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .btn-accent:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(138, 92, 245, 0.3);
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            height: 100%;
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: var(--text-secondary);
+        }
+
+        .badge-public {
+            background-color: var(--accent-color);
+        }
+
+        .badge-private {
+            background-color: var(--secondary-dark);
+            border: 1px solid var(--border-color);
+        }
+
+        .alert-custom {
+            background-color: var(--secondary-dark);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .alert-success {
+            border-left: 4px solid var(--success-color);
+        }
+
+        .alert-danger {
+            border-left: 4px solid var(--danger-color);
+        }
     </style>
 </head>
 <body>
@@ -28,16 +116,12 @@
     <!-- Debug Info - Remove in production -->
     <%
     System.out.println("wishlists.jsp: Processing page");
-    List<Wishlist> wishlists = (List<Wishlist>) request.getAttribute("wishlists");
 
-    if (wishlists != null) {
-        System.out.println("wishlists.jsp: Wishlists count = " + wishlists.size());
-        for (Wishlist wishlist : wishlists) {
-            System.out.println("wishlists.jsp: Wishlist name = " + wishlist.getName() + ", Items count = " + wishlist.getItemCount());
-        }
-    } else {
-        System.out.println("wishlists.jsp: No wishlists found");
-    }
+    // Get wishlists and ensure it's not null
+    List<Wishlist> wishlists = (List<Wishlist>) request.getAttribute("wishlists");
+    if (wishlists == null) wishlists = new ArrayList<>();
+
+    System.out.println("wishlists.jsp: Wishlists count = " + wishlists.size());
     %>
 
     <!-- Main Content -->
@@ -49,9 +133,26 @@
             </a>
         </div>
 
+        <!-- Flash Messages -->
+        <c:if test="${not empty sessionScope.successMessage}">
+            <div class="alert alert-custom alert-success alert-dismissible fade show mb-4" role="alert">
+                <i class="fas fa-check-circle me-2"></i> ${sessionScope.successMessage}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <c:remove var="successMessage" scope="session" />
+        </c:if>
+
+        <c:if test="${not empty sessionScope.errorMessage}">
+            <div class="alert alert-custom alert-danger alert-dismissible fade show mb-4" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i> ${sessionScope.errorMessage}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <c:remove var="errorMessage" scope="session" />
+        </c:if>
+
         <!-- Wishlists Grid -->
         <c:choose>
-            <c:when test="${empty wishlists or not empty requestScope['org.apache.jasper.JspRuntimeException']}">
+            <c:when test="${empty wishlists}">
                 <div class="card">
                     <div class="card-body empty-state">
                         <i class="fas fa-heart-broken"></i>
@@ -65,12 +166,7 @@
             </c:when>
             <c:otherwise>
                 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                    <c:forEach var="wishlist" items="${wishlists}" varStatus="status">
-                        <%
-                        // Additional safety check
-                        Wishlist currentWishlist = (Wishlist) pageContext.getAttribute("wishlist");
-                        if (currentWishlist != null) {
-                        %>
+                    <c:forEach var="wishlist" items="${wishlists}">
                         <div class="col">
                             <div class="card wishlist-card">
                                 <div class="card-body">
@@ -98,11 +194,7 @@
                                     <p class="card-text">
                                         <small class="text-muted">
                                             <i class="fas fa-calendar-alt me-1"></i> Created:
-                                            <%
-                                            // Manual date formatting to avoid JSTL formatting issues
-                                            SimpleDateFormat sdf = new SimpleDateFormat("MMM d, yyyy");
-                                            out.print(sdf.format(currentWishlist.getCreatedDate()));
-                                            %>
+                                            <fmt:formatDate value="${wishlist.createdDate}" pattern="MMM d, yyyy" />
                                         </small>
                                     </p>
                                     <p class="card-text">
@@ -149,7 +241,6 @@
                                 </div>
                             </div>
                         </div>
-                        <% } %>
                     </c:forEach>
                 </div>
             </c:otherwise>

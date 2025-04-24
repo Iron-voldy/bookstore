@@ -101,6 +101,8 @@ public class WishlistItemServlet extends HttpServlet {
 
                 if (added) {
                     session.setAttribute("successMessage", book.getTitle() + " added to your wishlist");
+                    // Update wishlist count in session
+                    session.setAttribute("wishlistCount", wishlistManager.getTotalUserWishlistItemsCount(userId));
                 } else {
                     session.setAttribute("errorMessage", "Failed to add book to wishlist");
                 }
@@ -210,6 +212,8 @@ public class WishlistItemServlet extends HttpServlet {
 
                 if (removed) {
                     session.setAttribute("successMessage", book.getTitle() + " removed from wishlist");
+                    // Update wishlist count in session
+                    session.setAttribute("wishlistCount", wishlistManager.getTotalUserWishlistItemsCount(userId));
                 } else {
                     session.setAttribute("errorMessage", "Failed to remove book from wishlist");
                 }
@@ -335,6 +339,8 @@ public class WishlistItemServlet extends HttpServlet {
 
                 if (added) {
                     session.setAttribute("successMessage", book.getTitle() + " added to wishlist");
+                    // Update wishlist count in session
+                    session.setAttribute("wishlistCount", wishlistManager.getTotalUserWishlistItemsCount(userId));
                     response.sendRedirect(request.getContextPath() + "/wishlists?action=view&id=" + wishlistId);
                 } else {
                     session.setAttribute("errorMessage", "Failed to add book to wishlist");
