@@ -148,6 +148,115 @@
         .rating i {
             color: gold;
         }
+
+        :root {
+            --primary-dark: #0a0a0f;           /* Deeper, richer dark background */
+            --secondary-dark: #121218;         /* Slightly lighter than primary */
+            --accent-color: #8a5cf5;           /* Vibrant purple accent */
+            --accent-hover: #6e46c9;           /* Darker shade for hover */
+            --text-primary: #e6e6e6;           /* Softer white for text */
+            --text-secondary: #a0a0b0;         /* Muted gray for secondary text */
+            --danger-color: #d64045;           /* Bright red for danger actions */
+            --success-color: #4caf50;          /* Green for success */
+            --warning-color: #ff9800;          /* Orange for warnings */
+            --card-bg: #1a1a22;                /* Rich, deep card background */
+            --border-color: #2a2a36;           /* Subtle border color */
+            --gradient-bg: linear-gradient(
+                135deg,
+                var(--primary-dark) 0%,
+                var(--secondary-dark) 100%
+            );
+        }
+
+        body {
+            background: var(--gradient-bg);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow:
+                0 8px 16px rgba(0, 0, 0, 0.2),
+                0 4px 8px rgba(138, 92, 245, 0.1);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .book-card {
+            transform: translateY(0);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .book-card:hover {
+            transform: translateY(-10px);
+            box-shadow:
+                0 12px 24px rgba(0, 0, 0, 0.3),
+                0 6px 12px rgba(138, 92, 245, 0.2);
+        }
+
+        .book-cover {
+            height: 250px;
+            object-fit: cover;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .book-card:hover .book-cover {
+            transform: scale(1.05);
+        }
+
+        .card-body {
+            background: linear-gradient(
+                to bottom,
+                rgba(26, 26, 34, 0.9) 0%,
+                rgba(26, 26, 34, 1) 100%
+            );
+        }
+
+        .priority-badge {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        /* Enhanced priority colors */
+        .priority-1 {
+            background-color: #4a4a4a;
+            color: #b0b0b0;
+        }
+        .priority-2 {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .priority-3 {
+            background-color: #198754;
+            color: white;
+        }
+        .priority-4 {
+            background-color: #fd7e14;
+            color: white;
+        }
+        .priority-5 {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .empty-state {
+            background: linear-gradient(
+                to bottom right,
+                var(--card-bg) 0%,
+                rgba(26, 26, 34, 0.8) 100%
+            );
+            border-radius: 12px;
+        }
     </style>
 </head>
 <body>

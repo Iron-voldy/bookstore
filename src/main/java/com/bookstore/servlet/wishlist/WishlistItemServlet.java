@@ -13,6 +13,7 @@ import com.bookstore.model.book.Book;
 import com.bookstore.model.book.BookManager;
 import com.bookstore.model.wishlist.Wishlist;
 import com.bookstore.model.wishlist.WishlistManager;
+import com.bookstore.model.wishlist.WishlistItem;
 
 /**
  * Servlet for managing wishlist items (add, update, remove)
@@ -20,393 +21,391 @@ import com.bookstore.model.wishlist.WishlistManager;
 @WebServlet("/wishlist-item")
 public class WishlistItemServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
+    private static final boolean DEBUG = true;
 
     /**
-     * Handle GET requests - add book to wishlist from book details page
+     * Validate user is logged in
      */
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+    private boolean isUserLoggedIn(HttpSession session) {
+        return session != null && session.getAttribute("userId") != null;
+    }
 
-        System.out.println("WishlistItemServlet: doGet called with action=" + request.getParameter("action"));
+    /**
+     * Redirect to login page
+     */
+    private void redirectToLogin(HttpSession session, HttpServletResponse response,
+                                 HttpServletRequest request) throws IOException {
+        log("User not logged in, redirecting to login", DEBUG);
+        session.setAttribute("errorMessage", "Please log in to manage wishlist items");
+        response.sendRedirect(request.getContextPath() + "/login");
+    }
 
-        // Check if user is logged in
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
-            // Redirect to login page
-            if (session != null) {
-                session.setAttribute("errorMessage", "Please log in to manage your wishlist");
-            }
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
+    /**
+     * Set error message and redirect
+     */
+    private void setErrorAndRedirect(HttpSession session, String message,
+                                     String redirectUrl, HttpServletResponse response)
+            throws IOException {
+        session.setAttribute("errorMessage", message);
+        response.sendRedirect(redirectUrl);
+    }
 
-        String userId = (String) session.getAttribute("userId");
-        System.out.println("WishlistItemServlet: User ID = " + userId);
+    /**
+     * Validate wishlist and book IDs
+     */
+    private boolean isInvalidInput(String wishlistId, String bookId) {
+        return wishlistId == null || wishlistId.trim().isEmpty() ||
+                bookId == null || bookId.trim().isEmpty();
+    }
 
-        // Get action parameter
-        String action = request.getParameter("action");
-        if (action == null) {
-            response.sendRedirect(request.getContextPath() + "/wishlists");
-            return;
-        }
-
-        // Get book ID
-        String bookId = request.getParameter("bookId");
-        if (bookId == null || bookId.trim().isEmpty()) {
-            session.setAttribute("errorMessage", "Invalid book ID");
-            response.sendRedirect(request.getContextPath() + "/books");
-            return;
-        }
-
-        System.out.println("WishlistItemServlet: Book ID = " + bookId);
-
-        // Check if book exists
-        BookManager bookManager = new BookManager(getServletContext());
-        Book book = bookManager.getBookById(bookId);
-        if (book == null) {
-            session.setAttribute("errorMessage", "Book not found");
-            response.sendRedirect(request.getContextPath() + "/books");
-            return;
-        }
-
-        System.out.println("WishlistItemServlet: Book found: " + book.getTitle());
-
-        // Initialize WishlistManager
-        WishlistManager wishlistManager = new WishlistManager(getServletContext());
-
-        switch (action) {
-            case "add":
-                // If it's a quick add, get default wishlist or create one
-                Wishlist defaultWishlist = wishlistManager.getDefaultWishlist(userId);
-                if (defaultWishlist == null) {
-                    session.setAttribute("errorMessage", "Could not find or create default wishlist");
-                    response.sendRedirect(request.getContextPath() + "/book-details?id=" + bookId);
-                    return;
-                }
-
-                // Check if book is already in the wishlist
-                if (wishlistManager.isBookInWishlist(defaultWishlist.getWishlistId(), bookId)) {
-                    session.setAttribute("infoMessage", book.getTitle() + " is already in your wishlist");
-                    response.sendRedirect(request.getContextPath() + "/book-details?id=" + bookId);
-                    return;
-                }
-
-                // Add book to wishlist with default values
-                boolean added = wishlistManager.addBookToWishlist(
-                        defaultWishlist.getWishlistId(),
-                        bookId,
-                        "", // No notes
-                        3); // Medium priority
-
-                if (added) {
-                    session.setAttribute("successMessage", book.getTitle() + " added to your wishlist");
-                    // Update wishlist count in session
-                    session.setAttribute("wishlistCount", wishlistManager.getTotalUserWishlistItemsCount(userId));
-                } else {
-                    session.setAttribute("errorMessage", "Failed to add book to wishlist");
-                }
-
-                // Redirect back to book details
-                response.sendRedirect(request.getContextPath() + "/book-details?id=" + bookId);
-                break;
-
-            case "select-wishlist":
-                // Get user wishlists
-                List<Wishlist> userWishlists = wishlistManager.getUserWishlists(userId);
-                System.out.println("WishlistItemServlet: Found " + userWishlists.size() + " wishlists for user");
-
-                // Create default wishlist if none exist
-                if (userWishlists.isEmpty()) {
-                    String wishlistId = wishlistManager.createWishlist(userId, "My Wishlist", "Default wishlist", false);
-                    if (wishlistId != null) {
-                        userWishlists = wishlistManager.getUserWishlists(userId);
-                        System.out.println("WishlistItemServlet: Created default wishlist");
-                    }
-                }
-
-                // Set request attributes for JSP
-                request.setAttribute("wishlists", userWishlists);
-                request.setAttribute("book", book);
-
-                System.out.println("WishlistItemServlet: Book title = " + book.getTitle());
-                System.out.println("WishlistItemServlet: Book cover = " + book.getCoverImagePath());
-                System.out.println("WishlistItemServlet: Forwarding to select-wishlist.jsp");
-
-                // Forward to select wishlist page
-                request.getRequestDispatcher("/wishlist/select-wishlist.jsp").forward(request, response);
-                break;
-
-            case "edit":
-                String wishlistId = request.getParameter("wishlistId");
-                if (wishlistId == null || wishlistId.trim().isEmpty()) {
-                    session.setAttribute("errorMessage", "Invalid wishlist ID");
-                    response.sendRedirect(request.getContextPath() + "/wishlists");
-                    return;
-                }
-
-                // Get wishlist
-                Wishlist wishlist = wishlistManager.getWishlist(wishlistId);
-                if (wishlist == null) {
-                    session.setAttribute("errorMessage", "Wishlist not found");
-                    response.sendRedirect(request.getContextPath() + "/wishlists");
-                    return;
-                }
-
-                // Check if user owns this wishlist
-                if (!wishlist.getUserId().equals(userId)) {
-                    session.setAttribute("errorMessage", "You do not have permission to edit this wishlist");
-                    response.sendRedirect(request.getContextPath() + "/wishlists");
-                    return;
-                }
-
-                // Check if book is in wishlist
-                if (!wishlistManager.isBookInWishlist(wishlistId, bookId)) {
-                    session.setAttribute("errorMessage", "Book is not in this wishlist");
-                    response.sendRedirect(request.getContextPath() + "/wishlists?action=view&id=" + wishlistId);
-                    return;
-                }
-
-                // Get wishlist items
-                request.setAttribute("wishlist", wishlist);
-                request.setAttribute("book", book);
-
-                // Get current notes and priority for this item
-                for (com.bookstore.model.wishlist.WishlistItem item : wishlistManager.getWishlistItems(wishlistId)) {
-                    if (item.getBookId().equals(bookId)) {
-                        request.setAttribute("notes", item.getNotes());
-                        request.setAttribute("priority", item.getPriority());
-                        break;
-                    }
-                }
-
-                // Forward to edit item page
-                request.getRequestDispatcher("/wishlist/edit-item.jsp").forward(request, response);
-                break;
-
-            case "remove":
-                wishlistId = request.getParameter("wishlistId");
-                if (wishlistId == null || wishlistId.trim().isEmpty()) {
-                    session.setAttribute("errorMessage", "Invalid wishlist ID");
-                    response.sendRedirect(request.getContextPath() + "/wishlists");
-                    return;
-                }
-
-                // Get wishlist
-                wishlist = wishlistManager.getWishlist(wishlistId);
-                if (wishlist == null) {
-                    session.setAttribute("errorMessage", "Wishlist not found");
-                    response.sendRedirect(request.getContextPath() + "/wishlists");
-                    return;
-                }
-
-                // Check if user owns this wishlist
-                if (!wishlist.getUserId().equals(userId)) {
-                    session.setAttribute("errorMessage", "You do not have permission to modify this wishlist");
-                    response.sendRedirect(request.getContextPath() + "/wishlists");
-                    return;
-                }
-
-                // Remove book from wishlist
-                boolean removed = wishlistManager.removeBookFromWishlist(wishlistId, bookId);
-
-                if (removed) {
-                    session.setAttribute("successMessage", book.getTitle() + " removed from wishlist");
-                    // Update wishlist count in session
-                    session.setAttribute("wishlistCount", wishlistManager.getTotalUserWishlistItemsCount(userId));
-                } else {
-                    session.setAttribute("errorMessage", "Failed to remove book from wishlist");
-                }
-
-                // Redirect to wishlist view
-                response.sendRedirect(request.getContextPath() + "/wishlists?action=view&id=" + wishlistId);
-                break;
-
-            default:
-                // Invalid action, redirect to wishlists
-                response.sendRedirect(request.getContextPath() + "/wishlists");
-                break;
+    /**
+     * Validate and parse priority
+     */
+    private int validatePriority(String priorityStr) {
+        try {
+            int priority = Integer.parseInt(priorityStr);
+            // Ensure priority is between 1 and 5
+            return Math.max(1, Math.min(5, priority));
+        } catch (NumberFormatException e) {
+            // Default to medium priority
+            return 3;
         }
     }
 
     /**
-     * Handle POST requests - process wishlist item actions
+     * Logging utility method
+     */
+    private void log(String message, boolean debug) {
+        if (debug) {
+            System.out.println("[WishlistItemServlet] " + message);
+        }
+    }
+
+    /**
+     * Handle GET requests - manage different actions for wishlist items
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        log("WishlistItemServlet: doGet method called", DEBUG);
+
+        // Check if user is logged in
+        HttpSession session = request.getSession(false);
+        if (!isUserLoggedIn(session)) {
+            redirectToLogin(session, response, request);
+            return;
+        }
+
+        // Get essential parameters
+        String userId = (String) session.getAttribute("userId");
+        String action = request.getParameter("action");
+        String wishlistId = request.getParameter("wishlistId");
+        String bookId = request.getParameter("bookId");
+
+        // Log input parameters
+        log("Action: " + action, DEBUG);
+        log("WishlistId: " + wishlistId, DEBUG);
+        log("BookId: " + bookId, DEBUG);
+
+        try {
+            // Handle remove action
+            if ("remove".equals(action)) {
+                handleRemoveAction(request, response, session, userId, wishlistId, bookId);
+                return;
+            }
+
+            // Handle edit action
+            if ("edit".equals(action)) {
+                handleEditAction(request, response, session, userId, wishlistId, bookId);
+                return;
+            }
+
+            // Unsupported action
+            log("Unsupported GET action: " + action, DEBUG);
+            response.sendRedirect(request.getContextPath() + "/wishlists");
+
+        } catch (Exception e) {
+            log("Error in doGet: " + e.getMessage(), true);
+            e.printStackTrace();
+            session.setAttribute("errorMessage", "An unexpected error occurred");
+            response.sendRedirect(request.getContextPath() + "/wishlists");
+        }
+    }
+
+    /**
+     * Handle POST requests - add or update wishlist items
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
-        System.out.println("WishlistItemServlet: doPost called with action=" + request.getParameter("action"));
+        log("WishlistItemServlet: doPost method called", DEBUG);
 
         // Check if user is logged in
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("userId") == null) {
-            // Redirect to login page
-            if (session != null) {
-                session.setAttribute("errorMessage", "Please log in to manage your wishlist");
-            }
-            response.sendRedirect(request.getContextPath() + "/login");
+        if (!isUserLoggedIn(session)) {
+            redirectToLogin(session, response, request);
             return;
         }
 
+        // Get essential parameters
         String userId = (String) session.getAttribute("userId");
-        System.out.println("WishlistItemServlet doPost: User ID = " + userId);
-
-        // Get action parameter
         String action = request.getParameter("action");
-        if (action == null) {
+        String wishlistId = request.getParameter("wishlistId");
+        String bookId = request.getParameter("bookId");
+
+        // Log input parameters
+        log("Action: " + action, DEBUG);
+        log("WishlistId: " + wishlistId, DEBUG);
+        log("BookId: " + bookId, DEBUG);
+
+        try {
+            // Handle update action
+            if ("update".equals(action)) {
+                handleUpdateAction(request, response, session, userId, wishlistId, bookId);
+                return;
+            }
+
+            // Handle add to selected wishlist action
+            if ("add-to-selected".equals(action)) {
+                handleAddToSelectedAction(request, response, session, userId, wishlistId, bookId);
+                return;
+            }
+
+            // Unsupported action
+            log("Unsupported POST action: " + action, DEBUG);
             response.sendRedirect(request.getContextPath() + "/wishlists");
+
+        } catch (Exception e) {
+            log("Error in doPost: " + e.getMessage(), true);
+            e.printStackTrace();
+            session.setAttribute("errorMessage", "An unexpected error occurred");
+            response.sendRedirect(request.getContextPath() + "/wishlists");
+        }
+    }
+
+    /**
+     * Handle remove action for a wishlist item
+     */
+    private void handleRemoveAction(HttpServletRequest request, HttpServletResponse response,
+                                    HttpSession session, String userId,
+                                    String wishlistId, String bookId)
+            throws ServletException, IOException {
+        // Validate inputs
+        if (isInvalidInput(wishlistId, bookId)) {
+            setErrorAndRedirect(session, "Invalid wishlist or book information",
+                    request.getContextPath() + "/wishlists", response);
             return;
         }
 
-        // Initialize WishlistManager
+        // Initialize managers
+        WishlistManager wishlistManager = new WishlistManager(getServletContext());
+        BookManager bookManager = new BookManager(getServletContext());
+
+        // Get wishlist
+        Wishlist wishlist = wishlistManager.getWishlist(wishlistId);
+        if (wishlist == null || !wishlist.getUserId().equals(userId)) {
+            setErrorAndRedirect(session, "You cannot modify this wishlist",
+                    request.getContextPath() + "/wishlists", response);
+            return;
+        }
+
+        // Retrieve book (for success message)
+        Book book = bookManager.getBookById(bookId);
+        String bookTitle = book != null ? book.getTitle() : "the book";
+
+        // Remove book from wishlist
+        boolean removed = wishlistManager.removeBookFromWishlist(wishlistId, bookId);
+
+        if (removed) {
+            log("Book removed from wishlist successfully", DEBUG);
+            session.setAttribute("successMessage", bookTitle + " removed from wishlist");
+
+            // Check if wishlist has items, if not, redirect to wishlists
+            if (wishlistManager.getWishlistItems(wishlistId).isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/wishlists");
+            } else {
+                response.sendRedirect(request.getContextPath() +
+                        "/wishlists?action=view&id=" + wishlistId);
+            }
+        } else {
+            log("Failed to remove book from wishlist", DEBUG);
+            setErrorAndRedirect(session, "Failed to remove book from wishlist",
+                    request.getContextPath() + "/wishlists?action=view&id=" + wishlistId, response);
+        }
+    }
+
+    /**
+     * Handle edit action for a wishlist item
+     */
+    private void handleEditAction(HttpServletRequest request, HttpServletResponse response,
+                                  HttpSession session, String userId,
+                                  String wishlistId, String bookId)
+            throws ServletException, IOException {
+        // Validate inputs
+        if (isInvalidInput(wishlistId, bookId)) {
+            setErrorAndRedirect(session, "Invalid wishlist or book information",
+                    request.getContextPath() + "/wishlists", response);
+            return;
+        }
+
+        // Initialize managers
+        WishlistManager wishlistManager = new WishlistManager(getServletContext());
+        BookManager bookManager = new BookManager(getServletContext());
+
+        // Get wishlist
+        Wishlist wishlist = wishlistManager.getWishlist(wishlistId);
+        if (wishlist == null || !wishlist.getUserId().equals(userId)) {
+            setErrorAndRedirect(session, "You cannot modify this wishlist",
+                    request.getContextPath() + "/wishlists", response);
+            return;
+        }
+
+        // Get book
+        Book book = bookManager.getBookById(bookId);
+        if (book == null) {
+            setErrorAndRedirect(session, "Book not found",
+                    request.getContextPath() + "/wishlists?action=view&id=" + wishlistId, response);
+            return;
+        }
+
+        // Find wishlist item
+        WishlistItem itemToEdit = findWishlistItem(wishlistManager, wishlistId, bookId);
+        if (itemToEdit == null) {
+            setErrorAndRedirect(session, "Wishlist item not found",
+                    request.getContextPath() + "/wishlists?action=view&id=" + wishlistId, response);
+            return;
+        }
+
+        // Set attributes for edit page
+        request.setAttribute("wishlist", wishlist);
+        request.setAttribute("book", book);
+        request.setAttribute("notes", itemToEdit.getNotes());
+        request.setAttribute("priority", itemToEdit.getPriority());
+
+        // Forward to edit page
+        request.getRequestDispatcher("/wishlist/edit-item.jsp").forward(request, response);
+    }
+
+    /**
+     * Handle update action for a wishlist item
+     */
+    private void handleUpdateAction(HttpServletRequest request, HttpServletResponse response,
+                                    HttpSession session, String userId,
+                                    String wishlistId, String bookId)
+            throws ServletException, IOException {
+        // Validate inputs
+        if (isInvalidInput(wishlistId, bookId)) {
+            setErrorAndRedirect(session, "Invalid wishlist or book information",
+                    request.getContextPath() + "/wishlists", response);
+            return;
+        }
+
+        // Initialize managers
         WishlistManager wishlistManager = new WishlistManager(getServletContext());
 
-        switch (action) {
-            case "add-to-selected":
-                // Get form parameters
-                String wishlistId = request.getParameter("wishlistId");
-                String bookId = request.getParameter("bookId");
-                String notes = request.getParameter("notes");
-                String priorityStr = request.getParameter("priority");
-
-                System.out.println("WishlistItemServlet add-to-selected: Wishlist ID = " + wishlistId);
-                System.out.println("WishlistItemServlet add-to-selected: Book ID = " + bookId);
-                System.out.println("WishlistItemServlet add-to-selected: Priority = " + priorityStr);
-
-                // Validate input
-                if (wishlistId == null || wishlistId.trim().isEmpty() ||
-                        bookId == null || bookId.trim().isEmpty()) {
-                    session.setAttribute("errorMessage", "Invalid wishlist or book ID");
-                    response.sendRedirect(request.getContextPath() + "/wishlists");
-                    return;
-                }
-
-                // Parse priority
-                int priority = 3; // Default to medium
-                if (priorityStr != null && !priorityStr.trim().isEmpty()) {
-                    try {
-                        priority = Integer.parseInt(priorityStr);
-                        // Ensure priority is between 1-5
-                        if (priority < 1) priority = 1;
-                        if (priority > 5) priority = 5;
-                    } catch (NumberFormatException e) {
-                        // Use default
-                    }
-                }
-
-                // Get wishlist
-                Wishlist wishlist = wishlistManager.getWishlist(wishlistId);
-                if (wishlist == null) {
-                    // If wishlist doesn't exist, create default
-                    System.out.println("WishlistItemServlet: Wishlist not found, creating default");
-                    wishlistId = wishlistManager.createWishlist(userId, "My Wishlist", "Default wishlist", false);
-                    wishlist = wishlistManager.getWishlist(wishlistId);
-
-                    if (wishlist == null) {
-                        session.setAttribute("errorMessage", "Wishlist not found and could not create default");
-                        response.sendRedirect(request.getContextPath() + "/wishlists");
-                        return;
-                    }
-                }
-
-                // Check if user owns this wishlist
-                if (!wishlist.getUserId().equals(userId)) {
-                    session.setAttribute("errorMessage", "You do not have permission to modify this wishlist");
-                    response.sendRedirect(request.getContextPath() + "/wishlists");
-                    return;
-                }
-
-                // Check if book exists
-                BookManager bookManager = new BookManager(getServletContext());
-                Book book = bookManager.getBookById(bookId);
-                if (book == null) {
-                    session.setAttribute("errorMessage", "Book not found");
-                    response.sendRedirect(request.getContextPath() + "/wishlists");
-                    return;
-                }
-
-                // Check if book is already in the wishlist
-                if (wishlistManager.isBookInWishlist(wishlistId, bookId)) {
-                    session.setAttribute("infoMessage", book.getTitle() + " is already in this wishlist");
-                    response.sendRedirect(request.getContextPath() + "/wishlists?action=view&id=" + wishlistId);
-                    return;
-                }
-
-                // Add book to wishlist
-                boolean added = wishlistManager.addBookToWishlist(wishlistId, bookId, notes, priority);
-                System.out.println("WishlistItemServlet: Book added to wishlist: " + added);
-
-                if (added) {
-                    session.setAttribute("successMessage", book.getTitle() + " added to wishlist");
-                    // Update wishlist count in session
-                    session.setAttribute("wishlistCount", wishlistManager.getTotalUserWishlistItemsCount(userId));
-                    response.sendRedirect(request.getContextPath() + "/wishlists?action=view&id=" + wishlistId);
-                } else {
-                    session.setAttribute("errorMessage", "Failed to add book to wishlist");
-                    response.sendRedirect(request.getContextPath() + "/book-details?id=" + bookId);
-                }
-                break;
-
-            case "update":
-                // Get form parameters
-                wishlistId = request.getParameter("wishlistId");
-                bookId = request.getParameter("bookId");
-                notes = request.getParameter("notes");
-                priorityStr = request.getParameter("priority");
-
-                // Validate input
-                if (wishlistId == null || wishlistId.trim().isEmpty() ||
-                        bookId == null || bookId.trim().isEmpty()) {
-                    session.setAttribute("errorMessage", "Invalid wishlist or book ID");
-                    response.sendRedirect(request.getContextPath() + "/wishlists");
-                    return;
-                }
-
-                // Parse priority (default to 3 - Medium if missing or invalid)
-                priority = 3;
-                if (priorityStr != null && !priorityStr.trim().isEmpty()) {
-                    try {
-                        priority = Integer.parseInt(priorityStr);
-                        if (priority < 1) priority = 1;
-                        if (priority > 5) priority = 5;
-                    } catch (NumberFormatException e) {
-                        // Keep default value
-                    }
-                }
-
-                // Get wishlist
-                wishlist = wishlistManager.getWishlist(wishlistId);
-                if (wishlist == null) {
-                    session.setAttribute("errorMessage", "Wishlist not found");
-                    response.sendRedirect(request.getContextPath() + "/wishlists");
-                    return;
-                }
-
-                // Check if user owns this wishlist
-                if (!wishlist.getUserId().equals(userId)) {
-                    session.setAttribute("errorMessage", "You do not have permission to modify this wishlist");
-                    response.sendRedirect(request.getContextPath() + "/wishlists");
-                    return;
-                }
-
-                // Update wishlist item
-                boolean updated = wishlistManager.updateWishlistItem(wishlistId, bookId, notes, priority);
-
-                if (updated) {
-                    session.setAttribute("successMessage", "Wishlist item updated successfully");
-                } else {
-                    session.setAttribute("errorMessage", "Failed to update wishlist item");
-                }
-
-                // Redirect back to wishlist view
-                response.sendRedirect(request.getContextPath() + "/wishlists?action=view&id=" + wishlistId);
-                break;
-
-            default:
-                // Invalid action, redirect to wishlists
-                response.sendRedirect(request.getContextPath() + "/wishlists");
-                break;
+        // Get wishlist
+        Wishlist wishlist = wishlistManager.getWishlist(wishlistId);
+        if (wishlist == null || !wishlist.getUserId().equals(userId)) {
+            setErrorAndRedirect(session, "You cannot modify this wishlist",
+                    request.getContextPath() + "/wishlists", response);
+            return;
         }
+
+        // Get input parameters
+        String notes = request.getParameter("notes");
+        String priorityStr = request.getParameter("priority");
+
+        // Validate and parse priority
+        int priority = validatePriority(priorityStr);
+
+        // Update wishlist item
+        boolean updated = wishlistManager.updateWishlistItem(
+                wishlistId, bookId, notes, priority
+        );
+
+        if (updated) {
+            log("Wishlist item updated successfully", DEBUG);
+            session.setAttribute("successMessage", "Wishlist item updated successfully");
+        } else {
+            log("Failed to update wishlist item", DEBUG);
+            session.setAttribute("errorMessage", "Failed to update wishlist item");
+        }
+
+        // Redirect back to wishlist view
+        response.sendRedirect(request.getContextPath() +
+                "/wishlists?action=view&id=" + wishlistId);
+    }
+
+    /**
+     * Handle adding a book to a selected wishlist
+     */
+    private void handleAddToSelectedAction(HttpServletRequest request, HttpServletResponse response,
+                                           HttpSession session, String userId,
+                                           String wishlistId, String bookId)
+            throws ServletException, IOException {
+        // Validate inputs
+        if (isInvalidInput(wishlistId, bookId)) {
+            setErrorAndRedirect(session, "Invalid wishlist or book information",
+                    request.getContextPath() + "/wishlists", response);
+            return;
+        }
+
+        // Initialize managers
+        WishlistManager wishlistManager = new WishlistManager(getServletContext());
+        BookManager bookManager = new BookManager(getServletContext());
+
+        // Get wishlist
+        Wishlist wishlist = wishlistManager.getWishlist(wishlistId);
+        if (wishlist == null || !wishlist.getUserId().equals(userId)) {
+            setErrorAndRedirect(session, "You cannot modify this wishlist",
+                    request.getContextPath() + "/wishlists", response);
+            return;
+        }
+
+        // Get input parameters
+        String notes = request.getParameter("notes");
+        String priorityStr = request.getParameter("priority");
+
+        // Validate and parse priority
+        int priority = validatePriority(priorityStr);
+
+        // Check if book exists
+        Book book = bookManager.getBookById(bookId);
+        if (book == null) {
+            setErrorAndRedirect(session, "Book not found",
+                    request.getContextPath() + "/books", response);
+            return;
+        }
+
+        // Add book to wishlist
+        boolean added = wishlistManager.addBookToWishlist(
+                wishlistId, bookId, notes, priority
+        );
+
+        if (added) {
+            log("Book added to wishlist successfully", DEBUG);
+            session.setAttribute("successMessage",
+                    book.getTitle() + " added to " + wishlist.getName());
+            response.sendRedirect(request.getContextPath() +
+                    "/wishlists?action=view&id=" + wishlistId);
+        } else {
+            log("Failed to add book to wishlist", DEBUG);
+            session.setAttribute("errorMessage", "Failed to add book to wishlist");
+            response.sendRedirect(request.getContextPath() + "/books");
+        }
+    }
+
+    /**
+     * Find a specific wishlist item
+     */
+    private WishlistItem findWishlistItem(WishlistManager wishlistManager,
+                                          String wishlistId, String bookId) {
+        List<WishlistItem> items = wishlistManager.getWishlistItems(wishlistId);
+        for (WishlistItem item : items) {
+            if (item.getBookId().equals(bookId)) {
+                return item;
+            }
+        }
+        return null;
     }
 }
