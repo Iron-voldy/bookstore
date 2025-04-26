@@ -1,7 +1,8 @@
-<!-- File: src/main/webapp/wishlist/edit-item.jsp -->
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page import="com.bookstore.model.book.Book" %>
+<%@ page import="com.bookstore.model.wishlist.Wishlist" %>
+<%@ page import="com.bookstore.model.wishlist.WishlistItem" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -149,6 +150,22 @@
     </style>
 </head>
 <body>
+    <%
+        // Access the data directly with scriptlets for debugging
+        Book book = (Book) request.getAttribute("book");
+        Wishlist wishlist = (Wishlist) request.getAttribute("wishlist");
+        String notes = (String) request.getAttribute("notes");
+        Integer priority = (Integer) request.getAttribute("priority");
+
+        if (priority == null) priority = 3; // Default to medium if not set
+
+        // Debug output
+        System.out.println("JSP Debug - Book: " + (book != null ? book.getTitle() : "null"));
+        System.out.println("JSP Debug - Wishlist: " + (wishlist != null ? wishlist.getName() : "null"));
+        System.out.println("JSP Debug - Notes: " + notes);
+        System.out.println("JSP Debug - Priority: " + priority);
+    %>
+
     <!-- Include Header -->
     <jsp:include page="../includes/header.jsp" />
 
@@ -157,9 +174,13 @@
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb" class="mb-4">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/">Home</a></li>
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/wishlists">My Wishlists</a></li>
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/wishlists?action=view&id=${wishlist.wishlistId}">${wishlist.name}</a></li>
+                <li class="breadcrumb-item"><a href="<%=request.getContextPath()%>/">Home</a></li>
+                <li class="breadcrumb-item"><a href="<%=request.getContextPath()%>/wishlists">My Wishlists</a></li>
+                <li class="breadcrumb-item">
+                    <a href="<%=request.getContextPath()%>/wishlists?action=view&id=<%=wishlist != null ? wishlist.getWishlistId() : ""%>">
+                        <%=wishlist != null ? wishlist.getName() : "Wishlist"%>
+                    </a>
+                </li>
                 <li class="breadcrumb-item active" aria-current="page">Edit Item</li>
             </ol>
         </nav>
@@ -175,106 +196,119 @@
             <c:remove var="errorMessage" scope="session" />
         </c:if>
 
-        <!-- Book Information -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <img src="${pageContext.request.contextPath}/book-covers/${book.coverImagePath}"
-                         alt="${book.title}" class="book-cover me-4">
-                    <div class="book-details">
-                        <h3>${book.title}</h3>
-                        <p class="text-muted">by ${book.author}</p>
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="rating me-2">
-                                <c:forEach begin="1" end="5" var="i">
-                                    <c:choose>
-                                        <c:when test="${i <= book.averageRating}">
-                                            <i class="fas fa-star" style="color: gold;"></i>
-                                        </c:when>
-                                        <c:when test="${i <= book.averageRating + 0.5}">
-                                            <i class="fas fa-star-half-alt" style="color: gold;"></i>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <i class="far fa-star" style="color: gold;"></i>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </c:forEach>
+        <% if (book == null || wishlist == null) { %>
+            <div class="alert alert-custom alert-danger mb-4">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                Book or wishlist information is missing. Please go back and try again.
+            </div>
+            <div class="text-center mt-4">
+                <a href="<%=request.getContextPath()%>/wishlists" class="btn btn-outline-light">
+                    <i class="fas fa-arrow-left me-2"></i> Back to Wishlists
+                </a>
+            </div>
+        <% } else { %>
+            <!-- Book Information -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <img src="<%=request.getContextPath()%>/book-covers/<%=book.getCoverImagePath()%>"
+                             alt="<%=book.getTitle()%>" class="book-cover me-4">
+                        <div class="book-details">
+                            <h3><%=book.getTitle()%></h3>
+                            <p class="text-muted">by <%=book.getAuthor()%></p>
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rating me-2">
+                                    <%
+                                        double rating = book.getAverageRating();
+                                        for (int i = 1; i <= 5; i++) {
+                                            if (i <= rating) {
+                                    %>
+                                        <i class="fas fa-star" style="color: gold;"></i>
+                                    <% } else if (i <= rating + 0.5) { %>
+                                        <i class="fas fa-star-half-alt" style="color: gold;"></i>
+                                    <% } else { %>
+                                        <i class="far fa-star" style="color: gold;"></i>
+                                    <% } } %>
+                                </div>
+                                <span class="text-muted">(<%=book.getAverageRating()%>)</span>
                             </div>
-                            <span class="text-muted">(${book.averageRating})</span>
+                            <p class="price" style="color: var(--accent-color); font-weight: bold;">$<%=book.getPrice()%></p>
                         </div>
-                        <p class="price" style="color: var(--accent-color); font-weight: bold;">${book.price}</p>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Edit Wishlist Item Form -->
-        <div class="card">
-            <div class="card-body">
-                <form action="${pageContext.request.contextPath}/wishlist-item" method="post">
-                    <input type="hidden" name="action" value="update">
-                    <input type="hidden" name="wishlistId" value="${wishlist.wishlistId}">
-                    <input type="hidden" name="bookId" value="${book.id}">
+            <!-- Edit Wishlist Item Form -->
+            <div class="card">
+                <div class="card-body">
+                    <form action="<%=request.getContextPath()%>/wishlist-item" method="post">
+                        <input type="hidden" name="action" value="update">
+                        <input type="hidden" name="wishlistId" value="<%=wishlist.getWishlistId()%>">
+                        <input type="hidden" name="bookId" value="<%=book.getId()%>">
 
-                    <div class="mb-3">
-                        <label for="notes" class="form-label">Notes</label>
-                        <textarea class="form-control" id="notes" name="notes" rows="4"
-                                  placeholder="Add personal notes about this book">${notes}</textarea>
-                    </div>
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="4"
+                                     placeholder="Add personal notes about this book"><%=notes != null ? notes : ""%></textarea>
+                        </div>
 
-                    <div class="mb-4">
-                        <label class="form-label">Priority</label>
-                        <div class="d-flex flex-column">
-                            <div class="priority-indicator">
-                                <div class="d-flex">
-                                    <div class="priority-dot priority-1"
-                                         onclick="selectPriority(1)"
-                                         id="priority-dot-1"></div>
-                                    <div class="priority-dot priority-2"
-                                         onclick="selectPriority(2)"
-                                         id="priority-dot-2"></div>
-                                    <div class="priority-dot priority-3"
-                                         onclick="selectPriority(3)"
-                                         id="priority-dot-3"></div>
-                                    <div class="priority-dot priority-4"
-                                         onclick="selectPriority(4)"
-                                         id="priority-dot-4"></div>
-                                    <div class="priority-dot priority-5"
-                                         onclick="selectPriority(5)"
-                                         id="priority-dot-5"></div>
+                        <div class="mb-4">
+                            <label class="form-label">Priority</label>
+                            <div class="d-flex flex-column">
+                                <div class="priority-indicator">
+                                    <div class="d-flex">
+                                        <div class="priority-dot priority-1"
+                                             onclick="selectPriority(1)"
+                                             id="priority-dot-1"></div>
+                                        <div class="priority-dot priority-2"
+                                             onclick="selectPriority(2)"
+                                             id="priority-dot-2"></div>
+                                        <div class="priority-dot priority-3"
+                                             onclick="selectPriority(3)"
+                                             id="priority-dot-3"></div>
+                                        <div class="priority-dot priority-4"
+                                             onclick="selectPriority(4)"
+                                             id="priority-dot-4"></div>
+                                        <div class="priority-dot priority-5"
+                                             onclick="selectPriority(5)"
+                                             id="priority-dot-5"></div>
+                                    </div>
+                                    <div class="priority-label" id="priority-label">
+                                        <%
+                                        String priorityLabel = "Medium";
+                                        switch (priority) {
+                                            case 1: priorityLabel = "Very Low"; break;
+                                            case 2: priorityLabel = "Low"; break;
+                                            case 3: priorityLabel = "Medium"; break;
+                                            case 4: priorityLabel = "High"; break;
+                                            case 5: priorityLabel = "Very High"; break;
+                                        }
+                                        %>
+                                        <%=priorityLabel%>
+                                    </div>
                                 </div>
-                                <div class="priority-label" id="priority-label">
-                                    <c:choose>
-                                        <c:when test="${priority == 1}">Very Low</c:when>
-                                        <c:when test="${priority == 2}">Low</c:when>
-                                        <c:when test="${priority == 3}">Medium</c:when>
-                                        <c:when test="${priority == 4}">High</c:when>
-                                        <c:when test="${priority == 5}">Very High</c:when>
-                                        <c:otherwise>Medium</c:otherwise>
-                                    </c:choose>
-                                </div>
+                                <input type="hidden" id="priority" name="priority" value="<%=priority%>">
                             </div>
-                            <input type="hidden" id="priority" name="priority" value="${priority}">
                         </div>
-                    </div>
 
-                    <div class="d-flex justify-content-between">
-                        <a href="${pageContext.request.contextPath}/wishlists?action=view&id=${wishlist.wishlistId}" class="btn btn-outline-light">
-                            <i class="fas fa-arrow-left me-2"></i> Cancel
-                        </a>
-                        <div>
-                            <a href="${pageContext.request.contextPath}/wishlist-item?action=remove&wishlistId=${wishlist.wishlistId}&bookId=${book.id}"
-                               class="btn btn-outline-danger me-2">
-                                <i class="fas fa-trash-alt me-2"></i> Remove from Wishlist
+                        <div class="d-flex justify-content-between">
+                            <a href="<%=request.getContextPath()%>/wishlists?action=view&id=<%=wishlist.getWishlistId()%>" class="btn btn-outline-light">
+                                <i class="fas fa-arrow-left me-2"></i> Cancel
                             </a>
-                            <button type="submit" class="btn btn-accent">
-                                <i class="fas fa-save me-2"></i> Save Changes
-                            </button>
+                            <div>
+                                <a href="<%=request.getContextPath()%>/wishlist-item?action=remove&wishlistId=<%=wishlist.getWishlistId()%>&bookId=<%=book.getId()%>"
+                                   class="btn btn-outline-danger me-2">
+                                    <i class="fas fa-trash-alt me-2"></i> Remove from Wishlist
+                                </a>
+                                <button type="submit" class="btn btn-accent">
+                                    <i class="fas fa-save me-2"></i> Save Changes
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
-        </div>
+        <% } %>
     </div>
 
     <!-- Include Footer -->
@@ -284,7 +318,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Set initial priority
-            const initialPriority = ${priority};
+            const initialPriority = <%=priority%>;
             selectPriority(initialPriority);
         });
 
