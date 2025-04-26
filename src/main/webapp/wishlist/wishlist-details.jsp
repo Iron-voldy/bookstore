@@ -1,12 +1,17 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page import="java.util.Map" %>
+<%@ page import="java.util.Date" %>
+<%@ page import="java.text.SimpleDateFormat" %>
+<%@ page import="com.bookstore.model.book.Book" %>
+<%@ page import="com.bookstore.model.wishlist.Wishlist" %>
+<%@ page import="com.bookstore.model.wishlist.WishlistItem" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${wishlist.name} - BookVerse</title>
+    <title>Wishlist Details - BookVerse</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -146,6 +151,31 @@
     </style>
 </head>
 <body>
+    <%
+        // Get the wishlist from request attributes
+        Wishlist wishlist = (Wishlist)request.getAttribute("wishlist");
+        Map<WishlistItem, Book> wishlistItems = (Map<WishlistItem, Book>)request.getAttribute("wishlistItems");
+
+        // Format date
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM d, yyyy");
+        String formattedDate = "";
+        if (wishlist != null && wishlist.getCreatedDate() != null) {
+            formattedDate = dateFormat.format(wishlist.getCreatedDate());
+        }
+
+        // Debug information
+        System.out.println("JSP DEBUG: Wishlist attribute exists: " + (wishlist != null));
+        if (wishlist != null) {
+            System.out.println("JSP DEBUG: Wishlist name: " + wishlist.getName());
+            System.out.println("JSP DEBUG: Wishlist createdDate: " + wishlist.getCreatedDate());
+        }
+
+        System.out.println("JSP DEBUG: WishlistItems attribute exists: " + (wishlistItems != null));
+        if (wishlistItems != null) {
+            System.out.println("JSP DEBUG: Number of wishlist items: " + wishlistItems.size());
+        }
+    %>
+
     <!-- Include Header -->
     <jsp:include page="../includes/header.jsp" />
 
@@ -154,9 +184,9 @@
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb" class="mb-4">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/">Home</a></li>
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/wishlists">My Wishlists</a></li>
-                <li class="breadcrumb-item active" aria-current="page">${wishlist.name}</li>
+                <li class="breadcrumb-item"><a href="<%= request.getContextPath() %>/">Home</a></li>
+                <li class="breadcrumb-item"><a href="<%= request.getContextPath() %>/wishlists">My Wishlists</a></li>
+                <li class="breadcrumb-item active" aria-current="page"><%= wishlist != null ? wishlist.getName() : "Wishlist Details" %></li>
             </ol>
         </nav>
 
@@ -165,36 +195,31 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <h2 class="mb-2">${wishlist.name}</h2>
+                        <h2 class="mb-2"><%= wishlist != null ? wishlist.getName() : "Wishlist" %></h2>
                         <p class="text-muted mb-2">
-                            <c:choose>
-                                <c:when test="${not empty wishlist.description}">
-                                    ${wishlist.description}
-                                </c:when>
-                                <c:otherwise>
-                                    <span class="text-muted">No description</span>
-                                </c:otherwise>
-                            </c:choose>
+                            <% if (wishlist != null && wishlist.getDescription() != null && !wishlist.getDescription().isEmpty()) { %>
+                                <%= wishlist.getDescription() %>
+                            <% } else { %>
+                                <span class="text-muted">No description</span>
+                            <% } %>
                         </p>
                         <p class="mb-0">
                             <small class="text-muted">
                                 <i class="fas fa-calendar-alt me-1"></i> Created:
-                                <fmt:formatDate value="${wishlist.createdDate}" pattern="MMMM d, yyyy" />
+                                <%= formattedDate %>
                             </small>
                         </p>
                         <p class="mb-0">
-                            <c:choose>
-                                <c:when test="${wishlist.public}">
-                                    <span class="badge badge-public"><i class="fas fa-globe me-1"></i> Public</span>
-                                </c:when>
-                                <c:otherwise>
-                                    <span class="badge badge-private"><i class="fas fa-lock me-1"></i> Private</span>
-                                </c:otherwise>
-                            </c:choose>
+                            <% if (wishlist != null) { %>
+                                <span class="badge <%= wishlist.isPublic() ? "badge-public" : "badge-private" %>">
+                                    <i class="fas <%= wishlist.isPublic() ? "fa-globe" : "fa-lock" %> me-1"></i>
+                                    <%= wishlist.isPublic() ? "Public" : "Private" %>
+                                </span>
+                            <% } %>
                         </p>
                     </div>
                     <div>
-                        <a href="${pageContext.request.contextPath}/wishlists?action=edit&id=${wishlist.wishlistId}" class="btn btn-outline-light me-2">
+                        <a href="<%= request.getContextPath() %>/wishlists?action=edit&id=<%= wishlist != null ? wishlist.getWishlistId() : "" %>" class="btn btn-outline-light me-2">
                             <i class="fas fa-edit me-1"></i> Edit
                         </a>
                         <button type="button" class="btn btn-outline-danger"
@@ -207,125 +232,144 @@
         </div>
 
         <!-- Flash Messages -->
-        <c:if test="${not empty sessionScope.successMessage}">
+        <%
+            String successMessage = (String)session.getAttribute("successMessage");
+            if (successMessage != null && !successMessage.isEmpty()) {
+        %>
             <div class="alert alert-custom alert-success alert-dismissible fade show mb-4" role="alert">
-                <i class="fas fa-check-circle me-2"></i> ${sessionScope.successMessage}
+                <i class="fas fa-check-circle me-2"></i> <%= successMessage %>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-            <c:remove var="successMessage" scope="session" />
-        </c:if>
+        <%
+                session.removeAttribute("successMessage");
+            }
 
-        <c:if test="${not empty sessionScope.errorMessage}">
+            String errorMessage = (String)session.getAttribute("errorMessage");
+            if (errorMessage != null && !errorMessage.isEmpty()) {
+        %>
             <div class="alert alert-custom alert-danger alert-dismissible fade show mb-4" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i> ${sessionScope.errorMessage}
+                <i class="fas fa-exclamation-circle me-2"></i> <%= errorMessage %>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-            <c:remove var="errorMessage" scope="session" />
-        </c:if>
+        <%
+                session.removeAttribute("errorMessage");
+            }
+        %>
 
         <!-- Wishlist Items -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3><i class="fas fa-book me-2"></i> Items (${wishlist.itemCount})</h3>
-            <a href="${pageContext.request.contextPath}/books" class="btn btn-accent">
+            <h3><i class="fas fa-book me-2"></i> Items (<%= wishlist != null ? wishlist.getItemCount() : 0 %>)</h3>
+            <a href="<%= request.getContextPath() %>/books" class="btn btn-accent">
                 <i class="fas fa-plus me-2"></i> Add More Books
             </a>
         </div>
 
-        <c:choose>
-            <c:when test="${empty wishlistItems}">
-                <div class="card">
-                    <div class="card-body empty-state">
-                        <i class="fas fa-book-open"></i>
-                        <h4>No Books in Wishlist</h4>
-                        <p>Your wishlist is empty. Add books to your wishlist while browsing the store.</p>
-                        <a href="${pageContext.request.contextPath}/books" class="btn btn-accent mt-3">
-                            <i class="fas fa-search me-2"></i> Browse Books
-                        </a>
-                    </div>
+        <% if (wishlistItems == null || wishlistItems.isEmpty()) { %>
+            <div class="card">
+                <div class="card-body empty-state">
+                    <i class="fas fa-book-open"></i>
+                    <h4>No Books in Wishlist</h4>
+                    <p>Your wishlist is empty. Add books to your wishlist while browsing the store.</p>
+                    <a href="<%= request.getContextPath() %>/books" class="btn btn-accent mt-3">
+                        <i class="fas fa-search me-2"></i> Browse Books
+                    </a>
                 </div>
-            </c:when>
-            <c:otherwise>
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-                    <c:forEach var="entry" items="${wishlistItems}">
-                        <c:set var="item" value="${entry.key}" />
-                        <c:set var="book" value="${entry.value}" />
-                        <div class="col">
-                            <div class="card book-card">
-                                <c:choose>
-                                    <c:when test="${not empty book.coverImagePath}">
-                                        <img src="${pageContext.request.contextPath}/book-covers/${book.coverImagePath}" class="book-cover" alt="${book.title}">
-                                    </c:when>
-                                    <c:otherwise>
-                                        <img src="${pageContext.request.contextPath}/book-covers/default_cover.jpg" class="book-cover" alt="${book.title}">
-                                    </c:otherwise>
-                                </c:choose>
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <h5 class="card-title">${book.title}</h5>
-                                        <c:choose>
-                                            <c:when test="${item.priority == 5}">
-                                                <span class="badge priority-badge priority-5">Very High</span>
-                                            </c:when>
-                                            <c:when test="${item.priority == 4}">
-                                                <span class="badge priority-badge priority-4">High</span>
-                                            </c:when>
-                                            <c:when test="${item.priority == 3}">
-                                                <span class="badge priority-badge priority-3">Medium</span>
-                                            </c:when>
-                                            <c:when test="${item.priority == 2}">
-                                                <span class="badge priority-badge priority-2">Low</span>
-                                            </c:when>
-                                            <c:when test="${item.priority == 1}">
-                                                <span class="badge priority-badge priority-1">Very Low</span>
-                                            </c:when>
-                                        </c:choose>
-                                    </div>
-                                    <p class="card-text text-muted small">by ${book.author}</p>
+            </div>
+        <% } else { %>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+                <% for (Map.Entry<WishlistItem, Book> entry : wishlistItems.entrySet()) {
+                    WishlistItem item = entry.getKey();
+                    Book book = entry.getValue();
 
-                                    <div class="rating small mb-2">
-                                        <c:forEach begin="1" end="5" var="i">
-                                            <c:choose>
-                                                <c:when test="${i <= book.averageRating}">
-                                                    <i class="fas fa-star"></i>
-                                                </c:when>
-                                                <c:when test="${i <= book.averageRating + 0.5}">
-                                                    <i class="fas fa-star-half-alt"></i>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <i class="far fa-star"></i>
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </c:forEach>
-                                        <span class="ms-1">(${book.averageRating})</span>
-                                    </div>
+                    // Determine priority label
+                    String priorityLabel = "";
+                    String priorityClass = "";
 
-                                    <p class="card-text fw-bold" style="color: var(--accent-color);">$${book.price}</p>
+                    switch(item.getPriority()) {
+                        case 5:
+                            priorityLabel = "Very High";
+                            priorityClass = "priority-5";
+                            break;
+                        case 4:
+                            priorityLabel = "High";
+                            priorityClass = "priority-4";
+                            break;
+                        case 3:
+                            priorityLabel = "Medium";
+                            priorityClass = "priority-3";
+                            break;
+                        case 2:
+                            priorityLabel = "Low";
+                            priorityClass = "priority-2";
+                            break;
+                        case 1:
+                            priorityLabel = "Very Low";
+                            priorityClass = "priority-1";
+                            break;
+                        default:
+                            priorityLabel = "Medium";
+                            priorityClass = "priority-3";
+                    }
 
-                                    <c:if test="${not empty item.notes}">
-                                        <div class="notes mt-2 small">
-                                            <strong>Notes:</strong> ${item.notes}
-                                        </div>
-                                    </c:if>
+                    // Get book cover
+                    String coverPath = request.getContextPath() + "/book-covers/";
+                    if (book.getCoverImagePath() != null && !book.getCoverImagePath().isEmpty()) {
+                        coverPath += book.getCoverImagePath();
+                    } else {
+                        coverPath += "default_cover.jpg";
+                    }
+                %>
+                    <div class="col">
+                        <div class="card book-card">
+                            <img src="<%= coverPath %>" class="book-cover" alt="<%= book.getTitle() %>">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="card-title"><%= book.getTitle() %></h5>
+                                    <span class="badge priority-badge <%= priorityClass %>"><%= priorityLabel %></span>
                                 </div>
-                                <div class="card-footer d-flex justify-content-between">
-                                    <a href="${pageContext.request.contextPath}/book-details?id=${book.id}" class="btn btn-outline-light btn-sm">
-                                        <i class="fas fa-eye me-1"></i> Details
-                                    </a>
-                                    <div>
-                                        <a href="${pageContext.request.contextPath}/wishlist-item?action=edit&wishlistId=${wishlist.wishlistId}&bookId=${book.id}" class="btn btn-outline-light btn-sm">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="${pageContext.request.contextPath}/wishlist-item?action=remove&wishlistId=${wishlist.wishlistId}&bookId=${book.id}" class="btn btn-outline-danger btn-sm">
-                                            <i class="fas fa-times"></i>
-                                        </a>
+                                <p class="card-text text-muted small">by <%= book.getAuthor() %></p>
+
+                                <div class="rating small mb-2">
+                                    <%
+                                        double rating = book.getAverageRating();
+                                        for (int i = 1; i <= 5; i++) {
+                                            if (i <= rating) {
+                                    %>
+                                        <i class="fas fa-star"></i>
+                                    <% } else if (i <= rating + 0.5) { %>
+                                        <i class="fas fa-star-half-alt"></i>
+                                    <% } else { %>
+                                        <i class="far fa-star"></i>
+                                    <% } } %>
+                                    <span class="ms-1">(<%= book.getAverageRating() %>)</span>
+                                </div>
+
+                                <p class="card-text fw-bold" style="color: var(--accent-color);">$<%= book.getPrice() %></p>
+
+                                <% if (item.getNotes() != null && !item.getNotes().isEmpty()) { %>
+                                    <div class="notes mt-2 small">
+                                        <strong>Notes:</strong> <%= item.getNotes() %>
                                     </div>
+                                <% } %>
+                            </div>
+                            <div class="card-footer d-flex justify-content-between">
+                                <a href="<%= request.getContextPath() %>/book-details?id=<%= book.getId() %>" class="btn btn-outline-light btn-sm">
+                                    <i class="fas fa-eye me-1"></i> Details
+                                </a>
+                                <div>
+                                    <a href="<%= request.getContextPath() %>/wishlist-item?action=edit&wishlistId=<%= wishlist.getWishlistId() %>&bookId=<%= book.getId() %>" class="btn btn-outline-light btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="<%= request.getContextPath() %>/wishlist-item?action=remove&wishlistId=<%= wishlist.getWishlistId() %>&bookId=<%= book.getId() %>" class="btn btn-outline-danger btn-sm">
+                                        <i class="fas fa-times"></i>
+                                    </a>
                                 </div>
                             </div>
                         </div>
-                    </c:forEach>
-                </div>
-            </c:otherwise>
-        </c:choose>
+                    </div>
+                <% } %>
+            </div>
+        <% } %>
     </div>
 
     <!-- Delete Confirmation Modal -->
@@ -337,14 +381,14 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Are you sure you want to delete the wishlist "${wishlist.name}"?</p>
+                    <p>Are you sure you want to delete the wishlist "<%= wishlist != null ? wishlist.getName() : "this wishlist" %>"?</p>
                     <p class="text-danger">This action cannot be undone and all items in this wishlist will be removed.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
-                    <form action="${pageContext.request.contextPath}/wishlists" method="post">
+                    <form action="<%= request.getContextPath() %>/wishlists" method="post">
                         <input type="hidden" name="action" value="delete">
-                        <input type="hidden" name="wishlistId" value="${wishlist.wishlistId}">
+                        <input type="hidden" name="wishlistId" value="<%= wishlist != null ? wishlist.getWishlistId() : "" %>">
                         <button type="submit" class="btn btn-danger">Delete</button>
                     </form>
                 </div>

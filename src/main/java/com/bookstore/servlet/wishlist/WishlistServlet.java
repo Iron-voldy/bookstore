@@ -90,9 +90,9 @@ public class WishlistServlet extends HttpServlet {
                     // Debug logging
                     System.out.println("WishlistServlet: Wishlist details");
                     System.out.println("Wishlist Name: " + wishlist.getName());
-                    System.out.println("Wishlist Items: " + wishlistItems.size());
+                    System.out.println("Wishlist Items: " + (wishlistItems != null ? wishlistItems.size() : "null"));
 
-                    // Set attributes
+                    // Set attributes explicitly
                     request.setAttribute("wishlist", wishlist);
                     request.setAttribute("wishlistItems", wishlistItems);
 
@@ -243,6 +243,14 @@ public class WishlistServlet extends HttpServlet {
                     // Validate input
                     if (wishlistId == null || wishlistId.trim().isEmpty()) {
                         session.setAttribute("errorMessage", "Invalid wishlist ID");
+                        response.sendRedirect(request.getContextPath() + "/wishlists");
+                        return;
+                    }
+
+                    // Check if user owns this wishlist
+                    Wishlist wishlistToDelete = wishlistManager.getWishlist(wishlistId);
+                    if (wishlistToDelete == null || !wishlistToDelete.getUserId().equals(userId)) {
+                        session.setAttribute("errorMessage", "Wishlist not found or you don't have permission to delete");
                         response.sendRedirect(request.getContextPath() + "/wishlists");
                         return;
                     }

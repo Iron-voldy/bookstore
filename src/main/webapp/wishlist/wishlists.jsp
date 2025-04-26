@@ -1,6 +1,8 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.text.SimpleDateFormat" %>
+<%@ page import="com.bookstore.model.wishlist.Wishlist" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -78,8 +80,50 @@
     </style>
 </head>
 <body>
+    <%
+        // Debug information
+        List<Wishlist> wishlists = (List<Wishlist>)request.getAttribute("wishlists");
+        System.out.println("JSP DEBUG: Wishlists attribute exists: " + (wishlists != null));
+        if (wishlists != null) {
+            System.out.println("JSP DEBUG: Number of wishlists: " + wishlists.size());
+            for (Wishlist w : wishlists) {
+                System.out.println("JSP DEBUG: Wishlist: " + w.getName() + ", Items: " + w.getItemCount());
+            }
+        }
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d, yyyy");
+    %>
+
+    <!-- Include Header -->
+    <jsp:include page="../includes/header.jsp" />
+
     <!-- Main Content -->
     <div class="container my-5">
+        <!-- Flash Messages -->
+        <%
+            String successMessage = (String)session.getAttribute("successMessage");
+            if (successMessage != null && !successMessage.isEmpty()) {
+        %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i> <%= successMessage %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <%
+                session.removeAttribute("successMessage");
+            }
+
+            String errorMessage = (String)session.getAttribute("errorMessage");
+            if (errorMessage != null && !errorMessage.isEmpty()) {
+        %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i> <%= errorMessage %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <%
+                session.removeAttribute("errorMessage");
+            }
+        %>
+
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="fas fa-heart me-2"></i> My Wishlists</h2>
             <a href="<%= request.getContextPath() %>/wishlists?action=create" class="btn btn-accent">
@@ -88,107 +132,91 @@
         </div>
 
         <!-- Wishlists Grid -->
-        <c:choose>
-            <c:when test="${empty wishlists}">
-                <div class="card">
-                    <div class="card-body empty-state">
-                        <i class="fas fa-heart-broken"></i>
-                        <h4>No Wishlists Yet</h4>
-                        <p>You haven't created any wishlists yet. Start by creating your first wishlist!</p>
-                        <a href="<%= request.getContextPath() %>/wishlists?action=create" class="btn btn-accent mt-3">
-                            <i class="fas fa-plus me-2"></i> Create New Wishlist
-                        </a>
-                    </div>
+        <% if (wishlists == null || wishlists.isEmpty()) { %>
+            <div class="card">
+                <div class="card-body empty-state">
+                    <i class="fas fa-heart-broken"></i>
+                    <h4>No Wishlists Yet</h4>
+                    <p>You haven't created any wishlists yet. Start by creating your first wishlist!</p>
+                    <a href="<%= request.getContextPath() %>/wishlists?action=create" class="btn btn-accent mt-3">
+                        <i class="fas fa-plus me-2"></i> Create New Wishlist
+                    </a>
                 </div>
-            </c:when>
-            <c:otherwise>
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                    <c:forEach var="wishlist" items="${wishlists}">
-                        <div class="col">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start mb-3">
-                                        <h5 class="card-title">
-                                            <c:out value="${wishlist.name}" escapeXml="true"/>
-                                        </h5>
-                                        <c:choose>
-                                            <c:when test="${wishlist.public}">
-                                                <span class="badge badge-public">Public</span>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <span class="badge badge-private">Private</span>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </div>
-                                    <p class="card-text text-muted">
-                                        <c:choose>
-                                            <c:when test="${not empty wishlist.description}">
-                                                <c:out value="${wishlist.description}" escapeXml="true"/>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <span class="text-muted">No description</span>
-                                            </c:otherwise>
-                                        </c:choose>
-                                    </p>
-                                    <p class="card-text">
-                                        <small class="text-muted">
-                                            <i class="fas fa-calendar-alt me-1"></i> Created:
-                                            <c:if test="${wishlist.createdDate != null}">
-                                                <fmt:formatDate value="${wishlist.createdDate}" pattern="MMM d, yyyy" />
-                                            </c:if>
-                                        </small>
-                                    </p>
-                                    <p class="card-text">
-                                        <i class="fas fa-book me-1"></i>
-                                        <c:out value="${wishlist.itemCount}" escapeXml="true"/> items
-                                    </p>
+            </div>
+        <% } else { %>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                <% for (Wishlist wishlist : wishlists) { %>
+                    <div class="col">
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h5 class="card-title"><%= wishlist.getName() %></h5>
+                                    <span class="badge <%= wishlist.isPublic() ? "badge-public" : "badge-private" %>">
+                                        <%= wishlist.isPublic() ? "Public" : "Private" %>
+                                    </span>
                                 </div>
-                                <div class="card-footer d-flex justify-content-between">
-                                    <a href="<%= request.getContextPath() %>/wishlists?action=view&amp;id=<c:out value='${wishlist.wishlistId}' escapeXml='true'/>" class="btn btn-accent">
-                                        <i class="fas fa-eye me-1"></i> View
+                                <p class="card-text text-muted">
+                                    <%= wishlist.getDescription() != null && !wishlist.getDescription().isEmpty()
+                                       ? wishlist.getDescription() : "No description" %>
+                                </p>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar-alt me-1"></i> Created:
+                                        <%= wishlist.getCreatedDate() != null ? dateFormat.format(wishlist.getCreatedDate()) : "" %>
+                                    </small>
+                                </p>
+                                <p class="card-text">
+                                    <i class="fas fa-book me-1"></i> <%= wishlist.getItemCount() %> items
+                                </p>
+                            </div>
+                            <div class="card-footer d-flex justify-content-between">
+                                <a href="<%= request.getContextPath() %>/wishlists?action=view&id=<%= wishlist.getWishlistId() %>" class="btn btn-accent">
+                                    <i class="fas fa-eye me-1"></i> View
+                                </a>
+                                <div>
+                                    <a href="<%= request.getContextPath() %>/wishlists?action=edit&id=<%= wishlist.getWishlistId() %>" class="btn btn-outline-light">
+                                        <i class="fas fa-edit"></i>
                                     </a>
-                                    <div>
-                                        <a href="<%= request.getContextPath() %>/wishlists?action=edit&amp;id=<c:out value='${wishlist.wishlistId}' escapeXml='true'/>" class="btn btn-outline-light">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-outline-danger"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#deleteWishlistModal<c:out value='${wishlist.wishlistId}' escapeXml='true'/>">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </div>
+                                    <button type="button" class="btn btn-outline-danger"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteWishlistModal<%= wishlist.getWishlistId() %>">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
                                 </div>
+                            </div>
 
-                                <!-- Delete Confirmation Modal -->
-                                <div class="modal fade" id="deleteWishlistModal<c:out value='${wishlist.wishlistId}' escapeXml='true'/>" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content bg-dark text-light">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Confirm Deletion</h5>
-                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <p>Are you sure you want to delete the wishlist "<c:out value='${wishlist.name}' escapeXml='true'/>"?</p>
-                                                <p class="text-danger">This action cannot be undone.</p>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
-                                                <form action="<%= request.getContextPath() %>/wishlists" method="post">
-                                                    <input type="hidden" name="action" value="delete">
-                                                    <input type="hidden" name="wishlistId" value="<c:out value='${wishlist.wishlistId}' escapeXml='true'/>">
-                                                    <button type="submit" class="btn btn-danger">Delete</button>
-                                                </form>
-                                            </div>
+                            <!-- Delete Confirmation Modal -->
+                            <div class="modal fade" id="deleteWishlistModal<%= wishlist.getWishlistId() %>" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content bg-dark text-light">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Confirm Deletion</h5>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Are you sure you want to delete the wishlist "<%= wishlist.getName() %>"?</p>
+                                            <p class="text-danger">This action cannot be undone.</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
+                                            <form action="<%= request.getContextPath() %>/wishlists" method="post">
+                                                <input type="hidden" name="action" value="delete">
+                                                <input type="hidden" name="wishlistId" value="<%= wishlist.getWishlistId() %>">
+                                                <button type="submit" class="btn btn-danger">Delete</button>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </c:forEach>
-                </div>
-            </c:otherwise>
-        </c:choose>
+                    </div>
+                <% } %>
+            </div>
+        <% } %>
     </div>
+
+    <!-- Include Footer -->
+    <jsp:include page="../includes/footer.jsp" />
 
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
