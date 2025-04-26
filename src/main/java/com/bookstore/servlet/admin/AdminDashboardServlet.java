@@ -1,6 +1,7 @@
 package com.bookstore.servlet.admin;
 
 import java.io.IOException;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -16,6 +17,8 @@ import com.bookstore.model.book.EBook;
 import com.bookstore.model.book.PhysicalBook;
 import com.bookstore.model.user.User;
 import com.bookstore.model.user.UserManager;
+import com.bookstore.model.order.OrderManager;
+import com.bookstore.model.order.OrderStatus;
 
 /**
  * Servlet for handling admin dashboard
@@ -88,6 +91,17 @@ public class AdminDashboardServlet extends HttpServlet {
         int superAdminCount = adminManager.getSuperAdminCount();
         int regularAdminCount = totalAdmins - superAdminCount;
 
+        // 4. Order statistics
+        OrderManager orderManager = new OrderManager(getServletContext());
+        Map<OrderStatus, Integer> orderCounts = orderManager.getOrderCountsByStatus();
+        double totalSales = orderManager.getTotalSales();
+        int pendingOrders = orderCounts.getOrDefault(OrderStatus.PENDING, 0);
+        int processingOrders = orderCounts.getOrDefault(OrderStatus.PROCESSING, 0);
+        int shippedOrders = orderCounts.getOrDefault(OrderStatus.SHIPPED, 0);
+        int deliveredOrders = orderCounts.getOrDefault(OrderStatus.DELIVERED, 0);
+        int cancelledOrders = orderCounts.getOrDefault(OrderStatus.CANCELLED, 0);
+        int totalOrders = pendingOrders + processingOrders + shippedOrders + deliveredOrders + cancelledOrders;
+
         // Set attributes for the dashboard
         request.setAttribute("admin", admin);
 
@@ -107,6 +121,15 @@ public class AdminDashboardServlet extends HttpServlet {
         request.setAttribute("totalAdmins", totalAdmins);
         request.setAttribute("superAdminCount", superAdminCount);
         request.setAttribute("regularAdminCount", regularAdminCount);
+
+        // Order statistics
+        request.setAttribute("totalOrders", totalOrders);
+        request.setAttribute("pendingOrders", pendingOrders);
+        request.setAttribute("processingOrders", processingOrders);
+        request.setAttribute("shippedOrders", shippedOrders);
+        request.setAttribute("deliveredOrders", deliveredOrders);
+        request.setAttribute("cancelledOrders", cancelledOrders);
+        request.setAttribute("totalSales", totalSales);
 
         // Forward to dashboard page
         request.getRequestDispatcher("/admin/dashboard.jsp").forward(request, response);
