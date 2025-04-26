@@ -65,12 +65,9 @@
                         </div>
 
                         <div class="d-grid mt-4">
-                            <form action="<%=request.getContextPath()%>/process-payment" method="post">
-                                <!-- Existing form content -->
-                                <button type="submit" class="btn btn-accent">
-                                    <i class="fas fa-credit-card me-2"></i> Proceed to Payment
-                                </button>
-                            </form>
+                            <button type="submit" class="btn btn-accent">
+                                <i class="fas fa-credit-card me-2"></i> Proceed to Payment
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -89,18 +86,23 @@
                         <h6 class="mb-3">Items in Cart (${cart.size()})</h6>
                         <div class="table-responsive">
                             <table class="table table-sm table-dark">
-                                <c:forEach var="item" items="${cart}">
-                                    <c:set var="book" value="${cartBooks[item.key]}" />
-                                    <tr>
-                                        <td>
-                                            <strong>${book.title}</strong><br>
-                                            <small class="text-muted">Qty: ${item.value}</small>
-                                        </td>
-                                        <td class="text-end">
-                                            $<fmt:formatNumber value="${book.discountedPrice * item.value}" pattern="0.00" />
-                                        </td>
-                                    </tr>
-                                </c:forEach>
+                                <tbody>
+                                    <c:forEach var="entry" items="${cart}">
+                                        <c:set var="bookId" value="${entry.key}" />
+                                        <c:set var="quantity" value="${entry.value}" />
+                                        <c:set var="book" value="${cartBooks[bookId]}" />
+                                        <tr>
+                                            <td>
+                                                <strong>${book.title}</strong><br>
+                                                <small class="text-muted">Qty: ${quantity}</small>
+                                            </td>
+                                            <td class="text-end">
+                                                <c:set var="itemTotal" value="${book.discountedPrice * quantity}" />
+                                                $<fmt:formatNumber value="${itemTotal}" pattern="0.00" />
+                                            </td>
+                                        </tr>
+                                    </c:forEach>
+                                </tbody>
                             </table>
                         </div>
                     </div>
