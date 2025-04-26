@@ -117,9 +117,12 @@
                         </div>
 
                         <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-accent btn-lg" id="paymentButton">
-                                <i class="fas fa-lock me-2"></i> Complete Payment
-                            </button>
+                            <form action="<%=request.getContextPath()%>/process-payment" method="post">
+                                <!-- Existing form content -->
+                                <button type="submit" class="btn btn-accent btn-lg">
+                                    <i class="fas fa-lock me-2"></i> Complete Payment
+                                </button>
+                            </form>
                         </div>
                     </form>
                 </div>

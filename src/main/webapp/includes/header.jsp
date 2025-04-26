@@ -243,6 +243,13 @@ String username = isLoggedIn ? currentUser.getUsername() : "";
                             </a>
                         </li>
 
+                        <li class="nav-item">
+                            <a class="nav-link ${pageContext.request.requestURI.contains('/order-history') ? 'active' : ''}"
+                               href="<%=request.getContextPath()%>/order-history">
+                                My Orders
+                            </a>
+                        </li>
+
                         <!-- User Profile Dropdown -->
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle ${pageContext.request.requestURI.contains('/user/') ? 'active' : ''}"

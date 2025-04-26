@@ -122,7 +122,7 @@
                 <a href="${pageContext.request.contextPath}/" class="btn btn-outline-light">
                     <i class="fas fa-home me-2"></i> Continue Shopping
                 </a>
-                <a href="${pageContext.request.contextPath}/order-details?orderId=${order.orderId}" class="btn btn-accent">
+                <a href="<%=request.getContextPath()%>/order-details?orderId=${order.orderId}" class="btn btn-accent">
                     <i class="fas fa-file-alt me-2"></i> View Order Details
                 </a>
             </div>
