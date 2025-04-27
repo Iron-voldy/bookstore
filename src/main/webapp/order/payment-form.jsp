@@ -117,12 +117,9 @@
                         </div>
 
                         <div class="d-grid mt-4">
-                            <form action="<%=request.getContextPath()%>/process-payment" method="post">
-                                <!-- Existing form content -->
-                                <button type="submit" class="btn btn-accent btn-lg">
-                                    <i class="fas fa-lock me-2"></i> Complete Payment
-                                </button>
-                            </form>
+                            <button type="submit" class="btn btn-accent btn-lg" id="paymentButton">
+                                <i class="fas fa-lock me-2"></i> Complete Payment
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -133,11 +130,11 @@
         <div class="col-lg-4">
             <div class="card sticky-top" style="top: 20px">
                 <div class="card-header">
-                    <h5 class="mb-0">Order #${order.orderId.substring(0, 8)}</h5>
+                    <h5 class="mb-0">Order #${not empty order.orderId ? order.orderId.substring(0, 8) : ''}</h5>
                 </div>
                 <div class="card-body">
                     <!-- Order Items -->
-                    <h6 class="mb-3">Items (${order.items.size()})</h6>
+                    <h6 class="mb-3">Items (${not empty order.items ? order.items.size() : 0})</h6>
                     <div class="table-responsive">
                         <table class="table table-sm table-dark">
                             <c:forEach var="item" items="${order.items}">
@@ -177,65 +174,78 @@
 
 <script>
     // Toggle payment method sections
-    document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            const cardDetails = document.getElementById('cardDetails');
-            const paypalDetails = document.getElementById('paypalDetails');
-            const paymentButton = document.getElementById('paymentButton');
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle payment method sections
+        const paymentMethodRadios = document.querySelectorAll('input[name="paymentMethod"]');
+        const cardDetails = document.getElementById('cardDetails');
+        const paypalDetails = document.getElementById('paypalDetails');
+        const paymentButton = document.getElementById('paymentButton');
 
-            if (this.value === 'PAYPAL') {
-                cardDetails.style.display = 'none';
-                paypalDetails.style.display = 'block';
-                paymentButton.innerHTML = '<i class="fab fa-paypal me-2"></i> Pay with PayPal';
+        paymentMethodRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.value === 'PAYPAL') {
+                    cardDetails.style.display = 'none';
+                    paypalDetails.style.display = 'block';
+                    paymentButton.innerHTML = '<i class="fab fa-paypal me-2"></i> Pay with PayPal';
 
-                // Disable card validation
-                document.getElementById('cardNumber').removeAttribute('required');
-                document.getElementById('cardName').removeAttribute('required');
-                document.getElementById('expiryDate').removeAttribute('required');
-                document.getElementById('cvv').removeAttribute('required');
-            } else {
-                cardDetails.style.display = 'block';
-                paypalDetails.style.display = 'none';
-                paymentButton.innerHTML = '<i class="fas fa-lock me-2"></i> Complete Payment';
+                    // Disable card validation
+                    document.getElementById('cardNumber').removeAttribute('required');
+                    document.getElementById('cardName').removeAttribute('required');
+                    document.getElementById('expiryDate').removeAttribute('required');
+                    document.getElementById('cvv').removeAttribute('required');
+                } else {
+                    cardDetails.style.display = 'block';
+                    paypalDetails.style.display = 'none';
+                    paymentButton.innerHTML = '<i class="fas fa-lock me-2"></i> Complete Payment';
 
-                // Enable card validation
-                document.getElementById('cardNumber').setAttribute('required', '');
-                document.getElementById('cardName').setAttribute('required', '');
-                document.getElementById('expiryDate').setAttribute('required', '');
-                document.getElementById('cvv').setAttribute('required', '');
-            }
+                    // Enable card validation
+                    document.getElementById('cardNumber').setAttribute('required', '');
+                    document.getElementById('cardName').setAttribute('required', '');
+                    document.getElementById('expiryDate').setAttribute('required', '');
+                    document.getElementById('cvv').setAttribute('required', '');
+                }
+            });
         });
-    });
 
-    // Format card number with spaces
-    document.getElementById('cardNumber').addEventListener('input', function(e) {
-        let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-        let formattedValue = '';
+        // Format card number with spaces
+        const cardNumberInput = document.getElementById('cardNumber');
+        if (cardNumberInput) {
+            cardNumberInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+                let formattedValue = '';
 
-        for (let i = 0; i < value.length; i++) {
-            if (i > 0 && i % 4 === 0) {
-                formattedValue += ' ';
-            }
-            formattedValue += value[i];
+                for (let i = 0; i < value.length; i++) {
+                    if (i > 0 && i % 4 === 0) {
+                        formattedValue += ' ';
+                    }
+                    formattedValue += value[i];
+                }
+
+                e.target.value = formattedValue;
+            });
         }
 
-        e.target.value = formattedValue;
-    });
+        // Format expiry date as MM/YY
+        const expiryDateInput = document.getElementById('expiryDate');
+        if (expiryDateInput) {
+            expiryDateInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, '');
 
-    // Format expiry date as MM/YY
-    document.getElementById('expiryDate').addEventListener('input', function(e) {
-        let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 2) {
+                    value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                }
 
-        if (value.length > 2) {
-            value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                e.target.value = value;
+            });
         }
 
-        e.target.value = value;
-    });
-
-    // Only allow numbers for CVV
-    document.getElementById('cvv').addEventListener('input', function(e) {
-        e.target.value = e.target.value.replace(/\D/g, '');
+        // Only allow numbers for CVV
+        const cvvInput = document.getElementById('cvv');
+        if (cvvInput) {
+            cvvInput.addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/\D/g, '');
+            });
+        }
     });
 </script>
 

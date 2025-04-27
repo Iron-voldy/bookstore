@@ -12,11 +12,17 @@ import com.bookstore.model.order.Order;
 import com.bookstore.model.order.OrderManager;
 
 /**
- * Servlet for handling order confirmation
+ * Servlet for handling order confirmation display
  */
 @WebServlet("/order-confirmation")
 public class OrderConfirmationServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
+    private OrderManager orderManager;
+
+    @Override
+    public void init() throws ServletException {
+        orderManager = new OrderManager(getServletContext());
+    }
 
     /**
      * Handles GET requests - display order confirmation
@@ -28,8 +34,10 @@ public class OrderConfirmationServlet extends HttpServlet {
         HttpSession session = request.getSession();
 
         // Check if user is logged in
-        if (session.getAttribute("userId") == null) {
+        String userId = (String) session.getAttribute("userId");
+        if (userId == null) {
             session.setAttribute("errorMessage", "Please log in to view order confirmation");
+            session.setAttribute("redirectAfterLogin", request.getRequestURI() + "?" + request.getQueryString());
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
@@ -37,13 +45,16 @@ public class OrderConfirmationServlet extends HttpServlet {
         // Get order ID from request parameter
         String orderId = request.getParameter("orderId");
         if (orderId == null || orderId.trim().isEmpty()) {
-            session.setAttribute("errorMessage", "Order ID is required");
-            response.sendRedirect(request.getContextPath() + "/order-history");
-            return;
+            // If no order ID is provided, check if there's one in the session
+            orderId = (String) session.getAttribute("currentOrderId");
+            if (orderId == null) {
+                session.setAttribute("errorMessage", "Order ID is required");
+                response.sendRedirect(request.getContextPath() + "/order-history");
+                return;
+            }
         }
 
         // Get order details
-        OrderManager orderManager = new OrderManager(getServletContext());
         Order order = orderManager.getOrderById(orderId);
 
         if (order == null) {
@@ -53,7 +64,6 @@ public class OrderConfirmationServlet extends HttpServlet {
         }
 
         // Check if this order belongs to the logged-in user
-        String userId = (String) session.getAttribute("userId");
         if (!order.getUserId().equals(userId)) {
             session.setAttribute("errorMessage", "You do not have permission to view this order");
             response.sendRedirect(request.getContextPath() + "/order-history");
@@ -62,6 +72,9 @@ public class OrderConfirmationServlet extends HttpServlet {
 
         // Set order in request
         request.setAttribute("order", order);
+
+        // Remove the currentOrderId from session since we're done with it
+        session.removeAttribute("currentOrderId");
 
         // Forward to confirmation page
         request.getRequestDispatcher("/order/order-confirmation.jsp").forward(request, response);

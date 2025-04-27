@@ -33,6 +33,7 @@ public class OrderHistoryServlet extends HttpServlet {
         // Check if user is logged in
         if (session == null || session.getAttribute("userId") == null) {
             // Redirect to login if not logged in
+            session.setAttribute("redirectAfterLogin", request.getContextPath() + "/order-history");
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }

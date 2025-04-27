@@ -59,7 +59,11 @@
                         <li class="completed">
                             <span class="bubble"></span>
                             <span class="text">Order Placed</span>
-                            <span class="date"><fmt:formatDate value="${order.orderDate}" pattern="MMM d, yyyy" /></span>
+                            <span class="date">
+                                <c:if test="${not empty order.orderDate}">
+                                    <fmt:formatDate value="${order.orderDate}" pattern="MMM d, yyyy" />
+                                </c:if>
+                            </span>
                         </li>
                         <li class="${order.status == 'PENDING' ? 'active' : (order.status == 'PROCESSING' || order.status == 'SHIPPED' || order.status == 'DELIVERED' ? 'completed' : '')}">
                             <span class="bubble"></span>
@@ -68,14 +72,14 @@
                         <li class="${order.status == 'SHIPPED' || order.status == 'DELIVERED' ? 'completed' : (order.status == 'CANCELLED' ? 'danger' : '')}">
                             <span class="bubble"></span>
                             <span class="text">Shipped</span>
-                            <c:if test="${order.shippedDate != null}">
+                            <c:if test="${not empty order.shippedDate}">
                                 <span class="date"><fmt:formatDate value="${order.shippedDate}" pattern="MMM d, yyyy" /></span>
                             </c:if>
                         </li>
                         <li class="${order.status == 'DELIVERED' ? 'completed' : (order.status == 'CANCELLED' ? 'danger' : '')}">
                             <span class="bubble"></span>
                             <span class="text">Delivered</span>
-                            <c:if test="${order.deliveredDate != null}">
+                            <c:if test="${not empty order.deliveredDate}">
                                 <span class="date"><fmt:formatDate value="${order.deliveredDate}" pattern="MMM d, yyyy" /></span>
                             </c:if>
                         </li>
@@ -92,7 +96,10 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Order Items</h5>
                     <span class="text-muted small">
-                        Placed on <fmt:formatDate value="${order.orderDate}" pattern="MMMM d, yyyy h:mm a" />
+                        Placed on
+                        <c:if test="${not empty order.orderDate}">
+                            <fmt:formatDate value="${order.orderDate}" pattern="MMMM d, yyyy h:mm a" />
+                        </c:if>
                     </span>
                 </div>
                 <div class="card-body">
@@ -162,7 +169,11 @@
                             </div>
                             <div class="col-md-6">
                                 <h6>Shipped Date</h6>
-                                <p class="mb-0"><fmt:formatDate value="${order.shippedDate}" pattern="MMMM d, yyyy" /></p>
+                                <p class="mb-0">
+                                    <c:if test="${not empty order.shippedDate}">
+                                        <fmt:formatDate value="${order.shippedDate}" pattern="MMMM d, yyyy" />
+                                    </c:if>
+                                </p>
                             </div>
                         </div>
 
@@ -239,7 +250,9 @@
                                 <div>
                                     <h6 class="mb-0">Payment Successful</h6>
                                     <p class="text-muted mb-0 small">
-                                        <fmt:formatDate value="${order.payment.paymentDate}" pattern="MMMM d, yyyy h:mm a" />
+                                        <c:if test="${not empty order.payment.paymentDate}">
+                                            <fmt:formatDate value="${order.payment.paymentDate}" pattern="MMMM d, yyyy h:mm a" />
+                                        </c:if>
                                     </p>
                                 </div>
                             </div>

@@ -30,7 +30,11 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <h6>Order Date</h6>
-                            <p><fmt:formatDate value="${order.orderDate}" pattern="MMMM d, yyyy h:mm a" /></p>
+                            <p>
+                                <c:if test="${not empty order.orderDate}">
+                                    <fmt:formatDate value="${order.orderDate}" pattern="MMMM d, yyyy h:mm a" />
+                                </c:if>
+                            </p>
 
                             <h6>Payment Method</h6>
                             <p>
@@ -122,7 +126,7 @@
                 <a href="${pageContext.request.contextPath}/" class="btn btn-outline-light">
                     <i class="fas fa-home me-2"></i> Continue Shopping
                 </a>
-                <a href="<%=request.getContextPath()%>/order-details?orderId=${order.orderId}" class="btn btn-accent">
+                <a href="${pageContext.request.contextPath}/order-details?orderId=${order.orderId}" class="btn btn-accent">
                     <i class="fas fa-file-alt me-2"></i> View Order Details
                 </a>
             </div>

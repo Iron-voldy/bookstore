@@ -17,6 +17,12 @@ import com.bookstore.model.order.OrderManager;
 @WebServlet("/order-details")
 public class OrderDetailsServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
+    private OrderManager orderManager;
+
+    @Override
+    public void init() throws ServletException {
+        orderManager = new OrderManager(getServletContext());
+    }
 
     /**
      * Handles GET requests - display order details
@@ -31,6 +37,7 @@ public class OrderDetailsServlet extends HttpServlet {
         String userId = (String) session.getAttribute("userId");
         if (userId == null) {
             session.setAttribute("errorMessage", "Please log in to view order details");
+            session.setAttribute("redirectAfterLogin", request.getRequestURI() + "?" + request.getQueryString());
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
@@ -42,9 +49,6 @@ public class OrderDetailsServlet extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/order-history");
             return;
         }
-
-        // Get order manager
-        OrderManager orderManager = new OrderManager(getServletContext());
 
         // Get order details
         Order order = orderManager.getOrderById(orderId);

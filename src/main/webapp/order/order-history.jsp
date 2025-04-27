@@ -64,7 +64,9 @@
                         <c:forEach var="order" items="${orders}">
                             <tr>
                                 <td>${order.orderId.substring(0, 8)}</td>
-                                <td><fmt:formatDate value="${order.orderDate}" pattern="MMM d, yyyy" /></td>
+                                <td>
+                                    <fmt:formatDate value="${order.orderDate}" pattern="MMM d, yyyy" />
+                                </td>
                                 <td>${order.totalItems} item(s)</td>
                                 <td>$<fmt:formatNumber value="${order.total}" pattern="0.00" /></td>
                                 <td>
