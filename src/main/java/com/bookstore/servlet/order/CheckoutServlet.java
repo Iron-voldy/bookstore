@@ -70,10 +70,10 @@ public class CheckoutServlet extends HttpServlet {
         // Set attributes for JSP
         request.setAttribute("cart", cart);
         request.setAttribute("cartBooks", cartManager.getCartBookDetails(userId));
-        request.setAttribute("subtotal", subtotal);
-        request.setAttribute("tax", tax);
-        request.setAttribute("shipping", shipping);
-        request.setAttribute("total", total);
+        request.setAttribute("subtotal", Double.valueOf(subtotal));
+        request.setAttribute("tax", Double.valueOf(tax));
+        request.setAttribute("shipping", Double.valueOf(shipping));
+        request.setAttribute("total", Double.valueOf(total));
 
         // Forward to checkout page
         request.getRequestDispatcher("/order/checkout.jsp").forward(request, response);
