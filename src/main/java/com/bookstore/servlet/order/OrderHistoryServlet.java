@@ -2,7 +2,6 @@ package com.bookstore.servlet.order;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -30,43 +29,77 @@ public class OrderHistoryServlet extends HttpServlet {
         // Get user session
         HttpSession session = request.getSession(false);
 
+        // Debug logging
+        System.out.println("OrderHistoryServlet: doGet method started");
+
         // Check if user is logged in
         if (session == null || session.getAttribute("userId") == null) {
             // Redirect to login if not logged in
-            session.setAttribute("redirectAfterLogin", request.getContextPath() + "/order-history");
+            System.out.println("User not logged in, redirecting to login page");
+            if (session != null) {
+                session.setAttribute("redirectAfterLogin", request.getContextPath() + "/order-history");
+            }
             response.sendRedirect(request.getContextPath() + "/login");
             return;
         }
 
         // Get user ID
         String userId = (String) session.getAttribute("userId");
+        System.out.println("OrderHistoryServlet: userId = " + userId);
 
         // Set OrderStatus array as an attribute for the JSP
-        request.setAttribute("statuses", OrderStatus.values());
+        OrderStatus[] statuses = OrderStatus.values();
+        request.setAttribute("statuses", statuses);
 
         // Get status filter parameter
         String statusFilter = request.getParameter("status");
+        System.out.println("OrderHistoryServlet: statusFilter = " + statusFilter);
 
         // Fetch orders
         List<Order> orders;
-        if (statusFilter != null && !statusFilter.isEmpty()) {
-            try {
-                OrderStatus status = OrderStatus.valueOf(statusFilter.toUpperCase());
-                orders = orderManager.getOrdersByUser(userId).stream()
-                        .filter(order -> order.getStatus() == status)
-                        .collect(Collectors.toList());
-            } catch (IllegalArgumentException e) {
-                // Invalid status, fetch all orders
+        try {
+            if (statusFilter != null && !statusFilter.isEmpty()) {
+                try {
+                    OrderStatus status = OrderStatus.valueOf(statusFilter.toUpperCase());
+                    System.out.println("Filtering orders by status: " + status);
+                    orders = orderManager.getOrdersByUser(userId);
+
+                    // Filter in Java rather than in database query
+                    orders.removeIf(order -> order.getStatus() != status);
+                } catch (IllegalArgumentException e) {
+                    // Invalid status, fetch all orders
+                    System.out.println("Invalid status filter: " + statusFilter + ", showing all orders");
+                    orders = orderManager.getOrdersByUser(userId);
+                }
+            } else {
+                // Fetch all orders for the user
+                System.out.println("Fetching all orders for user");
                 orders = orderManager.getOrdersByUser(userId);
             }
-        } else {
-            // Fetch all orders for the user
-            orders = orderManager.getOrdersByUser(userId);
+
+            System.out.println("Found " + (orders != null ? orders.size() : 0) + " orders");
+
+            // Verify order totals to avoid null values
+            if (orders != null) {
+                for (Order order : orders) {
+                    if (order.getTotal() == 0) {
+                        // Recalculate totals if they appear to be missing
+                        order.calculateTotals();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error fetching orders: " + e.getMessage());
+            e.printStackTrace();
+            orders = null;
+            session.setAttribute("errorMessage", "An error occurred while fetching your orders: " + e.getMessage());
         }
 
         // Set attributes for the JSP
         request.setAttribute("orders", orders);
         request.setAttribute("statusFilter", statusFilter);
+
+        System.out.println("OrderHistoryServlet: Forwarding to order-history.jsp");
 
         // Forward to order history page
         request.getRequestDispatcher("/order/order-history.jsp").forward(request, response);
