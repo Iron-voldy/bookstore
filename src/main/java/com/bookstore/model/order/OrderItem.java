@@ -113,19 +113,79 @@ public class OrderItem {
      * Create item from string representation
      */
     public static OrderItem fromFileString(String fileString) {
-        String[] parts = fileString.split(",");
-        if (parts.length >= 7) {
-            OrderItem item = new OrderItem();
-            item.setBookId(parts[0]);
-            item.setTitle(parts[1].replace("{{COMMA}}", ","));
-            item.setAuthor(parts[2].replace("{{COMMA}}", ","));
-            item.setPrice(Double.parseDouble(parts[3]));
-            item.setDiscountedPrice(Double.parseDouble(parts[4]));
-            item.setQuantity(Integer.parseInt(parts[5]));
-            item.setBookType(parts[6]);
-            return item;
+        try {
+            String[] parts = fileString.split(",");
+            if (parts.length >= 3) {  // More lenient check (was 7)
+                OrderItem item = new OrderItem();
+
+                // Set required fields
+                item.setBookId(parts[0].trim());
+
+                // Title and author - with fallbacks
+                if (parts.length > 1) {
+                    item.setTitle(parts[1].replace("{{COMMA}}", ","));
+                } else {
+                    item.setTitle("Unknown Title");
+                }
+
+                if (parts.length > 2) {
+                    item.setAuthor(parts[2].replace("{{COMMA}}", ","));
+                } else {
+                    item.setAuthor("Unknown Author");
+                }
+
+                // Parse price and quantity with error handling
+                if (parts.length > 3) {
+                    try {
+                        item.setPrice(Double.parseDouble(parts[3]));
+                    } catch (NumberFormatException e) {
+                        System.err.println("Error parsing price: " + parts[3]);
+                        item.setPrice(0.0);
+                    }
+                } else {
+                    item.setPrice(0.0);
+                }
+
+                if (parts.length > 4) {
+                    try {
+                        item.setDiscountedPrice(Double.parseDouble(parts[4]));
+                    } catch (NumberFormatException e) {
+                        System.err.println("Error parsing discounted price: " + parts[4]);
+                        item.setDiscountedPrice(item.getPrice());  // Default to regular price
+                    }
+                } else {
+                    item.setDiscountedPrice(item.getPrice());  // Default to regular price
+                }
+
+                if (parts.length > 5) {
+                    try {
+                        item.setQuantity(Integer.parseInt(parts[5]));
+                    } catch (NumberFormatException e) {
+                        System.err.println("Error parsing quantity: " + parts[5]);
+                        item.setQuantity(1);  // Default to 1
+                    }
+                } else {
+                    item.setQuantity(1);  // Default to 1
+                }
+
+                // Book type
+                if (parts.length > 6) {
+                    item.setBookType(parts[6]);
+                } else {
+                    item.setBookType("BOOK");  // Default type
+                }
+
+                System.out.println("Successfully parsed order item for book: " + item.getBookId());
+                return item;
+            }
+
+            System.err.println("Invalid order item format, not enough parts: " + parts.length + ", Data: " + fileString);
+            return null;
+        } catch (Exception e) {
+            System.err.println("Error parsing order item: " + e.getMessage() + ", Data: " + fileString);
+            e.printStackTrace();
+            return null;
         }
-        return null;
     }
 
     @Override

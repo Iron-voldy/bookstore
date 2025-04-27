@@ -117,11 +117,20 @@ public class OrderManager {
                     continue;
                 }
 
-                Order order = Order.fromFileString(line);
-                if (order != null) {
-                    orders.put(order.getOrderId(), order);
+                try {
+                    Order order = Order.fromFileString(line);
+                    if (order != null) {
+                        orders.put(order.getOrderId(), order);
+                        System.out.println("Loaded order: " + order.getOrderId());
+                    } else {
+                        System.err.println("Failed to parse order from line: " + line);
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error parsing order from line: " + line);
+                    e.printStackTrace();
                 }
             }
+            System.out.println("Orders loaded from file: " + orders.size());
         } catch (IOException e) {
             System.err.println("Error loading orders: " + e.getMessage());
             e.printStackTrace();
@@ -145,15 +154,61 @@ public class OrderManager {
         }
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            StringBuilder itemsData = new StringBuilder();
             String line;
+            int lineCount = 0;
+            int processedItems = 0;
+
             while ((line = reader.readLine()) != null) {
-                itemsData.append(line).append("\n");
+                lineCount++;
+                if (line.trim().isEmpty()) continue;
+
+                try {
+                    // Format should be: orderId,bookId,title,author,price,discountedPrice,quantity,bookType
+                    int firstCommaIndex = line.indexOf(',');
+                    if (firstCommaIndex > 0) {
+                        String orderId = line.substring(0, firstCommaIndex).trim();
+                        String itemData = line.substring(firstCommaIndex + 1);
+
+                        System.out.println("Processing order item - Order ID: " + orderId);
+
+                        // Find the order first
+                        Order order = orders.get(orderId);
+                        if (order != null) {
+                            // Create the item from the remaining data
+                            OrderItem item = OrderItem.fromFileString(itemData);
+                            if (item != null) {
+                                // Initialize the items list if needed
+                                if (order.getItems() == null) {
+                                    order.setItems(new ArrayList<>());
+                                }
+                                order.getItems().add(item);
+                                processedItems++;
+                                System.out.println("Added item to order: " + orderId);
+                            } else {
+                                System.err.println("Failed to parse order item from line: " + line);
+                            }
+                        } else {
+                            System.err.println("Order not found for item: " + orderId);
+                        }
+                    } else {
+                        System.err.println("Invalid order item format (missing first comma): " + line);
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error processing order item line: " + line);
+                    e.printStackTrace();
+                }
             }
 
-            // Add items to their respective orders
+            System.out.println("Read " + lineCount + " lines from order items file");
+            System.out.println("Successfully processed " + processedItems + " order items");
+
+            // Now recalculate totals for all orders
             for (Order order : orders.values()) {
-                Order.addItemsFromFileString(order, itemsData.toString());
+                if (order.getItems() != null && !order.getItems().isEmpty()) {
+                    order.calculateTotals();
+                    System.out.println("Recalculated totals for order: " + order.getOrderId() +
+                            ", Total: " + order.getTotal());
+                }
             }
         } catch (IOException e) {
             System.err.println("Error loading order items: " + e.getMessage());
@@ -184,12 +239,20 @@ public class OrderManager {
                     continue;
                 }
 
-                Payment payment = Payment.fromFileString(line);
-                if (payment != null && payment.getOrderId() != null) {
-                    Order order = orders.get(payment.getOrderId());
-                    if (order != null) {
-                        order.setPayment(payment);
+                try {
+                    Payment payment = Payment.fromFileString(line);
+                    if (payment != null && payment.getOrderId() != null) {
+                        Order order = orders.get(payment.getOrderId());
+                        if (order != null) {
+                            order.setPayment(payment);
+                            System.out.println("Added payment to order: " + payment.getOrderId());
+                        } else {
+                            System.err.println("Order not found for payment: " + payment.getOrderId());
+                        }
                     }
+                } catch (Exception e) {
+                    System.err.println("Error parsing payment from line: " + line);
+                    e.printStackTrace();
                 }
             }
         } catch (IOException e) {
@@ -434,15 +497,17 @@ public class OrderManager {
         List<Order> userOrders = new ArrayList<>();
 
         for (Order order : orders.values()) {
-            if (order.getUserId().equals(userId)) {
+            if (order.getUserId() != null && order.getUserId().equals(userId)) {
                 userOrders.add(order);
             }
         }
 
         // Sort by date (newest first)
-        QuickSort.sort(userOrders.toArray(new Order[0]), (o1, o2) ->
-                o2.getOrderDate().compareTo(o1.getOrderDate())
-        );
+        if (!userOrders.isEmpty()) {
+            QuickSort.sort(userOrders.toArray(new Order[0]), (o1, o2) ->
+                    o2.getOrderDate().compareTo(o1.getOrderDate())
+            );
+        }
 
         return userOrders;
     }
@@ -454,9 +519,11 @@ public class OrderManager {
         List<Order> allOrders = new ArrayList<>(orders.values());
 
         // Sort by date (newest first)
-        QuickSort.sort(allOrders.toArray(new Order[0]), (o1, o2) ->
-                o2.getOrderDate().compareTo(o1.getOrderDate())
-        );
+        if (!allOrders.isEmpty()) {
+            QuickSort.sort(allOrders.toArray(new Order[0]), (o1, o2) ->
+                    o2.getOrderDate().compareTo(o1.getOrderDate())
+            );
+        }
 
         return allOrders;
     }
@@ -474,9 +541,11 @@ public class OrderManager {
         }
 
         // Sort by date (newest first)
-        QuickSort.sort(filteredOrders.toArray(new Order[0]), (o1, o2) ->
-                o2.getOrderDate().compareTo(o1.getOrderDate())
-        );
+        if (!filteredOrders.isEmpty()) {
+            QuickSort.sort(filteredOrders.toArray(new Order[0]), (o1, o2) ->
+                    o2.getOrderDate().compareTo(o1.getOrderDate())
+            );
+        }
 
         return filteredOrders;
     }
@@ -604,9 +673,11 @@ public class OrderManager {
         }
 
         // Sort by date (newest first)
-        QuickSort.sort(results.toArray(new Order[0]), (o1, o2) ->
-                o2.getOrderDate().compareTo(o1.getOrderDate())
-        );
+        if (!results.isEmpty()) {
+            QuickSort.sort(results.toArray(new Order[0]), (o1, o2) ->
+                    o2.getOrderDate().compareTo(o1.getOrderDate())
+            );
+        }
 
         return results;
     }

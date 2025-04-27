@@ -1,6 +1,7 @@
 package com.bookstore.servlet.order;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -9,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import com.bookstore.model.order.Order;
+import com.bookstore.model.order.OrderItem;
 import com.bookstore.model.order.OrderManager;
 
 /**
@@ -34,8 +36,7 @@ public class OrderDetailsServlet extends HttpServlet {
         HttpSession session = request.getSession();
 
         // Check if user is logged in
-        String userId = (String) session.getAttribute("userId");
-        if (userId == null) {
+        if (session.getAttribute("userId") == null) {
             session.setAttribute("errorMessage", "Please log in to view order details");
             session.setAttribute("redirectAfterLogin", request.getRequestURI() + "?" + request.getQueryString());
             response.sendRedirect(request.getContextPath() + "/login");
@@ -59,11 +60,24 @@ public class OrderDetailsServlet extends HttpServlet {
         }
 
         // Check if this order belongs to the logged-in user
+        String userId = (String) session.getAttribute("userId");
         if (!order.getUserId().equals(userId)) {
             session.setAttribute("errorMessage", "You do not have permission to view this order");
             response.sendRedirect(request.getContextPath() + "/order-history");
             return;
         }
+
+        // Ensure order has valid items and totals
+        if (order.getItems() == null) {
+            order.setItems(new ArrayList<>());
+        }
+
+        // Recalculate totals to ensure they are up to date
+        order.calculateTotals();
+
+        // Debug output
+        System.out.println("OrderDetailsServlet: Displaying order " + orderId);
+        System.out.println("OrderDetailsServlet: Order has " + order.getItems().size() + " items");
 
         // Set order in request
         request.setAttribute("order", order);

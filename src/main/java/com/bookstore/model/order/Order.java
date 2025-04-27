@@ -355,48 +355,132 @@ public class Order implements Comparable<Order> {
      * Create order from string representation (from file)
      */
     public static Order fromFileString(String fileString) {
-        String[] parts = fileString.split("\\|");
-        if (parts.length >= 16) {
-            Order order = new Order();
-            order.setOrderId(parts[0]);
-            order.setUserId(parts[1]);
+        try {
+            String[] parts = fileString.split("\\|");
+            if (parts.length >= 8) {  // Changed from 16 to 8 to be more lenient
+                Order order = new Order();
 
-            long orderDateLong = Long.parseLong(parts[2]);
-            if (orderDateLong > 0) {
-                order.setOrderDate(new Date(orderDateLong));
+                // Parse basic order data
+                order.setOrderId(parts[0].trim());
+                order.setUserId(parts[1].trim());
+
+                // Order date
+                if (parts.length > 2 && parts[2] != null && !parts[2].trim().isEmpty() && !parts[2].equals("0")) {
+                    try {
+                        long orderDateLong = Long.parseLong(parts[2].trim());
+                        if (orderDateLong > 0) {
+                            order.setOrderDate(new Date(orderDateLong));
+                        } else {
+                            order.setOrderDate(new Date()); // Fallback to current date
+                        }
+                    } catch (NumberFormatException e) {
+                        System.err.println("Error parsing order date: " + parts[2]);
+                        order.setOrderDate(new Date()); // Fallback to current date
+                    }
+                } else {
+                    order.setOrderDate(new Date()); // Default to current date
+                }
+
+                // Status
+                if (parts.length > 3 && parts[3] != null && !parts[3].trim().isEmpty()) {
+                    try {
+                        order.setStatus(OrderStatus.valueOf(parts[3].trim()));
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("Error parsing order status: " + parts[3]);
+                        order.setStatus(OrderStatus.PENDING); // Default status
+                    }
+                } else {
+                    order.setStatus(OrderStatus.PENDING); // Default status
+                }
+
+                // Parse numerical values with error handling
+                if (parts.length > 4) {
+                    try {
+                        order.setSubtotal(Double.parseDouble(parts[4].trim()));
+                    } catch (NumberFormatException e) {
+                        System.err.println("Error parsing subtotal: " + parts[4]);
+                        order.setSubtotal(0.0);
+                    }
+                }
+
+                if (parts.length > 5) {
+                    try {
+                        order.setTax(Double.parseDouble(parts[5].trim()));
+                    } catch (NumberFormatException e) {
+                        System.err.println("Error parsing tax: " + parts[5]);
+                        order.setTax(0.0);
+                    }
+                }
+
+                if (parts.length > 6) {
+                    try {
+                        order.setShippingCost(Double.parseDouble(parts[6].trim()));
+                    } catch (NumberFormatException e) {
+                        System.err.println("Error parsing shipping cost: " + parts[6]);
+                        order.setShippingCost(0.0);
+                    }
+                }
+
+                if (parts.length > 7) {
+                    try {
+                        order.setTotal(Double.parseDouble(parts[7].trim()));
+                    } catch (NumberFormatException e) {
+                        System.err.println("Error parsing total: " + parts[7]);
+                        order.setTotal(0.0);
+                    }
+                }
+
+                // Set address and contact info
+                if (parts.length > 8) order.setShippingAddress(parts[8].replace("{{PIPE}}", "|"));
+                if (parts.length > 9) order.setBillingAddress(parts[9].replace("{{PIPE}}", "|"));
+                if (parts.length > 10) order.setContactEmail(parts[10]);
+                if (parts.length > 11) order.setContactPhone(parts[11]);
+                if (parts.length > 12) order.setTrackingNumber(parts[12]);
+
+                // Parse dates
+                if (parts.length > 13 && parts[13] != null && !parts[13].trim().isEmpty() && !parts[13].equals("0")) {
+                    try {
+                        long shippedDateLong = Long.parseLong(parts[13].trim());
+                        if (shippedDateLong > 0) {
+                            order.setShippedDate(new Date(shippedDateLong));
+                        }
+                    } catch (NumberFormatException e) {
+                        System.err.println("Error parsing shipped date: " + parts[13]);
+                    }
+                }
+
+                if (parts.length > 14 && parts[14] != null && !parts[14].trim().isEmpty() && !parts[14].equals("0")) {
+                    try {
+                        long deliveredDateLong = Long.parseLong(parts[14].trim());
+                        if (deliveredDateLong > 0) {
+                            order.setDeliveredDate(new Date(deliveredDateLong));
+                        }
+                    } catch (NumberFormatException e) {
+                        System.err.println("Error parsing delivered date: " + parts[14]);
+                    }
+                }
+
+                // Notes
+                if (parts.length > 15) {
+                    order.setNotes(parts[15].replace("{{PIPE}}", "|"));
+                }
+
+                // Initialize empty items list
+                order.setItems(new ArrayList<>());
+
+                System.out.println("Successfully parsed order: " + order.getOrderId());
+                return order;
+
+            } else {
+                System.err.println("Invalid order format, not enough parts: " + parts.length);
+                return null;
             }
-
-            if (!parts[3].isEmpty()) {
-                order.setStatus(OrderStatus.valueOf(parts[3]));
-            }
-
-            order.setSubtotal(Double.parseDouble(parts[4]));
-            order.setTax(Double.parseDouble(parts[5]));
-            order.setShippingCost(Double.parseDouble(parts[6]));
-            order.setTotal(Double.parseDouble(parts[7]));
-            order.setShippingAddress(parts[8].replace("{{PIPE}}", "|"));
-            order.setBillingAddress(parts[9].replace("{{PIPE}}", "|"));
-            order.setContactEmail(parts[10]);
-            order.setContactPhone(parts[11]);
-            order.setTrackingNumber(parts[12]);
-
-            long shippedDateLong = Long.parseLong(parts[13]);
-            if (shippedDateLong > 0) {
-                order.setShippedDate(new Date(shippedDateLong));
-            }
-
-            long deliveredDateLong = Long.parseLong(parts[14]);
-            if (deliveredDateLong > 0) {
-                order.setDeliveredDate(new Date(deliveredDateLong));
-            }
-
-            order.setNotes(parts[15].replace("{{PIPE}}", "|"));
-
-            return order;
+        } catch (Exception e) {
+            System.err.println("Error parsing order: " + e.getMessage());
+            e.printStackTrace();
+            return null;
         }
-        return null;
     }
-
     /**
      * Add items to order from file string representation
      */
@@ -409,16 +493,26 @@ public class Order implements Comparable<Order> {
         List<OrderItem> items = new ArrayList<>();
 
         for (String line : lines) {
-            String[] parts = line.split(",", 2); // Split into orderId and rest
-            if (parts.length >= 2 && parts[0].equals(order.getOrderId())) {
-                OrderItem item = OrderItem.fromFileString(parts[1]);
-                if (item != null) {
-                    items.add(item);
+            if (line.trim().isEmpty()) {
+                continue;
+            }
+
+            try {
+                String[] parts = line.split(",", 2); // Split into orderId and rest
+                if (parts.length >= 2 && parts[0].equals(order.getOrderId())) {
+                    OrderItem item = OrderItem.fromFileString(parts[1]);
+                    if (item != null) {
+                        items.add(item);
+                    }
                 }
+            } catch (Exception e) {
+                System.err.println("Error parsing order item line: " + line);
+                e.printStackTrace();
             }
         }
 
         order.setItems(items);
+        order.calculateTotals(); // Recalculate totals after adding items
     }
 
     @Override

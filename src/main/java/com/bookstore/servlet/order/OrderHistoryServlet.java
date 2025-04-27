@@ -1,6 +1,7 @@
 package com.bookstore.servlet.order;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -62,22 +63,39 @@ public class OrderHistoryServlet extends HttpServlet {
                 try {
                     OrderStatus status = OrderStatus.valueOf(statusFilter.toUpperCase());
                     System.out.println("Filtering orders by status: " + status);
-                    orders = orderManager.getOrdersByUser(userId);
 
-                    // Filter in Java rather than in database query
+                    // First get all user orders
+                    orders = orderManager.getOrdersByUser(userId);
+                    System.out.println("Found " + orders.size() + " orders for user before filtering");
+
+                    // Then filter by status (this is safer than filtering at DB level)
                     orders.removeIf(order -> order.getStatus() != status);
+                    System.out.println("Found " + orders.size() + " orders after status filtering");
                 } catch (IllegalArgumentException e) {
                     // Invalid status, fetch all orders
                     System.out.println("Invalid status filter: " + statusFilter + ", showing all orders");
                     orders = orderManager.getOrdersByUser(userId);
+                    System.out.println("Found " + orders.size() + " orders for user");
                 }
             } else {
                 // Fetch all orders for the user
                 System.out.println("Fetching all orders for user");
                 orders = orderManager.getOrdersByUser(userId);
+                System.out.println("Found " + orders.size() + " orders for user");
             }
 
-            System.out.println("Found " + (orders != null ? orders.size() : 0) + " orders");
+            // Debug orders list
+            if (orders != null && !orders.isEmpty()) {
+                System.out.println("Order details:");
+                for (Order order : orders) {
+                    System.out.println("Order ID: " + order.getOrderId() +
+                            ", Status: " + order.getStatus() +
+                            ", Items: " + order.getItems().size() +
+                            ", Total: " + order.getTotal());
+                }
+            } else {
+                System.out.println("No orders found for user ID: " + userId);
+            }
 
             // Verify order totals to avoid null values
             if (orders != null) {
@@ -85,6 +103,11 @@ public class OrderHistoryServlet extends HttpServlet {
                     if (order.getTotal() == 0) {
                         // Recalculate totals if they appear to be missing
                         order.calculateTotals();
+                    }
+
+                    // Ensure there are items in the order
+                    if (order.getItems() == null) {
+                        order.setItems(new ArrayList<>());
                     }
                 }
             }
