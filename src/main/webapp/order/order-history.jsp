@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page import="com.bookstore.model.order.OrderStatus" %>
 
 <jsp:include page="/includes/header.jsp">
     <jsp:param name="pageTitle" value="Order History - BookVerse" />
@@ -17,8 +18,13 @@
                     <label for="status" class="form-label">Filter by Status</label>
                     <select class="form-select" id="status" name="status" onchange="this.form.submit()">
                         <option value="" ${empty statusFilter ? 'selected' : ''}>All Orders</option>
+                        <%
+                        // Explicitly set statuses to avoid potential null attribute issues
+                        OrderStatus[] statuses = OrderStatus.values();
+                        request.setAttribute("statuses", statuses);
+                        %>
                         <c:forEach var="status" items="${statuses}">
-                            <option value="${status}" ${status == statusFilter ? 'selected' : ''}>
+                            <option value="${status}" ${status eq statusFilter ? 'selected' : ''}>
                                 ${status.displayName}
                             </option>
                         </c:forEach>
@@ -35,7 +41,7 @@
 
     <!-- Orders List -->
     <c:choose>
-        <c:when test="${empty orders}">
+        <c:when test="${empty orders or orders == null}">
             <div class="card">
                 <div class="card-body text-center py-5">
                     <i class="fas fa-shopping-bag fa-4x mb-3" style="color: var(--border-color);"></i>
@@ -63,9 +69,11 @@
                     <tbody>
                         <c:forEach var="order" items="${orders}">
                             <tr>
-                                <td>${order.orderId.substring(0, 8)}</td>
+                                <td>${order.orderId != null ? order.orderId.substring(0, 8) : 'N/A'}</td>
                                 <td>
-                                    <fmt:formatDate value="${order.orderDate}" pattern="MMM d, yyyy" />
+                                    <c:if test="${order.orderDate != null}">
+                                        <fmt:formatDate value="${order.orderDate}" pattern="MMM d, yyyy" />
+                                    </c:if>
                                 </td>
                                 <td>${order.totalItems} item(s)</td>
                                 <td>$<fmt:formatNumber value="${order.total}" pattern="0.00" /></td>

@@ -41,6 +41,9 @@ public class OrderHistoryServlet extends HttpServlet {
         // Get user ID
         String userId = (String) session.getAttribute("userId");
 
+        // Set OrderStatus array as an attribute for the JSP
+        request.setAttribute("statuses", OrderStatus.values());
+
         // Get status filter parameter
         String statusFilter = request.getParameter("status");
 
@@ -63,7 +66,6 @@ public class OrderHistoryServlet extends HttpServlet {
 
         // Set attributes for the JSP
         request.setAttribute("orders", orders);
-        request.setAttribute("statuses", OrderStatus.values());
         request.setAttribute("statusFilter", statusFilter);
 
         // Forward to order history page
