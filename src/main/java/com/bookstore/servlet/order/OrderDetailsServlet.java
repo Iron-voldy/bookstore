@@ -10,7 +10,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import com.bookstore.model.order.Order;
-import com.bookstore.model.order.OrderItem;
 import com.bookstore.model.order.OrderManager;
 
 /**
@@ -73,11 +72,20 @@ public class OrderDetailsServlet extends HttpServlet {
         }
 
         // Recalculate totals to ensure they are up to date
-        order.calculateTotals();
+        try {
+            order.calculateTotals();
+        } catch (Exception e) {
+            // Log the error, but don't block the page load
+            System.err.println("Error recalculating order totals: " + e.getMessage());
+        }
 
         // Debug output
         System.out.println("OrderDetailsServlet: Displaying order " + orderId);
-        System.out.println("OrderDetailsServlet: Order has " + order.getItems().size() + " items");
+        System.out.println("OrderDetailsServlet: Order has " +
+                (order.getItems() != null ? order.getItems().size() : "0") + " items");
+        System.out.println("OrderDetailsServlet: Subtotal: " + order.getSubtotal());
+        System.out.println("OrderDetailsServlet: Tax: " + order.getTax());
+        System.out.println("OrderDetailsServlet: Total: " + order.getTotal());
 
         // Set order in request
         request.setAttribute("order", order);

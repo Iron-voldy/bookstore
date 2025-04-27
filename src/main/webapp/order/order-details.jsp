@@ -158,51 +158,49 @@
                                     <tr>
                                         <th>Product</th>
                                         <th>Quantity</th>
+                                        <th>Price</th>
+                                        <th class="text-end">Total</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <c:forEach var="item" items="${order.items}">
+                                        <c:set var="discountedPrice" value="${item.discountedPrice != null ? item.discountedPrice : 0}" />
+                                        <c:set var="quantity" value="${item.quantity != null ? item.quantity : 0}" />
+                                        <c:set var="itemTotal" value="${discountedPrice * quantity}" />
                                         <tr>
                                             <td>
                                                 <strong>${item.title}</strong><br>
                                                 <small class="text-muted">by ${item.author}</small>
-                                                <c:if test="${not empty item.bookType}">
-                                                    <br>
-                                                    <c:choose>
-                                                        <c:when test="${item.bookType == 'EBOOK'}">
-                                                            <span class="badge bg-primary">E-Book</span>
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            <span class="badge bg-secondary">Physical Book</span>
-                                                        </c:otherwise>
-                                                    </c:choose>
-                                                </c:if>
                                             </td>
-                                            <td>${item.quantity}</td>
+                                            <td>${quantity}</td>
+                                            <td>$<fmt:formatNumber value="${discountedPrice}" pattern="0.00" /></td>
+                                            <td class="text-end">$<fmt:formatNumber value="${itemTotal}" pattern="0.00" /></td>
                                         </tr>
                                     </c:forEach>
                                 </tbody>
+                                <tfoot>
+                                    <c:set var="subtotal" value="${order.subtotal != null ? order.subtotal : 0}" />
+                                    <c:set var="tax" value="${order.tax != null ? order.tax : 0}" />
+                                    <c:set var="shippingCost" value="${order.shippingCost != null ? order.shippingCost : 0}" />
+                                    <c:set var="total" value="${order.total != null ? order.total : 0}" />
+                                    <tr>
+                                        <td colspan="3" class="text-end">Subtotal:</td>
+                                        <td class="text-end">$<fmt:formatNumber value="${subtotal}" pattern="0.00" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="text-end">Tax:</td>
+                                        <td class="text-end">$<fmt:formatNumber value="${tax}" pattern="0.00" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="text-end">Shipping:</td>
+                                        <td class="text-end">$<fmt:formatNumber value="${shippingCost}" pattern="0.00" /></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="text-end fw-bold">Total:</td>
+                                        <td class="text-end fw-bold">$<fmt:formatNumber value="${total}" pattern="0.00" /></td>
+                                    </tr>
+                                </tfoot>
                             </table>
-                        </div>
-
-                        <div class="mt-3">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Subtotal:</span>
-                                <span>$<fmt:formatNumber value="${order.subtotal}" pattern="0.00" /></span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Tax:</span>
-                                <span>$<fmt:formatNumber value="${order.tax}" pattern="0.00" /></span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Shipping:</span>
-                                <span>$<fmt:formatNumber value="${order.shippingCost}" pattern="0.00" /></span>
-                            </div>
-                            <hr>
-                            <div class="d-flex justify-content-between fw-bold">
-                                <span>Total:</span>
-                                <span>$<fmt:formatNumber value="${order.total}" pattern="0.00" /></span>
-                            </div>
                         </div>
                     </div>
                 </div>
