@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import com.bookstore.model.order.Order;
+import com.bookstore.model.order.OrderItem;
 import com.bookstore.model.order.OrderManager;
 
 /**
@@ -77,6 +78,7 @@ public class OrderDetailsServlet extends HttpServlet {
         } catch (Exception e) {
             // Log the error, but don't block the page load
             System.err.println("Error recalculating order totals: " + e.getMessage());
+            e.printStackTrace();
         }
 
         // Debug output

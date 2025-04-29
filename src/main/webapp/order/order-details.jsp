@@ -1,6 +1,49 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page import="com.bookstore.model.order.OrderItem" %>
+<%@ page import="com.bookstore.model.order.Order" %>
+<%@ page import="com.bookstore.model.order.OrderStatus" %>
+<%@ page import="java.util.List" %>
+
+<%
+// Get the order from request
+Order order = (Order)request.getAttribute("order");
+
+// Make sure we have a valid order
+if (order == null) {
+    response.sendRedirect(request.getContextPath() + "/order-history");
+    return;
+}
+
+// Get shortened order ID for display
+String orderIdShort = order.getOrderId().substring(0, 8);
+
+// Get order status information
+String statusLabel = "";
+String statusClass = "";
+OrderStatus status = order.getStatus();
+
+if (status == OrderStatus.PENDING) {
+    statusLabel = "Pending";
+    statusClass = "bg-warning text-dark";
+} else if (status == OrderStatus.PROCESSING) {
+    statusLabel = "Processing";
+    statusClass = "bg-primary";
+} else if (status == OrderStatus.SHIPPED) {
+    statusLabel = "Shipped";
+    statusClass = "bg-info text-dark";
+} else if (status == OrderStatus.DELIVERED) {
+    statusLabel = "Delivered";
+    statusClass = "bg-success";
+} else if (status == OrderStatus.CANCELLED) {
+    statusLabel = "Cancelled";
+    statusClass = "bg-danger";
+}
+
+// Format for currency
+java.text.DecimalFormat df = new java.text.DecimalFormat("0.00");
+%>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -60,7 +103,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="${pageContext.request.contextPath}/">
+            <a class="navbar-brand" href="<%= request.getContextPath() %>/">
                 <i class="fas fa-book-open me-2"></i>BookVerse
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -69,25 +112,25 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/">Home</a>
+                        <a class="nav-link" href="<%= request.getContextPath() %>/">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/books">Books</a>
+                        <a class="nav-link" href="<%= request.getContextPath() %>/books">Books</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/cart">
+                        <a class="nav-link" href="<%= request.getContextPath() %>/cart">
                             <i class="fas fa-shopping-cart"></i>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="${pageContext.request.contextPath}/order-history">
+                        <a class="nav-link active" href="<%= request.getContextPath() %>/order-history">
                             Orders
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="${pageContext.request.contextPath}/logout">Logout</a>
+                        <a class="nav-link" href="<%= request.getContextPath() %>/logout">Logout</a>
                     </li>
                 </ul>
             </div>
@@ -98,42 +141,26 @@
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb" class="mb-4">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/">Home</a></li>
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/order-history">Order History</a></li>
+                <li class="breadcrumb-item"><a href="<%= request.getContextPath() %>/">Home</a></li>
+                <li class="breadcrumb-item"><a href="<%= request.getContextPath() %>/order-history">Order History</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Order Details</li>
             </ol>
         </nav>
 
         <h2 class="mb-4">
             <i class="fas fa-file-invoice me-2"></i>
-            Order #${order.orderId.substring(0, 8)}
-            <c:choose>
-                <c:when test="${order.status == 'PENDING'}">
-                    <span class="badge bg-warning text-dark ms-2">Pending</span>
-                </c:when>
-                <c:when test="${order.status == 'PROCESSING'}">
-                    <span class="badge bg-primary ms-2">Processing</span>
-                </c:when>
-                <c:when test="${order.status == 'SHIPPED'}">
-                    <span class="badge bg-info text-dark ms-2">Shipped</span>
-                </c:when>
-                <c:when test="${order.status == 'DELIVERED'}">
-                    <span class="badge bg-success ms-2">Delivered</span>
-                </c:when>
-                <c:when test="${order.status == 'CANCELLED'}">
-                    <span class="badge bg-danger ms-2">Cancelled</span>
-                </c:when>
-            </c:choose>
+            Order #<%= orderIdShort %>
+            <span class="badge <%= statusClass %> ms-2"><%= statusLabel %></span>
         </h2>
 
         <!-- Order Actions -->
         <div class="mb-4">
-            <c:if test="${order.canCancel()}">
+            <% if (order.canCancel()) { %>
                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
                     <i class="fas fa-times-circle me-2"></i> Cancel Order
                 </button>
-            </c:if>
-            <a href="${pageContext.request.contextPath}/order-history" class="btn btn-outline-light ms-2">
+            <% } %>
+            <a href="<%= request.getContextPath() %>/order-history" class="btn btn-outline-light ms-2">
                 <i class="fas fa-arrow-left me-2"></i> Back to Orders
             </a>
         </div>
@@ -146,9 +173,9 @@
                         <h5 class="mb-0">Order Items</h5>
                         <span class="text-muted small">
                             Placed on
-                            <c:if test="${not empty order.orderDate}">
-                                <fmt:formatDate value="${order.orderDate}" pattern="MMMM d, yyyy h:mm a" />
-                            </c:if>
+                            <% if (order.getOrderDate() != null) { %>
+                                <%= new java.text.SimpleDateFormat("MMMM d, yyyy h:mm a").format(order.getOrderDate()) %>
+                            <% } %>
                         </span>
                     </div>
                     <div class="card-body">
@@ -163,41 +190,48 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <c:forEach var="item" items="${order.items}">
-                                        <c:set var="discountedPrice" value="${item.discountedPrice != null ? item.discountedPrice : 0}" />
-                                        <c:set var="quantity" value="${item.quantity != null ? item.quantity : 0}" />
-                                        <c:set var="itemTotal" value="${discountedPrice * quantity}" />
-                                        <tr>
-                                            <td>
-                                                <strong>${item.title}</strong><br>
-                                                <small class="text-muted">by ${item.author}</small>
-                                            </td>
-                                            <td>${quantity}</td>
-                                            <td>$<fmt:formatNumber value="${discountedPrice}" pattern="0.00" /></td>
-                                            <td class="text-end">$<fmt:formatNumber value="${itemTotal}" pattern="0.00" /></td>
-                                        </tr>
-                                    </c:forEach>
+                                    <%
+                                    // Process items safely
+                                    if (order.getItems() != null) {
+                                        List<OrderItem> items = order.getItems();
+                                        for (OrderItem item : items) {
+                                            // Get values safely
+                                            String title = item.getTitle() != null ? item.getTitle() : "Unknown";
+                                            String author = item.getAuthor() != null ? item.getAuthor() : "Unknown";
+                                            int quantity = item.getQuantity();
+                                            double price = item.getDiscountedPrice();
+                                            double total = price * quantity;
+                                    %>
+                                    <tr>
+                                        <td>
+                                            <strong><%= title %></strong><br>
+                                            <small class="text-muted">by <%= author %></small>
+                                        </td>
+                                        <td><%= quantity %></td>
+                                        <td>$<%= df.format(price) %></td>
+                                        <td class="text-end">$<%= df.format(total) %></td>
+                                    </tr>
+                                    <%
+                                        } // End of for loop
+                                    } // End of if statement
+                                    %>
                                 </tbody>
                                 <tfoot>
-                                    <c:set var="subtotal" value="${order.subtotal != null ? order.subtotal : 0}" />
-                                    <c:set var="tax" value="${order.tax != null ? order.tax : 0}" />
-                                    <c:set var="shippingCost" value="${order.shippingCost != null ? order.shippingCost : 0}" />
-                                    <c:set var="total" value="${order.total != null ? order.total : 0}" />
                                     <tr>
                                         <td colspan="3" class="text-end">Subtotal:</td>
-                                        <td class="text-end">$<fmt:formatNumber value="${subtotal}" pattern="0.00" /></td>
+                                        <td class="text-end">$<%= df.format(order.getSubtotal()) %></td>
                                     </tr>
                                     <tr>
                                         <td colspan="3" class="text-end">Tax:</td>
-                                        <td class="text-end">$<fmt:formatNumber value="${tax}" pattern="0.00" /></td>
+                                        <td class="text-end">$<%= df.format(order.getTax()) %></td>
                                     </tr>
                                     <tr>
                                         <td colspan="3" class="text-end">Shipping:</td>
-                                        <td class="text-end">$<fmt:formatNumber value="${shippingCost}" pattern="0.00" /></td>
+                                        <td class="text-end">$<%= df.format(order.getShippingCost()) %></td>
                                     </tr>
                                     <tr>
                                         <td colspan="3" class="text-end fw-bold">Total:</td>
-                                        <td class="text-end fw-bold">$<fmt:formatNumber value="${total}" pattern="0.00" /></td>
+                                        <td class="text-end fw-bold">$<%= df.format(order.getTotal()) %></td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -215,11 +249,11 @@
                     </div>
                     <div class="card-body">
                         <h6>Shipping Address</h6>
-                        <p class="mb-3">${order.shippingAddress}</p>
+                        <p class="mb-3"><%= order.getShippingAddress() %></p>
 
                         <h6>Contact Information</h6>
-                        <p class="mb-1"><i class="fas fa-envelope me-2 text-muted"></i> ${order.contactEmail}</p>
-                        <p class="mb-0"><i class="fas fa-phone me-2 text-muted"></i> ${order.contactPhone}</p>
+                        <p class="mb-1"><i class="fas fa-envelope me-2 text-muted"></i> <%= order.getContactEmail() %></p>
+                        <p class="mb-0"><i class="fas fa-phone me-2 text-muted"></i> <%= order.getContactPhone() %></p>
                     </div>
                 </div>
 
@@ -230,7 +264,7 @@
                     </div>
                     <div class="card-body">
                         <div class="d-grid gap-2">
-                            <a href="${pageContext.request.contextPath}/contact" class="btn btn-outline-light">
+                            <a href="<%= request.getContextPath() %>/contact" class="btn btn-outline-light">
                                 <i class="fas fa-headset me-2"></i> Contact Support
                             </a>
                         </div>
@@ -250,13 +284,13 @@
                 </div>
                 <div class="modal-body">
                     <p>Are you sure you want to cancel this order?</p>
-                    <p><strong>Order #${order.orderId.substring(0, 8)}</strong></p>
+                    <p><strong>Order #<%= orderIdShort %></strong></p>
                     <p class="text-danger">This action cannot be undone.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">No, Keep Order</button>
-                    <form action="${pageContext.request.contextPath}/cancel-order" method="post">
-                        <input type="hidden" name="orderId" value="${order.orderId}">
+                    <form action="<%= request.getContextPath() %>/cancel-order" method="post">
+                        <input type="hidden" name="orderId" value="<%= order.getOrderId() %>">
                         <button type="submit" class="btn btn-danger">Yes, Cancel Order</button>
                     </form>
                 </div>
@@ -275,9 +309,9 @@
                 <div class="col-md-4 mb-3">
                     <h5>Quick Links</h5>
                     <ul class="list-unstyled">
-                        <li><a href="${pageContext.request.contextPath}/" class="text-decoration-none text-light">Home</a></li>
-                        <li><a href="${pageContext.request.contextPath}/books" class="text-decoration-none text-light">Books</a></li>
-                        <li><a href="${pageContext.request.contextPath}/contact" class="text-decoration-none text-light">Contact Us</a></li>
+                        <li><a href="<%= request.getContextPath() %>/" class="text-decoration-none text-light">Home</a></li>
+                        <li><a href="<%= request.getContextPath() %>/books" class="text-decoration-none text-light">Books</a></li>
+                        <li><a href="<%= request.getContextPath() %>/contact" class="text-decoration-none text-light">Contact Us</a></li>
                     </ul>
                 </div>
                 <div class="col-md-4 mb-3">
