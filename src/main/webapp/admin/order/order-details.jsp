@@ -1,6 +1,54 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page import="com.bookstore.model.order.OrderItem" %>
+<%@ page import="com.bookstore.model.order.Order" %>
+<%@ page import="com.bookstore.model.order.OrderStatus" %>
+<%@ page import="com.bookstore.model.user.User" %>
+<%@ page import="java.util.List" %>
+
+<%
+// Get the order from request
+Order order = (Order)request.getAttribute("order");
+User customer = (User)request.getAttribute("customer");
+
+// Make sure we have a valid order
+if (order == null) {
+    response.sendRedirect(request.getContextPath() + "/admin/orders");
+    return;
+}
+
+// Get shortened order ID for display
+String orderIdShort = order.getOrderId().substring(0, 8);
+
+// Get order status information
+String statusLabel = "";
+String statusClass = "";
+OrderStatus status = order.getStatus();
+
+if (status == OrderStatus.PENDING) {
+    statusLabel = "Pending";
+    statusClass = "status-pending";
+} else if (status == OrderStatus.PROCESSING) {
+    statusLabel = "Processing";
+    statusClass = "status-processing";
+} else if (status == OrderStatus.SHIPPED) {
+    statusLabel = "Shipped";
+    statusClass = "status-shipped";
+} else if (status == OrderStatus.DELIVERED) {
+    statusLabel = "Delivered";
+    statusClass = "status-delivered";
+} else if (status == OrderStatus.CANCELLED) {
+    statusLabel = "Cancelled";
+    statusClass = "status-cancelled";
+}
+
+// Format for currency
+java.text.DecimalFormat df = new java.text.DecimalFormat("0.00");
+
+// Get all available statuses
+OrderStatus[] allStatuses = OrderStatus.values();
+%>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -92,10 +140,6 @@
             color: white;
         }
 
-        .table-responsive {
-            overflow-x: auto;
-        }
-
         .card {
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border: none;
@@ -161,32 +205,32 @@
         </div>
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link" href="${pageContext.request.contextPath}/admin/dashboard">
+                <a class="nav-link" href="<%= request.getContextPath() %>/admin/dashboard">
                     <i class="fas fa-tachometer-alt"></i> Dashboard
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="${pageContext.request.contextPath}/admin/manage-books.jsp">
+                <a class="nav-link" href="<%= request.getContextPath() %>/admin/manage-books.jsp">
                     <i class="fas fa-book"></i> Books
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link active" href="${pageContext.request.contextPath}/admin/orders">
+                <a class="nav-link active" href="<%= request.getContextPath() %>/admin/orders">
                     <i class="fas fa-shopping-cart"></i> Orders
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="${pageContext.request.contextPath}/admin/manage-users.jsp">
+                <a class="nav-link" href="<%= request.getContextPath() %>/admin/manage-users.jsp">
                     <i class="fas fa-users"></i> Users
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="${pageContext.request.contextPath}/admin/manage-admins">
+                <a class="nav-link" href="<%= request.getContextPath() %>/admin/manage-admins">
                     <i class="fas fa-user-shield"></i> Admins
                 </a>
             </li>
             <li class="nav-item mt-5">
-                <a class="nav-link" href="${pageContext.request.contextPath}/admin/logout">
+                <a class="nav-link" href="<%= request.getContextPath() %>/admin/logout">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
             </li>
@@ -196,26 +240,35 @@
     <!-- Main Content -->
     <div class="main-content">
         <!-- Flash Messages -->
-        <c:if test="${not empty sessionScope.successMessage}">
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle me-2"></i> ${sessionScope.successMessage}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            <c:remove var="successMessage" scope="session" />
-        </c:if>
+        <%
+        String successMessage = (String)session.getAttribute("successMessage");
+        String errorMessage = (String)session.getAttribute("errorMessage");
 
-        <c:if test="${not empty sessionScope.errorMessage}">
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i> ${sessionScope.errorMessage}
+        if (successMessage != null && !successMessage.isEmpty()) {
+        %>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="fas fa-check-circle me-2"></i> <%= successMessage %>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-            <c:remove var="errorMessage" scope="session" />
-        </c:if>
+        <%
+            session.removeAttribute("successMessage");
+        }
+
+        if (errorMessage != null && !errorMessage.isEmpty()) {
+        %>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i> <%= errorMessage %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <%
+            session.removeAttribute("errorMessage");
+        }
+        %>
 
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="fas fa-file-invoice me-2"></i> Order Details</h2>
-            <a href="${pageContext.request.contextPath}/admin/orders" class="btn btn-outline-secondary">
+            <a href="<%= request.getContextPath() %>/admin/orders" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left me-2"></i> Back to Orders
             </a>
         </div>
@@ -223,8 +276,8 @@
         <!-- Order Information -->
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Order #${order.orderId}</span>
-                <span class="order-status status-${order.status.name().toLowerCase()}">${order.status.displayName}</span>
+                <span>Order #<%= orderIdShort %></span>
+                <span class="order-status <%= statusClass %>"><%= statusLabel %></span>
             </div>
             <div class="card-body">
                 <div class="row">
@@ -233,30 +286,34 @@
                         <table class="table table-borderless">
                             <tr>
                                 <th>Order Date:</th>
-                                <td><fmt:formatDate value="${order.orderDate}" pattern="MMMM d, yyyy h:mm a" /></td>
+                                <td>
+                                    <% if (order.getOrderDate() != null) { %>
+                                        <%= new java.text.SimpleDateFormat("MMMM d, yyyy h:mm a").format(order.getOrderDate()) %>
+                                    <% } %>
+                                </td>
                             </tr>
                             <tr>
                                 <th>Order Status:</th>
-                                <td><span class="order-status status-${order.status.name().toLowerCase()}">${order.status.displayName}</span></td>
+                                <td><span class="order-status <%= statusClass %>"><%= statusLabel %></span></td>
                             </tr>
-                            <c:if test="${not empty order.trackingNumber}">
+                            <% if (order.getTrackingNumber() != null && !order.getTrackingNumber().isEmpty()) { %>
                                 <tr>
                                     <th>Tracking Number:</th>
-                                    <td>${order.trackingNumber}</td>
+                                    <td><%= order.getTrackingNumber() %></td>
                                 </tr>
-                            </c:if>
-                            <c:if test="${not empty order.shippedDate}">
+                            <% } %>
+                            <% if (order.getShippedDate() != null) { %>
                                 <tr>
                                     <th>Shipped Date:</th>
-                                    <td><fmt:formatDate value="${order.shippedDate}" pattern="MMMM d, yyyy" /></td>
+                                    <td><%= new java.text.SimpleDateFormat("MMMM d, yyyy").format(order.getShippedDate()) %></td>
                                 </tr>
-                            </c:if>
-                            <c:if test="${not empty order.deliveredDate}">
+                            <% } %>
+                            <% if (order.getDeliveredDate() != null) { %>
                                 <tr>
                                     <th>Delivered Date:</th>
-                                    <td><fmt:formatDate value="${order.deliveredDate}" pattern="MMMM d, yyyy" /></td>
+                                    <td><%= new java.text.SimpleDateFormat("MMMM d, yyyy").format(order.getDeliveredDate()) %></td>
                                 </tr>
-                            </c:if>
+                            <% } %>
                         </table>
                     </div>
                     <div class="col-md-6">
@@ -264,19 +321,19 @@
                         <table class="table table-borderless">
                             <tr>
                                 <th>Customer Name:</th>
-                                <td>${customer.fullName}</td>
+                                <td><%= customer != null ? customer.getFullName() : "N/A" %></td>
                             </tr>
                             <tr>
                                 <th>Email:</th>
-                                <td>${order.contactEmail}</td>
+                                <td><%= order.getContactEmail() %></td>
                             </tr>
                             <tr>
                                 <th>Phone:</th>
-                                <td>${order.contactPhone}</td>
+                                <td><%= order.getContactPhone() %></td>
                             </tr>
                             <tr>
                                 <th>User ID:</th>
-                                <td>${order.userId}</td>
+                                <td><%= order.getUserId() %></td>
                             </tr>
                         </table>
                     </div>
@@ -285,55 +342,53 @@
                 <div class="row mt-3">
                     <div class="col-md-6">
                         <h5>Shipping Address</h5>
-                        <p class="border p-2">${order.shippingAddress}</p>
+                        <p class="border p-2"><%= order.getShippingAddress() %></p>
                     </div>
                     <div class="col-md-6">
                         <h5>Billing Address</h5>
-                        <p class="border p-2">${order.billingAddress}</p>
+                        <p class="border p-2"><%= order.getBillingAddress() %></p>
                     </div>
                 </div>
 
                 <div class="row mt-3">
                     <div class="col-md-12">
                         <h5>Payment Information</h5>
-                        <c:choose>
-                            <c:when test="${not empty order.payment}">
-                                <table class="table table-borderless">
-                                    <tr>
-                                        <th>Payment Method:</th>
-                                        <td>${order.payment.paymentMethod.displayName}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Transaction ID:</th>
-                                        <td>${order.payment.transactionId}</td>
-                                    </tr>
-                                    <tr>
-                                        <th>Payment Date:</th>
-                                        <td><fmt:formatDate value="${order.payment.paymentDate}" pattern="MMMM d, yyyy h:mm a" /></td>
-                                    </tr>
-                                    <tr>
-                                        <th>Payment Status:</th>
-                                        <td>
-                                            <c:choose>
-                                                <c:when test="${order.payment.successful}">
-                                                    <span class="badge bg-success">Successful</span>
-                                                </c:when>
-                                                <c:otherwise>
-                                                    <span class="badge bg-danger">Failed</span>
-                                                </c:otherwise>
-                                            </c:choose>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Payment Details:</th>
-                                        <td>${order.payment.paymentDetails}</td>
-                                    </tr>
-                                </table>
-                            </c:when>
-                            <c:otherwise>
-                                <p class="text-muted">No payment information available.</p>
-                            </c:otherwise>
-                        </c:choose>
+                        <% if (order.getPayment() != null) { %>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th>Payment Method:</th>
+                                    <td><%= order.getPayment().getPaymentMethod() != null ? order.getPayment().getPaymentMethod().getDisplayName() : "N/A" %></td>
+                                </tr>
+                                <tr>
+                                    <th>Transaction ID:</th>
+                                    <td><%= order.getPayment().getTransactionId() %></td>
+                                </tr>
+                                <tr>
+                                    <th>Payment Date:</th>
+                                    <td>
+                                        <% if (order.getPayment().getPaymentDate() != null) { %>
+                                            <%= new java.text.SimpleDateFormat("MMMM d, yyyy h:mm a").format(order.getPayment().getPaymentDate()) %>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Payment Status:</th>
+                                    <td>
+                                        <% if (order.getPayment().isSuccessful()) { %>
+                                            <span class="badge bg-success">Successful</span>
+                                        <% } else { %>
+                                            <span class="badge bg-danger">Failed</span>
+                                        <% } %>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Payment Details:</th>
+                                    <td><%= order.getPayment().getPaymentDetails() %></td>
+                                </tr>
+                            </table>
+                        <% } else { %>
+                            <p class="text-muted">No payment information available.</p>
+                        <% } %>
                     </div>
                 </div>
 
@@ -352,47 +407,58 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <c:forEach var="item" items="${order.items}">
-                                        <tr>
-                                            <td>
-                                                <strong>${item.title}</strong><br>
-                                                <small class="text-muted">by ${item.author}</small>
-                                            </td>
-                                            <td>
-                                                <c:choose>
-                                                    <c:when test="${item.bookType eq 'EBOOK'}">
-                                                        <span class="badge bg-primary">E-Book</span>
-                                                    </c:when>
-                                                    <c:when test="${item.bookType eq 'PHYSICAL'}">
-                                                        <span class="badge bg-info">Physical Book</span>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <span class="badge bg-secondary">Book</span>
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </td>
-                                            <td class="text-end">$<fmt:formatNumber value="${item.discountedPrice}" pattern="0.00" /></td>
-                                            <td class="text-center">${item.quantity}</td>
-                                            <td class="text-end">$<fmt:formatNumber value="${item.subtotal}" pattern="0.00" /></td>
-                                        </tr>
-                                    </c:forEach>
+                                    <%
+                                    // Process items safely
+                                    if (order.getItems() != null) {
+                                        List<OrderItem> items = order.getItems();
+                                        for (OrderItem item : items) {
+                                            // Get values safely
+                                            String title = item.getTitle() != null ? item.getTitle() : "Unknown";
+                                            String author = item.getAuthor() != null ? item.getAuthor() : "Unknown";
+                                            int quantity = item.getQuantity();
+                                            double price = item.getDiscountedPrice();
+                                            double itemTotal = price * quantity;
+                                            String bookType = item.getBookType();
+                                    %>
+                                    <tr>
+                                        <td>
+                                            <strong><%= title %></strong><br>
+                                            <small class="text-muted">by <%= author %></small>
+                                        </td>
+                                        <td>
+                                            <% if("EBOOK".equals(bookType)) { %>
+                                                <span class="badge bg-primary">E-Book</span>
+                                            <% } else if("PHYSICAL".equals(bookType)) { %>
+                                                <span class="badge bg-info">Physical Book</span>
+                                            <% } else { %>
+                                                <span class="badge bg-secondary">Book</span>
+                                            <% } %>
+                                        </td>
+                                        <td class="text-end">$<%= df.format(price) %></td>
+                                        <td class="text-center"><%= quantity %></td>
+                                        <td class="text-end">$<%= df.format(itemTotal) %></td>
+                                    </tr>
+                                    <%
+                                        } // End of for loop
+                                    } // End of if statement
+                                    %>
                                 </tbody>
                                 <tfoot>
                                     <tr>
                                         <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
-                                        <td class="text-end">$<fmt:formatNumber value="${order.subtotal}" pattern="0.00" /></td>
+                                        <td class="text-end">$<%= df.format(order.getSubtotal()) %></td>
                                     </tr>
                                     <tr>
                                         <td colspan="4" class="text-end"><strong>Tax:</strong></td>
-                                        <td class="text-end">$<fmt:formatNumber value="${order.tax}" pattern="0.00" /></td>
+                                        <td class="text-end">$<%= df.format(order.getTax()) %></td>
                                     </tr>
                                     <tr>
                                         <td colspan="4" class="text-end"><strong>Shipping:</strong></td>
-                                        <td class="text-end">$<fmt:formatNumber value="${order.shippingCost}" pattern="0.00" /></td>
+                                        <td class="text-end">$<%= df.format(order.getShippingCost()) %></td>
                                     </tr>
                                     <tr>
                                         <td colspan="4" class="text-end"><strong>Total:</strong></td>
-                                        <td class="text-end"><strong>$<fmt:formatNumber value="${order.total}" pattern="0.00" /></strong></td>
+                                        <td class="text-end"><strong>$<%= df.format(order.getTotal()) %></strong></td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -403,7 +469,7 @@
                 <div class="row mt-3">
                     <div class="col-md-12">
                         <h5>Order Notes</h5>
-                        <textarea class="form-control" id="orderNotes" rows="3" readonly>${order.notes}</textarea>
+                        <textarea class="form-control" id="orderNotes" rows="3" readonly><%= order.getNotes() != null ? order.getNotes() : "" %></textarea>
                     </div>
                 </div>
             </div>
@@ -415,29 +481,31 @@
                 <h5 class="mb-0">Update Order Status</h5>
             </div>
             <div class="card-body">
-                <form action="${pageContext.request.contextPath}/admin/update-order-status" method="post">
-                    <input type="hidden" name="orderId" value="${order.orderId}">
+                <form action="<%= request.getContextPath() %>/admin/update-order-status" method="post">
+                    <input type="hidden" name="orderId" value="<%= order.getOrderId() %>">
 
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="status" class="form-label">Order Status</label>
                             <select class="form-select" id="status" name="status" required>
-                                <c:forEach var="status" items="${statuses}">
-                                    <option value="${status}" ${order.status eq status ? 'selected' : ''}>${status.displayName}</option>
-                                </c:forEach>
+                                <% for (OrderStatus availableStatus : allStatuses) { %>
+                                    <option value="<%= availableStatus.name() %>" <%= (order.getStatus() == availableStatus) ? "selected" : "" %>>
+                                        <%= availableStatus.getDisplayName() %>
+                                    </option>
+                                <% } %>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label for="trackingNumber" class="form-label">Tracking Number</label>
                             <input type="text" class="form-control" id="trackingNumber" name="trackingNumber"
-                                   value="${order.trackingNumber}" placeholder="Enter tracking number">
+                                   value="<%= order.getTrackingNumber() != null ? order.getTrackingNumber() : "" %>" placeholder="Enter tracking number">
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label for="notes" class="form-label">Order Notes</label>
                         <textarea class="form-control" id="notes" name="notes" rows="3"
-                                  placeholder="Add notes about this order">${order.notes}</textarea>
+                                  placeholder="Add notes about this order"><%= order.getNotes() != null ? order.getNotes() : "" %></textarea>
                     </div>
 
                     <div class="d-flex justify-content-between">
@@ -447,11 +515,11 @@
                             </button>
                         </div>
                         <div>
-                            <c:if test="${order.status ne 'DELIVERED' and order.status ne 'CANCELLED'}">
+                            <% if(order.getStatus() != OrderStatus.DELIVERED && order.getStatus() != OrderStatus.CANCELLED) { %>
                                 <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
                                     <i class="fas fa-times me-2"></i> Cancel Order
                                 </button>
-                            </c:if>
+                            <% } %>
                             <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteOrderModal">
                                 <i class="fas fa-trash me-2"></i> Delete Order
                             </button>
@@ -475,8 +543,8 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <form action="${pageContext.request.contextPath}/admin/update-order-status" method="post">
-                        <input type="hidden" name="orderId" value="${order.orderId}">
+                    <form action="<%= request.getContextPath() %>/admin/update-order-status" method="post">
+                        <input type="hidden" name="orderId" value="<%= order.getOrderId() %>">
                         <input type="hidden" name="status" value="CANCELLED">
                         <button type="submit" class="btn btn-danger">Cancel Order</button>
                     </form>
@@ -498,8 +566,8 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <form action="${pageContext.request.contextPath}/admin/delete-order" method="post">
-                        <input type="hidden" name="orderId" value="${order.orderId}">
+                    <form action="<%= request.getContextPath() %>/admin/delete-order" method="post">
+                        <input type="hidden" name="orderId" value="<%= order.getOrderId() %>">
                         <input type="hidden" name="confirm" value="yes">
                         <button type="submit" class="btn btn-danger">Delete Order</button>
                     </form>
