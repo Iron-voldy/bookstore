@@ -14,9 +14,6 @@ import com.bookstore.model.order.Order;
 import com.bookstore.model.order.OrderManager;
 import com.bookstore.model.order.OrderStatus;
 
-/**
- * Servlet for handling admin order list
- */
 @WebServlet("/admin/orders")
 public class AdminOrdersServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -28,9 +25,6 @@ public class AdminOrdersServlet extends HttpServlet {
         orderManager = new OrderManager(getServletContext());
     }
 
-    /**
-     * Handles GET requests - display admin order list
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -51,7 +45,6 @@ public class AdminOrdersServlet extends HttpServlet {
                 try {
                     status = OrderStatus.valueOf(statusFilter.toUpperCase());
                 } catch (IllegalArgumentException e) {
-                    // Invalid status, ignore filter
                     System.out.println("Invalid status filter: " + statusFilter);
                 }
             }
@@ -62,15 +55,12 @@ public class AdminOrdersServlet extends HttpServlet {
             // Get orders based on filters
             List<Order> orders;
             if (search != null && !search.trim().isEmpty()) {
-                // Search for orders
                 orders = orderManager.searchOrders(search);
                 System.out.println("Searching for orders with query: " + search + ", found: " + orders.size());
             } else if (status != null) {
-                // Filter by status
                 orders = orderManager.getOrdersByStatus(status);
                 System.out.println("Filtering orders by status: " + status + ", found: " + orders.size());
             } else {
-                // Get all orders
                 orders = orderManager.getAllOrders();
                 System.out.println("Getting all orders, found: " + orders.size());
             }
@@ -78,7 +68,7 @@ public class AdminOrdersServlet extends HttpServlet {
             // Get order counts by status for dashboard stats
             Map<OrderStatus, Integer> orderCounts = orderManager.getOrderCountsByStatus();
 
-            // Get total sales with proper handling
+            // Get total sales
             double totalSales = 0.0;
             try {
                 totalSales = orderManager.getTotalSales();
@@ -86,8 +76,6 @@ public class AdminOrdersServlet extends HttpServlet {
             } catch (Exception e) {
                 System.err.println("Error getting total sales: " + e.getMessage());
                 e.printStackTrace();
-                // Default to 0.0 for total sales
-                totalSales = 0.0;
             }
 
             // Set attributes in request
@@ -95,11 +83,12 @@ public class AdminOrdersServlet extends HttpServlet {
             request.setAttribute("statusFilter", statusFilter);
             request.setAttribute("statuses", OrderStatus.values());
             request.setAttribute("orderCounts", orderCounts);
-            request.setAttribute("totalSales", Double.valueOf(totalSales));
+            request.setAttribute("totalSales", totalSales);
             request.setAttribute("search", search);
 
-            // Forward to admin orders page
+            // Ensure safe access to request attributes
             request.getRequestDispatcher("/admin/order/orders.jsp").forward(request, response);
+
         } catch (Exception e) {
             // Log the error
             System.err.println("Error in AdminOrdersServlet: " + e.getMessage());
@@ -108,7 +97,7 @@ public class AdminOrdersServlet extends HttpServlet {
             // Set error message
             session.setAttribute("errorMessage", "An error occurred while loading orders: " + e.getMessage());
 
-            // Forward to error page or dashboard
+            // Redirect to dashboard instead of forwarding to prevent further errors
             response.sendRedirect(request.getContextPath() + "/admin/dashboard");
         }
     }

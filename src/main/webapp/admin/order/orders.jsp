@@ -2,6 +2,8 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ page import="com.bookstore.model.order.OrderStatus" %>
+<%@ page import="java.util.Date" %>
+<%@ page import="java.text.SimpleDateFormat" %>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -16,205 +18,205 @@
     <!-- Custom CSS -->
     <style>
         :root {
-            --primary-dark: #121212;
-            --secondary-dark: #1e1e1e;
-            --accent-color: #8a5cf5;
-            --accent-hover: #6e46c9;
-            --text-primary: #f5f5f5;
-            --text-secondary: #b0b0b0;
-            --danger-color: #d64045;
-            --success-color: #4caf50;
-            --warning-color: #ff9800;
-            --info-color: #2196F3;
-            --card-bg: #252525;
-            --border-color: #333333;
-        }
+                    --primary-dark: #121212;
+                    --secondary-dark: #1e1e1e;
+                    --accent-color: #8a5cf5;
+                    --accent-hover: #6e46c9;
+                    --text-primary: #f5f5f5;
+                    --text-secondary: #b0b0b0;
+                    --danger-color: #d64045;
+                    --success-color: #4caf50;
+                    --warning-color: #ff9800;
+                    --info-color: #2196F3;
+                    --card-bg: #252525;
+                    --border-color: #333333;
+                }
 
-        body {
-            background-color: var(--primary-dark);
-            color: var(--text-primary);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+                body {
+                    background-color: var(--primary-dark);
+                    color: var(--text-primary);
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                }
 
-        .sidebar {
-            background-color: var(--secondary-dark);
-            min-height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 250px;
-            padding-top: 20px;
-            z-index: 100;
-        }
+                .sidebar {
+                    background-color: var(--secondary-dark);
+                    min-height: 100vh;
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 250px;
+                    padding-top: 20px;
+                    z-index: 100;
+                }
 
-        .sidebar-brand {
-            padding: 15px 20px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-        }
+                .sidebar-brand {
+                    padding: 15px 20px;
+                    margin-bottom: 20px;
+                    border-bottom: 1px solid var(--border-color);
+                }
 
-        .sidebar-brand a {
-            color: var(--accent-color);
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
+                .sidebar-brand a {
+                    color: var(--accent-color);
+                    text-decoration: none;
+                    font-weight: bold;
+                    font-size: 1.2rem;
+                }
 
-        .sidebar-menu {
-            padding: 0;
-            list-style: none;
-        }
+                .sidebar-menu {
+                    padding: 0;
+                    list-style: none;
+                }
 
-        .sidebar-menu li {
-            margin-bottom: 5px;
-        }
+                .sidebar-menu li {
+                    margin-bottom: 5px;
+                }
 
-        .sidebar-menu a {
-            display: block;
-            padding: 12px 20px;
-            color: var(--text-primary);
-            text-decoration: none;
-            transition: all 0.3s;
-        }
+                .sidebar-menu a {
+                    display: block;
+                    padding: 12px 20px;
+                    color: var(--text-primary);
+                    text-decoration: none;
+                    transition: all 0.3s;
+                }
 
-        .sidebar-menu a:hover,
-        .sidebar-menu a.active {
-            background-color: rgba(138, 92, 245, 0.1);
-            color: var(--accent-color);
-            border-left: 4px solid var(--accent-color);
-        }
+                .sidebar-menu a:hover,
+                .sidebar-menu a.active {
+                    background-color: rgba(138, 92, 245, 0.1);
+                    color: var(--accent-color);
+                    border-left: 4px solid var(--accent-color);
+                }
 
-        .sidebar-menu a.active {
-            font-weight: 500;
-        }
+                .sidebar-menu a.active {
+                    font-weight: 500;
+                }
 
-        .sidebar-menu i {
-            margin-right: 10px;
-            width: 20px;
-            text-align: center;
-        }
+                .sidebar-menu i {
+                    margin-right: 10px;
+                    width: 20px;
+                    text-align: center;
+                }
 
-        .main-content {
-            margin-left: 250px;
-            padding: 20px;
-        }
+                .main-content {
+                    margin-left: 250px;
+                    padding: 20px;
+                }
 
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
+                .card {
+                    background-color: var(--card-bg);
+                    border: 1px solid var(--border-color);
+                    border-radius: 8px;
+                    margin-bottom: 20px;
+                }
 
-        .card-header {
-            background-color: var(--secondary-dark);
-            border-bottom: 1px solid var(--border-color);
-            padding: 15px 20px;
-        }
+                .card-header {
+                    background-color: var(--secondary-dark);
+                    border-bottom: 1px solid var(--border-color);
+                    padding: 15px 20px;
+                }
 
-        .stat-card {
-            border-left: 4px solid;
-            transition: transform 0.3s;
-        }
+                .stat-card {
+                    border-left: 4px solid;
+                    transition: transform 0.3s;
+                }
 
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
+                .stat-card:hover {
+                    transform: translateY(-5px);
+                }
 
-        .stat-card.pending {
-            border-left-color: var(--warning-color);
-        }
+                .stat-card.pending {
+                    border-left-color: var(--warning-color);
+                }
 
-        .stat-card.processing {
-            border-left-color: var(--accent-color);
-        }
+                .stat-card.processing {
+                    border-left-color: var(--accent-color);
+                }
 
-        .stat-card.shipped {
-            border-left-color: var(--info-color);
-        }
+                .stat-card.shipped {
+                    border-left-color: var(--info-color);
+                }
 
-        .stat-card.delivered {
-            border-left-color: var(--success-color);
-        }
+                .stat-card.delivered {
+                    border-left-color: var(--success-color);
+                }
 
-        .stat-card.cancelled {
-            border-left-color: var(--danger-color);
-        }
+                .stat-card.cancelled {
+                    border-left-color: var(--danger-color);
+                }
 
-        .stat-card.sales {
-            border-left-color: #28a745;
-        }
+                .stat-card.sales {
+                    border-left-color: #28a745;
+                }
 
-        .stat-card .stat-icon {
-            font-size: 2.5rem;
-            opacity: 0.8;
-        }
+                .stat-card .stat-icon {
+                    font-size: 2.5rem;
+                    opacity: 0.8;
+                }
 
-        .table-dark {
-            background-color: var(--card-bg);
-            color: var(--text-primary);
-        }
+                .table-dark {
+                    background-color: var(--card-bg);
+                    color: var(--text-primary);
+                }
 
-        .table-dark th,
-        .table-dark td {
-            border-color: var(--border-color);
-        }
+                .table-dark th,
+                .table-dark td {
+                    border-color: var(--border-color);
+                }
 
-        .btn-accent {
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-        }
+                .btn-accent {
+                    background-color: var(--accent-color);
+                    color: white;
+                    border: none;
+                }
 
-        .btn-accent:hover {
-            background-color: var(--accent-hover);
-            color: white;
-        }
+                .btn-accent:hover {
+                    background-color: var(--accent-hover);
+                    color: white;
+                }
 
-        .search-container {
-            position: relative;
-        }
+                .search-container {
+                    position: relative;
+                }
 
-        .search-container .form-control {
-            background-color: var(--secondary-dark);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding-left: 40px;
-        }
+                .search-container .form-control {
+                    background-color: var(--secondary-dark);
+                    border: 1px solid var(--border-color);
+                    color: var(--text-primary);
+                    padding-left: 40px;
+                }
 
-        .search-icon {
-            position: absolute;
-            left: 15px;
-            top: 10px;
-            color: var(--text-secondary);
-        }
+                .search-icon {
+                    position: absolute;
+                    left: 15px;
+                    top: 10px;
+                    color: var(--text-secondary);
+                }
 
-        .alert-custom {
-            background-color: var(--secondary-dark);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-        }
+                .alert-custom {
+                    background-color: var(--secondary-dark);
+                    color: var(--text-primary);
+                    border: 1px solid var(--border-color);
+                }
 
-        .alert-success {
-            border-left: 4px solid var(--success-color);
-        }
+                .alert-success {
+                    border-left: 4px solid var(--success-color);
+                }
 
-        .alert-danger {
-            border-left: 4px solid var(--danger-color);
-        }
+                .alert-danger {
+                    border-left: 4px solid var(--danger-color);
+                }
 
-        .form-control, .form-select {
-            background-color: var(--secondary-dark);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-        }
+                .form-control, .form-select {
+                    background-color: var(--secondary-dark);
+                    border: 1px solid var(--border-color);
+                    color: var(--text-primary);
+                }
 
-        .form-control:focus, .form-select:focus {
-            background-color: var(--secondary-dark);
-            color: var(--text-primary);
-            border-color: var(--accent-color);
-            box-shadow: 0 0 0 0.25rem rgba(138, 92, 245, 0.25);
-        }
+                .form-control:focus, .form-select:focus {
+                    background-color: var(--secondary-dark);
+                    color: var(--text-primary);
+                    border-color: var(--accent-color);
+                    box-shadow: 0 0 0 0.25rem rgba(138, 92, 245, 0.25);
+                }
     </style>
 </head>
 <body>
@@ -387,9 +389,7 @@
                         <select class="form-select" id="status" name="status" onchange="this.form.submit()">
                             <option value="" ${empty statusFilter ? 'selected' : ''}>All Orders</option>
                             <c:forEach var="status" items="${statuses}">
-                                <option value="${status}" ${status.name() == statusFilter ? 'selected' : ''}>
-                                    ${status.displayName}
-                                </option>
+                                <option value="${status}" ${status.name() == statusFilter ? 'selected' : ''}>${status.displayName}</option>
                             </c:forEach>
                         </select>
                     </div>
@@ -447,10 +447,25 @@
                                     <c:forEach var="order" items="${orders}">
                                         <tr>
                                             <td>${order.orderId.substring(0, 8)}</td>
-                                            <td><fmt:formatDate value="${order.orderDate}" pattern="MMM d, yyyy HH:mm" /></td>
+                                            <td>
+                                                <%
+                                                // Safe date formatting
+                                                Object orderObj = pageContext.findAttribute("order");
+                                                if (orderObj != null) {
+                                                    com.bookstore.model.order.Order currentOrder = (com.bookstore.model.order.Order)orderObj;
+                                                    Date orderDate = currentOrder.getOrderDate();
+                                                    if (orderDate != null) {
+                                                        SimpleDateFormat sdf = new SimpleDateFormat("MMM d, yyyy HH:mm");
+                                                        out.print(sdf.format(orderDate));
+                                                    } else {
+                                                        out.print("N/A");
+                                                    }
+                                                }
+                                                %>
+                                            </td>
                                             <td>${order.contactEmail}</td>
                                             <td>${order.items.size()} item(s)</td>
-                                            <td>$<fmt:formatNumber value="${order.total}" pattern="0.00" /></td>
+                                            <td>$${order.total != null ? String.format('%.2f', order.total) : '0.00'}</td>
                                             <td>
                                                 <c:choose>
                                                     <c:when test="${order.status == 'PENDING'}">
