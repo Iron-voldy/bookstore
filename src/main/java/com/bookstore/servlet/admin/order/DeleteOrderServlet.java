@@ -16,6 +16,13 @@ import com.bookstore.model.order.OrderManager;
 @WebServlet("/admin/delete-order")
 public class DeleteOrderServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
+    private OrderManager orderManager;
+
+    @Override
+    public void init() throws ServletException {
+        // Initialize OrderManager with ServletContext
+        orderManager = new OrderManager(getServletContext());
+    }
 
     /**
      * Handles POST requests - delete an order
@@ -26,40 +33,64 @@ public class DeleteOrderServlet extends HttpServlet {
 
         HttpSession session = request.getSession();
 
-        // Check if admin is logged in
-        if (session.getAttribute("adminId") == null) {
-            response.sendRedirect(request.getContextPath() + "/admin/login");
-            return;
-        }
+        try {
+            // Check if admin is logged in
+            if (session.getAttribute("adminId") == null) {
+                response.sendRedirect(request.getContextPath() + "/admin/login");
+                return;
+            }
 
-        // Get order ID from request parameter
-        String orderId = request.getParameter("orderId");
-        if (orderId == null || orderId.trim().isEmpty()) {
-            session.setAttribute("errorMessage", "Order ID is required");
+            // Check if admin is super admin
+            Boolean isSuperAdmin = (Boolean) session.getAttribute("isSuperAdmin");
+            if (isSuperAdmin == null || !isSuperAdmin) {
+                session.setAttribute("errorMessage", "Only super administrators can delete orders");
+                response.sendRedirect(request.getContextPath() + "/admin/orders");
+                return;
+            }
+
+            // Get order ID from request parameter
+            String orderId = request.getParameter("orderId");
+            if (orderId == null || orderId.trim().isEmpty()) {
+                session.setAttribute("errorMessage", "Order ID is required");
+                response.sendRedirect(request.getContextPath() + "/admin/orders");
+                return;
+            }
+
+            // Get confirmation parameter
+            String confirm = request.getParameter("confirm");
+            if (!"yes".equals(confirm)) {
+                session.setAttribute("errorMessage", "Confirmation required to delete an order");
+                response.sendRedirect(request.getContextPath() + "/admin/order-details?orderId=" + orderId);
+                return;
+            }
+
+            // Log the deletion request
+            System.out.println("Admin is attempting to delete order: " + orderId);
+
+            // Delete the order
+            boolean deleted = orderManager.deleteOrder(orderId);
+
+            if (deleted) {
+                session.setAttribute("successMessage", "Order deleted successfully");
+                System.out.println("Order deleted successfully: " + orderId);
+            } else {
+                session.setAttribute("errorMessage", "Failed to delete order");
+                System.out.println("Failed to delete order: " + orderId);
+            }
+
+            // Redirect to orders list
             response.sendRedirect(request.getContextPath() + "/admin/orders");
-            return;
+        } catch (Exception e) {
+            // Log the error
+            System.err.println("Error in DeleteOrderServlet: " + e.getMessage());
+            e.printStackTrace();
+
+            // Set error message
+            session.setAttribute("errorMessage", "An error occurred while deleting order: " + e.getMessage());
+
+            // Redirect to orders list
+            response.sendRedirect(request.getContextPath() + "/admin/orders");
         }
-
-        // Get confirmation parameter
-        String confirm = request.getParameter("confirm");
-        if (!"yes".equals(confirm)) {
-            session.setAttribute("errorMessage", "Confirmation required to delete an order");
-            response.sendRedirect(request.getContextPath() + "/admin/order-details?orderId=" + orderId);
-            return;
-        }
-
-        // Delete the order
-        OrderManager orderManager = new OrderManager(getServletContext());
-        boolean deleted = orderManager.deleteOrder(orderId);
-
-        if (deleted) {
-            session.setAttribute("successMessage", "Order deleted successfully");
-        } else {
-            session.setAttribute("errorMessage", "Failed to delete order");
-        }
-
-        // Redirect to orders list
-        response.sendRedirect(request.getContextPath() + "/admin/orders");
     }
 
     /**

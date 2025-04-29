@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page import="com.bookstore.model.order.OrderStatus" %>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -201,6 +202,19 @@
         .alert-danger {
             border-left: 4px solid var(--danger-color);
         }
+
+        .form-control, .form-select {
+            background-color: var(--secondary-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: var(--secondary-dark);
+            color: var(--text-primary);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.25rem rgba(138, 92, 245, 0.25);
+        }
     </style>
 </head>
 <body>
@@ -232,21 +246,13 @@
                     <i class="fas fa-users"></i> Users
                 </a>
             </li>
-            <li>
-                <a href="${pageContext.request.contextPath}/admin/manage-admins">
-                    <i class="fas fa-user-shield"></i> Admins
-                </a>
-            </li>
-            <li>
-                <a href="${pageContext.request.contextPath}/admin/reports.jsp">
-                    <i class="fas fa-chart-bar"></i> Reports
-                </a>
-            </li>
-            <li>
-                <a href="${pageContext.request.contextPath}/admin/settings.jsp">
-                    <i class="fas fa-cog"></i> Settings
-                </a>
-            </li>
+            <c:if test="${sessionScope.isSuperAdmin}">
+                <li>
+                    <a href="${pageContext.request.contextPath}/admin/manage-admins">
+                        <i class="fas fa-user-shield"></i> Admins
+                    </a>
+                </li>
+            </c:if>
             <li>
                 <a href="${pageContext.request.contextPath}/admin/logout">
                     <i class="fas fa-sign-out-alt"></i> Logout
@@ -297,7 +303,7 @@
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title text-warning">Pending</h6>
-                            <h3 class="mb-0">${orderCounts['PENDING']}</h3>
+                            <h3 class="mb-0">${orderCounts['PENDING'] != null ? orderCounts['PENDING'] : 0}</h3>
                         </div>
                         <div class="stat-icon text-warning">
                             <i class="fas fa-clock"></i>
@@ -310,7 +316,7 @@
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title text-primary">Processing</h6>
-                            <h3 class="mb-0">${orderCounts['PROCESSING']}</h3>
+                            <h3 class="mb-0">${orderCounts['PROCESSING'] != null ? orderCounts['PROCESSING'] : 0}</h3>
                         </div>
                         <div class="stat-icon text-primary">
                             <i class="fas fa-spinner"></i>
@@ -323,7 +329,7 @@
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title text-info">Shipped</h6>
-                            <h3 class="mb-0">${orderCounts['SHIPPED']}</h3>
+                            <h3 class="mb-0">${orderCounts['SHIPPED'] != null ? orderCounts['SHIPPED'] : 0}</h3>
                         </div>
                         <div class="stat-icon text-info">
                             <i class="fas fa-truck"></i>
@@ -336,7 +342,7 @@
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title text-success">Delivered</h6>
-                            <h3 class="mb-0">${orderCounts['DELIVERED']}</h3>
+                            <h3 class="mb-0">${orderCounts['DELIVERED'] != null ? orderCounts['DELIVERED'] : 0}</h3>
                         </div>
                         <div class="stat-icon text-success">
                             <i class="fas fa-check-circle"></i>
@@ -349,7 +355,7 @@
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title text-danger">Cancelled</h6>
-                            <h3 class="mb-0">${orderCounts['CANCELLED']}</h3>
+                            <h3 class="mb-0">${orderCounts['CANCELLED'] != null ? orderCounts['CANCELLED'] : 0}</h3>
                         </div>
                         <div class="stat-icon text-danger">
                             <i class="fas fa-times-circle"></i>
@@ -362,7 +368,7 @@
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title text-success">Total Sales</h6>
-                            <h3 class="mb-0">$<fmt:formatNumber value="${totalSales}" pattern="0.00" /></h3>
+                            <h3 class="mb-0">$<c:out value="${totalSales != null ? totalSales : 0.00}" /></h3>
                         </div>
                         <div class="stat-icon text-success">
                             <i class="fas fa-dollar-sign"></i>
@@ -381,7 +387,7 @@
                         <select class="form-select" id="status" name="status" onchange="this.form.submit()">
                             <option value="" ${empty statusFilter ? 'selected' : ''}>All Orders</option>
                             <c:forEach var="status" items="${statuses}">
-                                <option value="${status}" ${status == statusFilter ? 'selected' : ''}>
+                                <option value="${status}" ${status.name() == statusFilter ? 'selected' : ''}>
                                     ${status.displayName}
                                 </option>
                             </c:forEach>
@@ -442,8 +448,8 @@
                                         <tr>
                                             <td>${order.orderId.substring(0, 8)}</td>
                                             <td><fmt:formatDate value="${order.orderDate}" pattern="MMM d, yyyy HH:mm" /></td>
-                                            <td>${order.userId}</td>
-                                            <td>${order.totalItems} item(s)</td>
+                                            <td>${order.contactEmail}</td>
+                                            <td>${order.items.size()} item(s)</td>
                                             <td>$<fmt:formatNumber value="${order.total}" pattern="0.00" /></td>
                                             <td>
                                                 <c:choose>

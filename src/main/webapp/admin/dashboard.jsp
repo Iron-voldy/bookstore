@@ -10,10 +10,14 @@
 <%@ page import="com.bookstore.model.user.User" %>
 <%@ page import="com.bookstore.model.user.UserManager" %>
 <%@ page import="com.bookstore.model.user.PremiumUser" %>
+<%@ page import="com.bookstore.model.order.OrderManager" %>
+<%@ page import="com.bookstore.model.order.OrderStatus" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.util.Map" %>
 <%@ page import="java.util.ArrayList" %>
 <%@ page import="java.util.Date" %>
 <%@ page import="java.text.SimpleDateFormat" %>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -178,6 +182,7 @@
         AdminManager adminManager = new AdminManager(application);
         BookManager bookManager = new BookManager(application);
         UserManager userManager = new UserManager(application);
+        OrderManager orderManager = new OrderManager(application);
 
         // Get admin object
         Admin admin = adminManager.getAdminById(adminId);
@@ -218,6 +223,17 @@
         int totalAdmins = adminManager.getAdminCount();
         int superAdminCount = adminManager.getSuperAdminCount();
         int regularAdminCount = totalAdmins - superAdminCount;
+
+        // Order statistics
+        Map<OrderStatus, Integer> orderCounts = orderManager.getOrderCountsByStatus();
+        double totalSales = orderManager.getTotalSales();
+
+        int pendingOrders = orderCounts.getOrDefault(OrderStatus.PENDING, 0);
+        int processingOrders = orderCounts.getOrDefault(OrderStatus.PROCESSING, 0);
+        int shippedOrders = orderCounts.getOrDefault(OrderStatus.SHIPPED, 0);
+        int deliveredOrders = orderCounts.getOrDefault(OrderStatus.DELIVERED, 0);
+        int cancelledOrders = orderCounts.getOrDefault(OrderStatus.CANCELLED, 0);
+        int totalOrders = pendingOrders + processingOrders + shippedOrders + deliveredOrders + cancelledOrders;
 
         // Format for last login date
         SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM d, yyyy 'at' h:mm a");
@@ -276,10 +292,10 @@
                         <a class="nav-link" href="<%=request.getContextPath()%>/admin/manage-books.jsp">Books</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<%=request.getContextPath()%>/admin/manage-users.jsp">Users</a>
+                        <a class="nav-link" href="<%=request.getContextPath()%>/admin/orders">Orders</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<%=request.getContextPath()%>/admin/manage-orders.jsp">Orders</a>
+                        <a class="nav-link" href="<%=request.getContextPath()%>/admin/manage-users.jsp">Users</a>
                     </li>
                     <c:if test="${sessionScope.isSuperAdmin}">
                         <li class="nav-item">
@@ -396,22 +412,26 @@
                 </div>
             </div>
 
-            <!-- Orders Statistics (Placeholder) -->
+            <!-- Orders Statistics -->
             <div class="col-md-3 mb-4">
                 <div class="card stat-card h-100">
                     <div class="stat-icon" style="color: #ff9800;">
                         <i class="fas fa-shopping-cart"></i>
                     </div>
-                    <div class="stat-number">0</div>
+                    <div class="stat-number"><%= totalOrders %></div>
                     <div class="stat-title">Total Orders</div>
                     <div class="mt-3">
                         <div class="d-flex justify-content-between">
                             <small>Completed:</small>
-                            <small>0</small>
+                            <small><%= deliveredOrders %></small>
                         </div>
                         <div class="d-flex justify-content-between">
                             <small>Pending:</small>
-                            <small>0</small>
+                            <small><%= pendingOrders %></small>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <small>Processing:</small>
+                            <small><%= processingOrders %></small>
                         </div>
                     </div>
                 </div>
@@ -464,7 +484,7 @@
                                 </a>
                             </div>
                             <div class="col-6">
-                                <a href="<%=request.getContextPath()%>/admin/manage-orders.jsp" class="btn btn-outline-light w-100">
+                                <a href="<%=request.getContextPath()%>/admin/orders" class="btn btn-outline-light w-100">
                                     <i class="fas fa-clipboard-list me-2"></i> View Orders
                                 </a>
                             </div>
@@ -499,13 +519,89 @@
                             <i class="fas fa-search me-1"></i> View Low Stock Books
                         </a>
 
-                        <!-- Placeholder for other alerts -->
+                        <% if(pendingOrders > 0) { %>
                         <div class="alert alert-warning mb-3" role="alert">
-                            <i class="fas fa-info-circle me-2"></i> Reminder: Regular system backups are recommended.
+                            <i class="fas fa-info-circle me-2"></i> You have <%= pendingOrders %> pending orders that need processing.
                         </div>
+                        <a href="<%=request.getContextPath()%>/admin/orders?status=PENDING" class="btn btn-sm btn-outline-warning mb-3">
+                            <i class="fas fa-search me-1"></i> View Pending Orders
+                        </a>
+                        <% } %>
+
                         <div class="alert alert-info" role="alert">
                             <i class="fas fa-info-circle me-2"></i> Welcome to the BookVerse Administration Panel!
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="row mt-2">
+            <div class="col-md-12 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i> Recent Orders</h5>
+                        <a href="<%=request.getContextPath()%>/admin/orders" class="btn btn-sm btn-outline-light">View All Orders</a>
+                    </div>
+                    <div class="card-body">
+                        <%
+                        List<com.bookstore.model.order.Order> recentOrders = orderManager.getAllOrders();
+                        if(recentOrders != null && !recentOrders.isEmpty()) {
+                            // Limit to 5 most recent orders
+                            int showCount = Math.min(5, recentOrders.size());
+                        %>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Order #</th>
+                                        <th>Date</th>
+                                        <th>Customer</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% for(int i = 0; i < showCount; i++) {
+                                        com.bookstore.model.order.Order order = recentOrders.get(i);
+                                    %>
+                                    <tr>
+                                        <td><%= order.getOrderId().substring(0, 8) %></td>
+                                        <td><fmt:formatDate value="<%= order.getOrderDate() %>" pattern="MMM d, yyyy" /></td>
+                                        <td><%= order.getContactEmail() %></td>
+                                        <td>$<fmt:formatNumber value="<%= order.getTotal() %>" pattern="0.00" /></td>
+                                        <td>
+                                            <% if(order.getStatus() == OrderStatus.PENDING) { %>
+                                                <span class="badge bg-warning text-dark">Pending</span>
+                                            <% } else if(order.getStatus() == OrderStatus.PROCESSING) { %>
+                                                <span class="badge bg-primary">Processing</span>
+                                            <% } else if(order.getStatus() == OrderStatus.SHIPPED) { %>
+                                                <span class="badge bg-info text-dark">Shipped</span>
+                                            <% } else if(order.getStatus() == OrderStatus.DELIVERED) { %>
+                                                <span class="badge bg-success">Delivered</span>
+                                            <% } else if(order.getStatus() == OrderStatus.CANCELLED) { %>
+                                                <span class="badge bg-danger">Cancelled</span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <a href="<%=request.getContextPath()%>/admin/order-details?orderId=<%= order.getOrderId() %>" class="btn btn-sm btn-accent">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                        <% } else { %>
+                        <div class="text-center py-4">
+                            <i class="fas fa-shopping-cart fa-3x mb-3 text-muted"></i>
+                            <p>No orders found in the system.</p>
+                            <p>Orders will appear here once customers start placing them.</p>
+                        </div>
+                        <% } %>
                     </div>
                 </div>
             </div>
