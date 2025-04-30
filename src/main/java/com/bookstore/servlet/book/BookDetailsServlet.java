@@ -12,6 +12,7 @@ import com.bookstore.model.book.Book;
 import com.bookstore.model.book.BookManager;
 import com.bookstore.model.book.EBook;
 import com.bookstore.model.book.PhysicalBook;
+import com.bookstore.model.review.ReviewManager;
 
 /**
  * Servlet for handling book details display
@@ -90,6 +91,10 @@ public class BookDetailsServlet extends HttpServlet {
 
         // Set related books in request
         request.setAttribute("relatedBooks", relatedBooks.toArray(new Book[0]));
+
+        // Set review count - we'll use the number of ratings from the book
+        int reviewsCount = book.getNumberOfRatings();
+        request.setAttribute("reviewsCount", reviewsCount);
 
         // Forward to book details page
         request.getRequestDispatcher("/book/book-details.jsp").forward(request, response);

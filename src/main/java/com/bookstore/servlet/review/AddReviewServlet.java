@@ -14,10 +14,17 @@ import com.bookstore.model.review.Review;
 import com.bookstore.model.review.ReviewManager;
 import com.bookstore.util.ValidationUtil;
 
+/**
+ * Servlet for handling adding new reviews
+ */
 @WebServlet("/add-book-review")
 public class AddReviewServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Handles GET requests - displays the add review form
+     */
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // Get book ID from request
@@ -60,6 +67,10 @@ public class AddReviewServlet extends HttpServlet {
         request.getRequestDispatcher("/review/add-review.jsp").forward(request, response);
     }
 
+    /**
+     * Handles POST requests - processes the review submission
+     */
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // Get parameters
@@ -97,14 +108,14 @@ public class AddReviewServlet extends HttpServlet {
         // Get review manager
         ReviewManager reviewManager = new ReviewManager(getServletContext());
 
-        // Determine review type and add review
+        // Add review based on user status
         Review review;
         if (userId != null) {
-            // Check if it's a verified purchase review
+            // Try verified review first
             review = reviewManager.addVerifiedReview(userId, userName, bookId, comment, rating);
 
+            // If verified review fails, try standard review
             if (review == null) {
-                // If verified review fails, try standard review
                 review = reviewManager.addStandardReview(userId, userName, bookId, comment, rating);
             }
         } else {

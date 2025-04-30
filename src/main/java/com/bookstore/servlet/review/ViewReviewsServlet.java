@@ -9,6 +9,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import com.bookstore.model.book.Book;
 import com.bookstore.model.book.BookManager;
@@ -48,6 +49,17 @@ public class ViewReviewsServlet extends HttpServlet {
 
         // Get review statistics
         Map<String, Object> reviewStats = reviewManager.getReviewStatistics(bookId);
+
+        // Check if the current user has reviewed this book
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("userId") != null) {
+            String userId = (String) session.getAttribute("userId");
+            Review userReview = reviewManager.getUserReviewForBook(userId, bookId);
+            request.setAttribute("userReview", userReview);
+            request.setAttribute("hasReviewed", (userReview != null));
+        } else {
+            request.setAttribute("hasReviewed", false);
+        }
 
         // Set attributes for JSP
         request.setAttribute("book", book);

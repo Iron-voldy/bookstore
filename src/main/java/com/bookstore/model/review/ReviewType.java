@@ -1,5 +1,7 @@
 package com.bookstore.model.review;
 
+import java.util.Date;
+
 /**
  * Enum representing different types of reviews
  */

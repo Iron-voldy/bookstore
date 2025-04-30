@@ -408,9 +408,15 @@
                     <li class="nav-item">
                         <a class="nav-link active" href="<%=request.getContextPath()%>/books">Books</a>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab" aria-controls="reviews" aria-selected="false">
+                            Reviews (<%= request.getAttribute("reviewsCount") %>)
+                        </button>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="<%=request.getContextPath()%>/contact">Contact</a>
                     </li>
+
                 </ul>
 
                 <!-- Search Form -->
@@ -709,14 +715,19 @@
                         <div class="text-center py-4">
                             <i class="fas fa-star fa-3x mb-3" style="color: gold;"></i>
                             <h4>Book Reviews</h4>
-                            <p class="text-muted">This section will display user reviews for this book.</p>
-                            <p>The review functionality will be implemented in the future. Stay tuned!</p>
-                            <button class="btn btn-accent mt-3" disabled>
+                            <p class="text-muted">This book has <%= request.getAttribute("reviewsCount") %> reviews.</p>
+                            <% if (book.getNumberOfRatings() > 0) { %>
+                                <p>Average Rating: <%= String.format("%.1f", book.getAverageRating()) %> / 5.0</p>
+                            <% } else { %>
+                                <p>No ratings yet. Be the first to review this book!</p>
+                            <% } %>
+                            <a href="<%=request.getContextPath()%>/add-book-review?bookId=<%= book.getId() %>" class="btn btn-accent mt-3">
                                 <i class="fas fa-pen me-2"></i> Write a Review
-                            </button>
+                            </a>
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
 

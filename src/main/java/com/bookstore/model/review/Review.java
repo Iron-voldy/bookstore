@@ -3,39 +3,58 @@ package com.bookstore.model.review;
 import java.util.Date;
 
 /**
- * Represents a book review with core attributes and behaviors
+ * Model class for book reviews
  */
 public class Review {
+
+    /**
+     * Review types enum
+     */
+    public enum ReviewType {
+        GUEST("Guest Review"),
+        STANDARD("User Review"),
+        VERIFIED_PURCHASE("Verified Purchase");
+
+        private final String displayName;
+
+        ReviewType(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
+
     private String reviewId;
-    private String bookId;
-    private String userId;  // null for guest reviews
+    private String userId;
     private String userName;
+    private String bookId;
     private String comment;
-    private int rating;     // 1-5 star rating
+    private int rating;
     private Date reviewDate;
     private ReviewType reviewType;
 
-    // Constructors
+    /**
+     * Default constructor
+     */
     public Review() {
-        this.reviewId = "";
-        this.bookId = "";
-        this.userId = null;
-        this.userName = "";
-        this.comment = "";
-        this.rating = 0;
         this.reviewDate = new Date();
         this.reviewType = ReviewType.STANDARD;
     }
 
-    public Review(String reviewId, String bookId, String userId, String userName,
-                  String comment, int rating, ReviewType reviewType) {
+    /**
+     * Constructor with all fields
+     */
+    public Review(String reviewId, String userId, String userName, String bookId,
+                  String comment, int rating, Date reviewDate, ReviewType reviewType) {
         this.reviewId = reviewId;
-        this.bookId = bookId;
         this.userId = userId;
         this.userName = userName;
+        this.bookId = bookId;
         this.comment = comment;
-        this.rating = validateRating(rating);
-        this.reviewDate = new Date();
+        this.rating = rating;
+        this.reviewDate = reviewDate;
         this.reviewType = reviewType;
     }
 
@@ -46,14 +65,6 @@ public class Review {
 
     public void setReviewId(String reviewId) {
         this.reviewId = reviewId;
-    }
-
-    public String getBookId() {
-        return bookId;
-    }
-
-    public void setBookId(String bookId) {
-        this.bookId = bookId;
     }
 
     public String getUserId() {
@@ -72,6 +83,14 @@ public class Review {
         this.userName = userName;
     }
 
+    public String getBookId() {
+        return bookId;
+    }
+
+    public void setBookId(String bookId) {
+        this.bookId = bookId;
+    }
+
     public String getComment() {
         return comment;
     }
@@ -85,7 +104,10 @@ public class Review {
     }
 
     public void setRating(int rating) {
-        this.rating = validateRating(rating);
+        // Validate rating between 1-5
+        if (rating < 1) rating = 1;
+        if (rating > 5) rating = 5;
+        this.rating = rating;
     }
 
     public Date getReviewDate() {
@@ -104,39 +126,44 @@ public class Review {
         this.reviewType = reviewType;
     }
 
-    // Validation method for rating
-    private int validateRating(int rating) {
-        return Math.max(1, Math.min(5, rating));
-    }
-
-    // Convert review to file string for persistence
+    /**
+     * Convert to string representation for file storage
+     */
     public String toFileString() {
-        return String.format("%s,%s,%s,%s,%s,%d,%d,%s",
-                reviewId,
-                bookId,
-                userId != null ? userId : "null",
-                userName.replace(",", "{{COMMA}}"),
-                comment.replace(",", "{{COMMA}}"),
-                rating,
-                reviewDate.getTime(),
-                reviewType.name()
-        );
+        StringBuilder sb = new StringBuilder();
+        sb.append(reviewId).append(",");
+        sb.append(userId).append(",");
+        sb.append(userName.replace(",", "{{COMMA}}")).append(",");
+        sb.append(bookId).append(",");
+        sb.append(comment.replace(",", "{{COMMA}}").replace("\n", "{{NEWLINE}}")).append(",");
+        sb.append(rating).append(",");
+        sb.append(reviewDate.getTime()).append(",");
+        sb.append(reviewType.name());
+        return sb.toString();
     }
 
-    // Create review from file string
+    /**
+     * Create from string representation (from file)
+     */
     public static Review fromFileString(String fileString) {
         String[] parts = fileString.split(",");
         if (parts.length >= 8) {
-            Review review = new Review();
-            review.setReviewId(parts[0]);
-            review.setBookId(parts[1]);
-            review.setUserId("null".equals(parts[2]) ? null : parts[2]);
-            review.setUserName(parts[3].replace("{{COMMA}}", ","));
-            review.setComment(parts[4].replace("{{COMMA}}", ","));
-            review.setRating(Integer.parseInt(parts[5]));
-            review.setReviewDate(new Date(Long.parseLong(parts[6])));
-            review.setReviewType(ReviewType.valueOf(parts[7]));
-            return review;
+            try {
+                Review review = new Review();
+                review.setReviewId(parts[0]);
+                review.setUserId(parts[1]);
+                review.setUserName(parts[2].replace("{{COMMA}}", ","));
+                review.setBookId(parts[3]);
+                review.setComment(parts[4].replace("{{COMMA}}", ",").replace("{{NEWLINE}}", "\n"));
+                review.setRating(Integer.parseInt(parts[5]));
+                review.setReviewDate(new Date(Long.parseLong(parts[6])));
+                review.setReviewType(ReviewType.valueOf(parts[7]));
+                return review;
+            } catch (Exception e) {
+                System.err.println("Error parsing review from file: " + e.getMessage());
+                e.printStackTrace();
+                return null;
+            }
         }
         return null;
     }
@@ -145,9 +172,11 @@ public class Review {
     public String toString() {
         return "Review{" +
                 "reviewId='" + reviewId + '\'' +
-                ", bookId='" + bookId + '\'' +
+                ", userId='" + userId + '\'' +
                 ", userName='" + userName + '\'' +
+                ", bookId='" + bookId + '\'' +
                 ", rating=" + rating +
+                ", reviewDate=" + reviewDate +
                 ", reviewType=" + reviewType +
                 '}';
     }
