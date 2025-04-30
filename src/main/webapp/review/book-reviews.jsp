@@ -57,7 +57,7 @@
         <div class="book-header mb-4">
             <div class="row align-items-center">
                 <div class="col-md-3 text-center">
-                    <img src="${pageContext.request.contextPath}/book-covers/${book.coverImagePath}"
+                    <img src="<%=request.getContextPath()%>/book-covers/${book.coverImagePath}"
                          alt="${book.title}" class="img-fluid" style="max-height: 250px;">
                 </div>
                 <div class="col-md-9">
@@ -86,7 +86,7 @@
                     <p class="text-muted">${reviewStats.totalReviews} total reviews</p>
 
                     <%-- Add Review Button --%>
-                    <a href="${pageContext.request.contextPath}/add-book-review?bookId=${book.id}"
+                    <a href="<%=request.getContextPath()%>/add-book-review?bookId=${book.id}"
                        class="btn btn-primary mt-2">
                         <i class="bi bi-pencil-fill me-2"></i>Write a Review
                     </a>
@@ -152,11 +152,11 @@
                                 <%-- Show edit/delete for user's own review --%>
                                 <c:if test="${sessionScope.userId eq review.userId}">
                                     <div class="review-actions mt-2">
-                                        <a href="${pageContext.request.contextPath}/update-book-review?reviewId=${review.reviewId}"
+                                        <a href="<%=request.getContextPath()%>/update-book-review?reviewId=${review.reviewId}"
                                            class="btn btn-sm btn-outline-primary me-2">
                                             <i class="bi bi-pencil me-1"></i>Edit
                                         </a>
-                                        <form action="${pageContext.request.contextPath}/delete-book-review"
+                                        <form action="<%=request.getContextPath()%>/delete-book-review"
                                               method="post" class="d-inline"
                                               onsubmit="return confirm('Are you sure you want to delete this review?');">
                                             <input type="hidden" name="reviewId" value="${review.reviewId}">

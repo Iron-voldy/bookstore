@@ -238,7 +238,7 @@
     <!-- Using a placeholder, replace with your actual navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="${pageContext.request.contextPath}/">BookVerse</a>
+            <a class="navbar-brand" href="<%=request.getContextPath()%>/">BookVerse</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -277,7 +277,7 @@
                     <i class="bi bi-journal-text"></i>
                     <h4>You haven't written any reviews yet</h4>
                     <p class="text-muted mb-4">Your book reviews will appear here once you've shared your thoughts.</p>
-                    <a href="${pageContext.request.contextPath}/books" class="btn btn-accent">Browse Books</a>
+                    <a href="<%=request.getContextPath()%>/books" class="btn btn-accent">Browse Books</a>
                 </div>
             </c:when>
             <c:otherwise>
@@ -321,15 +321,15 @@
                                 ${review.comment}
                             </div>
                             <div class="review-actions">
-                                <a href="${pageContext.request.contextPath}/book-reviews?bookId=${review.bookId}"
+                                <a href="<%=request.getContextPath()%>/book-reviews?bookId=${review.bookId}"
                                    class="btn btn-outline btn-sm">
                                     <i class="bi bi-eye me-1"></i> View All Book Reviews
                                 </a>
-                                <a href="${pageContext.request.contextPath}/update-book-review?reviewId=${review.reviewId}"
+                                <a href="<%=request.getContextPath()%>/update-book-review?reviewId=${review.reviewId}"
                                    class="btn btn-accent btn-sm">
                                     <i class="bi bi-pencil me-1"></i> Edit
                                 </a>
-                                <a href="${pageContext.request.contextPath}/delete-book-review?reviewId=${review.reviewId}"
+                                <a href="<%=request.getContextPath()%>/delete-book-review?reviewId=${review.reviewId}"
                                    class="btn btn-danger btn-sm"
                                    onclick="return confirm('Are you sure you want to delete this review?');">
                                     <i class="bi bi-trash me-1"></i> Delete

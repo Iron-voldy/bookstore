@@ -61,7 +61,7 @@
                 </div>
             </c:if>
 
-            <form action="${pageContext.request.contextPath}/add-book-review" method="post">
+            <form action="<%=request.getContextPath()%>/add-book-review" method="post">
                 <input type="hidden" name="bookId" value="${book.id}">
 
                 <%-- Star Rating --%>

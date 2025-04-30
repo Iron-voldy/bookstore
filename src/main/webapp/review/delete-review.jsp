@@ -45,11 +45,11 @@
             <p class="text-muted">This action cannot be undone.</p>
 
             <div class="action-buttons">
-                <form action="${pageContext.request.contextPath}/delete-book-review" method="post">
+                <form action="<%=request.getContextPath()%>/delete-book-review" method="post">
                     <input type="hidden" name="reviewId" value="${review.reviewId}">
                     <input type="hidden" name="confirm" value="yes">
 
-                    <a href="${pageContext.request.contextPath}/book-reviews?bookId=${bookId}" class="btn btn-secondary btn-lg me-2">
+                    <a href="<%=request.getContextPath()%>/book-reviews?bookId=${bookId}" class="btn btn-secondary btn-lg me-2">
                         <i class="bi bi-x-circle"></i> Cancel
                     </a>
                     <button type="submit" class="btn btn-danger btn-lg">

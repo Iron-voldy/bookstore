@@ -78,7 +78,7 @@
                 </div>
             </c:if>
 
-            <form action="${pageContext.request.contextPath}/update-book-review" method="post">
+            <form action="<%=request.getContextPath()%>/update-book-review" method="post">
                 <input type="hidden" name="reviewId" value="${review.reviewId}">
 
                 <%-- Star Rating --%>
@@ -112,14 +112,14 @@
 
                 <%-- Action Buttons --%>
                 <div class="action-buttons">
-                    <a href="${pageContext.request.contextPath}/book-reviews?bookId=${book.id}" class="btn btn-secondary">
+                    <a href="<%=request.getContextPath()%>/book-reviews?bookId=${book.id}" class="btn btn-secondary">
                         <i class="bi bi-arrow-left"></i> Cancel
                     </a>
                     <div>
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-save"></i> Update Review
                         </button>
-                        <a href="${pageContext.request.contextPath}/delete-book-review?reviewId=${review.reviewId}"
+                        <a href="<%=request.getContextPath()%>/delete-book-review?reviewId=${review.reviewId}"
                            class="btn btn-danger ms-2"
                            onclick="return confirm('Are you sure you want to delete this review? This action cannot be undone.');">
                             <i class="bi bi-trash"></i> Delete
