@@ -48,14 +48,14 @@ public class UpdateReviewServlet extends HttpServlet {
         Review review = reviewManager.getReviewById(reviewId);
 
         if (review == null) {
-            request.getSession().setAttribute("errorMessage", "Review not found");
+            session.setAttribute("errorMessage", "Review not found");
             response.sendRedirect(request.getContextPath() + "/books");
             return;
         }
 
         // Check if the review belongs to the user
         if (!userId.equals(review.getUserId())) {
-            request.getSession().setAttribute("errorMessage", "You do not have permission to edit this review");
+            session.setAttribute("errorMessage", "You do not have permission to edit this review");
             response.sendRedirect(request.getContextPath() + "/books");
             return;
         }
@@ -65,7 +65,7 @@ public class UpdateReviewServlet extends HttpServlet {
         Book book = bookManager.getBookById(review.getBookId());
 
         if (book == null) {
-            request.getSession().setAttribute("errorMessage", "Book not found");
+            session.setAttribute("errorMessage", "Book not found");
             response.sendRedirect(request.getContextPath() + "/books");
             return;
         }
@@ -99,7 +99,9 @@ public class UpdateReviewServlet extends HttpServlet {
         String comment = request.getParameter("comment");
 
         // Validate inputs
-        if (ValidationUtil.isNullOrEmpty(reviewId) || ValidationUtil.isNullOrEmpty(rating) || ValidationUtil.isNullOrEmpty(comment)) {
+        if (ValidationUtil.isNullOrEmpty(reviewId) ||
+                ValidationUtil.isNullOrEmpty(rating) ||
+                ValidationUtil.isNullOrEmpty(comment)) {
             request.setAttribute("errorMessage", "All fields are required");
             doGet(request, response);
             return;
@@ -120,14 +122,14 @@ public class UpdateReviewServlet extends HttpServlet {
             // Get the review to check permissions and get the book ID
             Review review = reviewManager.getReviewById(reviewId);
             if (review == null) {
-                request.getSession().setAttribute("errorMessage", "Review not found");
+                session.setAttribute("errorMessage", "Review not found");
                 response.sendRedirect(request.getContextPath() + "/books");
                 return;
             }
 
             // Check if the review belongs to the user
             if (!userId.equals(review.getUserId())) {
-                request.getSession().setAttribute("errorMessage", "You do not have permission to edit this review");
+                session.setAttribute("errorMessage", "You do not have permission to edit this review");
                 response.sendRedirect(request.getContextPath() + "/books");
                 return;
             }
@@ -136,7 +138,7 @@ public class UpdateReviewServlet extends HttpServlet {
             boolean updated = reviewManager.updateReview(reviewId, userId, comment, ratingValue);
 
             if (updated) {
-                request.getSession().setAttribute("successMessage", "Review updated successfully");
+                session.setAttribute("successMessage", "Review updated successfully");
                 response.sendRedirect(request.getContextPath() + "/book-reviews?bookId=" + review.getBookId());
             } else {
                 request.setAttribute("errorMessage", "Failed to update review");

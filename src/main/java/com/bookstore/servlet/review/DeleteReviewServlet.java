@@ -16,6 +16,9 @@ import com.bookstore.util.ValidationUtil;
 public class DeleteReviewServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Handles GET requests - show delete confirmation
+     */
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // Get review ID
@@ -40,14 +43,14 @@ public class DeleteReviewServlet extends HttpServlet {
         Review review = reviewManager.getReviewById(reviewId);
 
         if (review == null) {
-            request.getSession().setAttribute("errorMessage", "Review not found");
+            session.setAttribute("errorMessage", "Review not found");
             response.sendRedirect(request.getContextPath() + "/books");
             return;
         }
 
         // Verify user owns the review
         if (!userId.equals(review.getUserId())) {
-            request.getSession().setAttribute("errorMessage", "You are not authorized to delete this review");
+            session.setAttribute("errorMessage", "You are not authorized to delete this review");
             response.sendRedirect(request.getContextPath() + "/books");
             return;
         }
@@ -58,6 +61,9 @@ public class DeleteReviewServlet extends HttpServlet {
         request.getRequestDispatcher("/review/delete-review.jsp").forward(request, response);
     }
 
+    /**
+     * Handles POST requests - process review deletion
+     */
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // Get review ID
@@ -83,14 +89,14 @@ public class DeleteReviewServlet extends HttpServlet {
         Review review = reviewManager.getReviewById(reviewId);
 
         if (review == null) {
-            request.getSession().setAttribute("errorMessage", "Review not found");
+            session.setAttribute("errorMessage", "Review not found");
             response.sendRedirect(request.getContextPath() + "/books");
             return;
         }
 
         // Verify user owns the review
         if (!userId.equals(review.getUserId())) {
-            request.getSession().setAttribute("errorMessage", "You are not authorized to delete this review");
+            session.setAttribute("errorMessage", "You are not authorized to delete this review");
             response.sendRedirect(request.getContextPath() + "/books");
             return;
         }
@@ -101,9 +107,9 @@ public class DeleteReviewServlet extends HttpServlet {
             boolean deleted = reviewManager.deleteReview(reviewId, userId);
 
             if (deleted) {
-                request.getSession().setAttribute("successMessage", "Review deleted successfully");
+                session.setAttribute("successMessage", "Review deleted successfully");
             } else {
-                request.getSession().setAttribute("errorMessage", "Failed to delete review");
+                session.setAttribute("errorMessage", "Failed to delete review");
             }
         }
 

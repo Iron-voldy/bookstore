@@ -1,2 +1,1 @@
 2da52dcc-aa7d-44a5-b239-a4fcc65d8932,3ee7b0b4-65d5-40cb-9459-538b2d4dfcbc,hasindut1,${book.id},test1,4,1746028119028,STANDARD
-bbc382c6-122b-41c1-80bd-685875108f28,3ee7b0b4-65d5-40cb-9459-538b2d4dfcbc,hasindut1,b065ae6d-308d-40aa-ae65-775a12c3e238,best,4,1746030000236,STANDARD

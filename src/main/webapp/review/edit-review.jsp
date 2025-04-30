@@ -8,11 +8,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Review - ${book.title}</title>
+    <title>Edit Review - <%= ((Book)request.getAttribute("book")).getTitle() %></title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
         body {
@@ -52,6 +51,15 @@
             margin-bottom: 20px;
             padding-bottom: 20px;
             border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+        .book-cover {
+            max-width: 100px;
+            max-height: 150px;
+            margin-right: 20px;
+            object-fit: cover;
+            border-radius: 5px;
         }
         .action-buttons {
             display: flex;
@@ -61,44 +69,51 @@
     </style>
 </head>
 <body>
+    <%
+        // Cast attributes to specific types for easier use
+        Book book = (Book)request.getAttribute("book");
+        Review review = (Review)request.getAttribute("review");
+    %>
     <div class="container">
         <div class="review-container">
-            <h2 class="mb-4">Edit Your Review</h2>
-
-            <!-- Book Info -->
+            <!-- Book Information -->
             <div class="book-info">
-                <h4>${book.title}</h4>
-                <p class="text-muted">by ${book.author}</p>
+                <img src="<%= request.getContextPath() %>/book-covers/<%= book.getCoverImagePath() %>"
+                     alt="<%= book.getTitle() %> Cover" class="book-cover">
+                <div>
+                    <h4><%= book.getTitle() %></h4>
+                    <p class="text-muted">by <%= book.getAuthor() %></p>
+                </div>
             </div>
 
             <%-- Error Message --%>
             <c:if test="${not empty errorMessage}">
                 <div class="alert alert-danger" role="alert">
-                    ${errorMessage}
+                    <c:out value="${errorMessage}" />
                 </div>
             </c:if>
 
-            <form action="<%=request.getContextPath()%>/update-book-review" method="post">
-                <input type="hidden" name="reviewId" value="${review.reviewId}">
+            <form action="<%= request.getContextPath() %>/update-book-review" method="post">
+                <input type="hidden" name="reviewId" value="<%= review.getReviewId() %>">
 
                 <%-- Star Rating --%>
                 <div class="mb-3">
                     <label class="form-label">Your Rating</label>
                     <div class="star-rating">
                         <input type="radio" id="star5" name="rating" value="5"
-                               <%= ((Review)request.getAttribute("review")).getRating() == 5 ? "checked" : "" %> />
+                            <%= review.getRating() == 5 ? "checked" : "" %> />
                         <label for="star5">★</label>
                         <input type="radio" id="star4" name="rating" value="4"
-                               <%= ((Review)request.getAttribute("review")).getRating() == 4 ? "checked" : "" %> />
+                            <%= review.getRating() == 4 ? "checked" : "" %> />
                         <label for="star4">★</label>
                         <input type="radio" id="star3" name="rating" value="3"
-                               <%= ((Review)request.getAttribute("review")).getRating() == 3 ? "checked" : "" %> />
+                            <%= review.getRating() == 3 ? "checked" : "" %> />
                         <label for="star3">★</label>
                         <input type="radio" id="star2" name="rating" value="2"
-                               <%= ((Review)request.getAttribute("review")).getRating() == 2 ? "checked" : "" %> />
+                            <%= review.getRating() == 2 ? "checked" : "" %> />
                         <label for="star2">★</label>
                         <input type="radio" id="star1" name="rating" value="1"
-                               <%= ((Review)request.getAttribute("review")).getRating() == 1 ? "checked" : "" %> />
+                            <%= review.getRating() == 1 ? "checked" : "" %> />
                         <label for="star1">★</label>
                     </div>
                 </div>
@@ -107,30 +122,30 @@
                 <div class="mb-3">
                     <label for="comment" class="form-label">Your Review</label>
                     <textarea class="form-control" id="comment" name="comment" rows="4" required
-                              placeholder="Share your thoughts about this book">${review.comment}</textarea>
-                </div>
+                                                  placeholder="Share your thoughts about this book"><%= review.getComment() %></textarea>
+                                    </div>
 
-                <%-- Action Buttons --%>
-                <div class="action-buttons">
-                    <a href="<%=request.getContextPath()%>/book-reviews?bookId=${book.id}" class="btn btn-secondary">
-                        <i class="bi bi-arrow-left"></i> Cancel
-                    </a>
-                    <div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-save"></i> Update Review
-                        </button>
-                        <a href="<%=request.getContextPath()%>/delete-book-review?reviewId=${review.reviewId}"
-                           class="btn btn-danger ms-2"
-                           onclick="return confirm('Are you sure you want to delete this review? This action cannot be undone.');">
-                            <i class="bi bi-trash"></i> Delete
-                        </a>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+                                    <%-- Action Buttons --%>
+                                    <div class="action-buttons">
+                                        <a href="<%= request.getContextPath() %>/book-reviews?bookId=<%= book.getId() %>" class="btn btn-secondary">
+                                            <i class="bi bi-arrow-left"></i> Cancel
+                                        </a>
+                                        <div>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-save"></i> Update Review
+                                            </button>
+                                            <a href="<%= request.getContextPath() %>/delete-book-review?reviewId=<%= review.getReviewId() %>"
+                                               class="btn btn-danger ms-2"
+                                               onclick="return confirm('Are you sure you want to delete this review? This action cannot be undone.');">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </a>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+                        <!-- Bootstrap JS -->
+                        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+                    </body>
+                    </html>

@@ -408,10 +408,10 @@
                     <li class="nav-item">
                         <a class="nav-link active" href="<%=request.getContextPath()%>/books">Books</a>
                     </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab" aria-controls="reviews" aria-selected="false">
+                    <li class="nav-item">
+                        <a href="<%= request.getContextPath() %>/book-reviews?bookId=<%= book.getId() %>" class="nav-link">
                             Reviews (<%= request.getAttribute("reviewsCount") %>)
-                        </button>
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="<%=request.getContextPath()%>/contact">Contact</a>
