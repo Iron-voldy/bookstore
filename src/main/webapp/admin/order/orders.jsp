@@ -1,11 +1,12 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ page import="com.bookstore.model.order.Order" %>
 <%@ page import="com.bookstore.model.order.OrderStatus" %>
-<%@ page import="java.util.List" %>
 <%@ page import="java.util.Date" %>
 <%@ page import="java.text.SimpleDateFormat" %>
+<%@ page import="com.bookstore.model.order.Order" %>
+<%@ page import="java.util.Map" %>
+<%@ page import="java.util.List" %>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -20,208 +21,245 @@
     <!-- Custom CSS -->
     <style>
         :root {
-                    --primary-dark: #121212;
-                    --secondary-dark: #1e1e1e;
-                    --accent-color: #8a5cf5;
-                    --accent-hover: #6e46c9;
-                    --text-primary: #f5f5f5;
-                    --text-secondary: #b0b0b0;
-                    --danger-color: #d64045;
-                    --success-color: #4caf50;
-                    --warning-color: #ff9800;
-                    --info-color: #2196F3;
-                    --card-bg: #252525;
-                    --border-color: #333333;
-                }
+            --primary-dark: #121212;
+            --secondary-dark: #1e1e1e;
+            --accent-color: #8a5cf5;
+            --accent-hover: #6e46c9;
+            --text-primary: #f5f5f5;
+            --text-secondary: #b0b0b0;
+            --danger-color: #d64045;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+            --info-color: #2196F3;
+            --card-bg: #252525;
+            --border-color: #333333;
+        }
 
-                body {
-                    background-color: var(--primary-dark);
-                    color: var(--text-primary);
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                }
+        body {
+            background-color: var(--primary-dark);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-                .sidebar {
-                    background-color: var(--secondary-dark);
-                    min-height: 100vh;
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 250px;
-                    padding-top: 20px;
-                    z-index: 100;
-                }
+        .sidebar {
+            background-color: var(--secondary-dark);
+            min-height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            padding-top: 20px;
+            z-index: 100;
+        }
 
-                .sidebar-brand {
-                    padding: 15px 20px;
-                    margin-bottom: 20px;
-                    border-bottom: 1px solid var(--border-color);
-                }
+        .sidebar-brand {
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
 
-                .sidebar-brand a {
-                    color: var(--accent-color);
-                    text-decoration: none;
-                    font-weight: bold;
-                    font-size: 1.2rem;
-                }
+        .sidebar-brand a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
 
-                .sidebar-menu {
-                    padding: 0;
-                    list-style: none;
-                }
+        .sidebar-menu {
+            padding: 0;
+            list-style: none;
+        }
 
-                .sidebar-menu li {
-                    margin-bottom: 5px;
-                }
+        .sidebar-menu li {
+            margin-bottom: 5px;
+        }
 
-                .sidebar-menu a {
-                    display: block;
-                    padding: 12px 20px;
-                    color: var(--text-primary);
-                    text-decoration: none;
-                    transition: all 0.3s;
-                }
+        .sidebar-menu a {
+            display: block;
+            padding: 12px 20px;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
 
-                .sidebar-menu a:hover,
-                .sidebar-menu a.active {
-                    background-color: rgba(138, 92, 245, 0.1);
-                    color: var(--accent-color);
-                    border-left: 4px solid var(--accent-color);
-                }
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background-color: rgba(138, 92, 245, 0.1);
+            color: var(--accent-color);
+            border-left: 4px solid var(--accent-color);
+        }
 
-                .sidebar-menu a.active {
-                    font-weight: 500;
-                }
+        .sidebar-menu a.active {
+            font-weight: 500;
+        }
 
-                .sidebar-menu i {
-                    margin-right: 10px;
-                    width: 20px;
-                    text-align: center;
-                }
+        .sidebar-menu i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
 
-                .main-content {
-                    margin-left: 250px;
-                    padding: 20px;
-                }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
 
-                .card {
-                    background-color: var(--card-bg);
-                    border: 1px solid var(--border-color);
-                    border-radius: 8px;
-                    margin-bottom: 20px;
-                }
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
 
-                .card-header {
-                    background-color: var(--secondary-dark);
-                    border-bottom: 1px solid var(--border-color);
-                    padding: 15px 20px;
-                }
+        .card-header {
+            background-color: var(--secondary-dark);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 20px;
+        }
 
-                .stat-card {
-                    border-left: 4px solid;
-                    transition: transform 0.3s;
-                }
+        .stat-card {
+            border-left: 4px solid;
+            transition: transform 0.3s;
+        }
 
-                .stat-card:hover {
-                    transform: translateY(-5px);
-                }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
 
-                .stat-card.pending {
-                    border-left-color: var(--warning-color);
-                }
+        .stat-card.pending {
+            border-left-color: var(--warning-color);
+        }
 
-                .stat-card.processing {
-                    border-left-color: var(--accent-color);
-                }
+        .stat-card.processing {
+            border-left-color: var(--accent-color);
+        }
 
-                .stat-card.shipped {
-                    border-left-color: var(--info-color);
-                }
+        .stat-card.shipped {
+            border-left-color: var(--info-color);
+        }
 
-                .stat-card.delivered {
-                    border-left-color: var(--success-color);
-                }
+        .stat-card.delivered {
+            border-left-color: var(--success-color);
+        }
 
-                .stat-card.cancelled {
-                    border-left-color: var(--danger-color);
-                }
+        .stat-card.cancelled {
+            border-left-color: var(--danger-color);
+        }
 
-                .stat-card.sales {
-                    border-left-color: #28a745;
-                }
+        .stat-card.sales {
+            border-left-color: #28a745;
+        }
 
-                .stat-card .stat-icon {
-                    font-size: 2.5rem;
-                    opacity: 0.8;
-                }
+        .stat-card .stat-icon {
+            font-size: 2.5rem;
+            opacity: 0.8;
+        }
 
-                .table-dark {
-                    background-color: var(--card-bg);
-                    color: var(--text-primary);
-                }
+        .table-dark {
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+        }
 
-                .table-dark th,
-                .table-dark td {
-                    border-color: var(--border-color);
-                }
+        .table-dark th,
+        .table-dark td {
+            border-color: var(--border-color);
+        }
 
-                .btn-accent {
-                    background-color: var(--accent-color);
-                    color: white;
-                    border: none;
-                }
+        .btn-accent {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+        }
 
-                .btn-accent:hover {
-                    background-color: var(--accent-hover);
-                    color: white;
-                }
+        .btn-accent:hover {
+            background-color: var(--accent-hover);
+            color: white;
+        }
 
-                .search-container {
-                    position: relative;
-                }
+        .search-container {
+            position: relative;
+        }
 
-                .search-container .form-control {
-                    background-color: var(--secondary-dark);
-                    border: 1px solid var(--border-color);
-                    color: var(--text-primary);
-                    padding-left: 40px;
-                }
+        .search-container .form-control {
+            background-color: var(--secondary-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding-left: 40px;
+        }
 
-                .search-icon {
-                    position: absolute;
-                    left: 15px;
-                    top: 10px;
-                    color: var(--text-secondary);
-                }
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 10px;
+            color: var(--text-secondary);
+        }
 
-                .alert-custom {
-                    background-color: var(--secondary-dark);
-                    color: var(--text-primary);
-                    border: 1px solid var(--border-color);
-                }
+        .alert-custom {
+            background-color: var(--secondary-dark);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
 
-                .alert-success {
-                    border-left: 4px solid var(--success-color);
-                }
+        .alert-success {
+            border-left: 4px solid var(--success-color);
+        }
 
-                .alert-danger {
-                    border-left: 4px solid var(--danger-color);
-                }
+        .alert-danger {
+            border-left: 4px solid var(--danger-color);
+        }
 
-                .form-control, .form-select {
-                    background-color: var(--secondary-dark);
-                    border: 1px solid var(--border-color);
-                    color: var(--text-primary);
-                }
+        .form-control, .form-select {
+            background-color: var(--secondary-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
 
-                .form-control:focus, .form-select:focus {
-                    background-color: var(--secondary-dark);
-                    color: var(--text-primary);
-                    border-color: var(--accent-color);
-                    box-shadow: 0 0 0 0.25rem rgba(138, 92, 245, 0.25);
-                }
+        .form-control:focus, .form-select:focus {
+            background-color: var(--secondary-dark);
+            color: var(--text-primary);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.25rem rgba(138, 92, 245, 0.25);
+        }
     </style>
 </head>
 <body>
+    <%
+    // Get data from request attributes
+    Map<OrderStatus, Integer> orderCounts = (Map<OrderStatus, Integer>)request.getAttribute("orderCounts");
+    Double totalSales = (Double)request.getAttribute("totalSales");
+    String statusFilter = (String)request.getAttribute("statusFilter");
+    OrderStatus[] statuses = (OrderStatus[])request.getAttribute("statuses");
+    String search = (String)request.getAttribute("search");
+    List<Order> orders = (List<Order>)request.getAttribute("orders");
+
+    // Format values
+    String formattedTotalSales = "0.00";
+    if (totalSales != null) {
+        java.text.NumberFormat nf = java.text.NumberFormat.getNumberInstance();
+        nf.setMinimumFractionDigits(2);
+        nf.setMaximumFractionDigits(2);
+        formattedTotalSales = nf.format(totalSales);
+    }
+
+    // Set default values
+    int pendingCount = 0;
+    int processingCount = 0;
+    int shippedCount = 0;
+    int deliveredCount = 0;
+    int cancelledCount = 0;
+
+    // Get counts if available
+    if (orderCounts != null) {
+        if (orderCounts.get(OrderStatus.PENDING) != null) pendingCount = orderCounts.get(OrderStatus.PENDING);
+        if (orderCounts.get(OrderStatus.PROCESSING) != null) processingCount = orderCounts.get(OrderStatus.PROCESSING);
+        if (orderCounts.get(OrderStatus.SHIPPED) != null) shippedCount = orderCounts.get(OrderStatus.SHIPPED);
+        if (orderCounts.get(OrderStatus.DELIVERED) != null) deliveredCount = orderCounts.get(OrderStatus.DELIVERED);
+        if (orderCounts.get(OrderStatus.CANCELLED) != null) cancelledCount = orderCounts.get(OrderStatus.CANCELLED);
+    }
+
+    int orderCount = orders != null ? orders.size() : 0;
+    %>
+
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-brand">
@@ -293,7 +331,7 @@
                         <span class="search-icon">
                             <i class="fas fa-search"></i>
                         </span>
-                        <input type="text" class="form-control" name="search" placeholder="Search orders..." value="${search}">
+                        <input type="text" class="form-control" name="search" placeholder="Search orders..." value="<%= search != null ? search : "" %>">
                         <button class="btn btn-accent" type="submit">Search</button>
                     </div>
                 </form>
@@ -307,7 +345,7 @@
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title text-warning">Pending</h6>
-                            <h3 class="mb-0">${orderCounts['PENDING'] != null ? orderCounts['PENDING'] : 0}</h3>
+                            <h3 class="mb-0"><%= pendingCount %></h3>
                         </div>
                         <div class="stat-icon text-warning">
                             <i class="fas fa-clock"></i>
@@ -320,7 +358,7 @@
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title text-primary">Processing</h6>
-                            <h3 class="mb-0">${orderCounts['PROCESSING'] != null ? orderCounts['PROCESSING'] : 0}</h3>
+                            <h3 class="mb-0"><%= processingCount %></h3>
                         </div>
                         <div class="stat-icon text-primary">
                             <i class="fas fa-spinner"></i>
@@ -333,7 +371,7 @@
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title text-info">Shipped</h6>
-                            <h3 class="mb-0">${orderCounts['SHIPPED'] != null ? orderCounts['SHIPPED'] : 0}</h3>
+                            <h3 class="mb-0"><%= shippedCount %></h3>
                         </div>
                         <div class="stat-icon text-info">
                             <i class="fas fa-truck"></i>
@@ -346,7 +384,7 @@
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title text-success">Delivered</h6>
-                            <h3 class="mb-0">${orderCounts['DELIVERED'] != null ? orderCounts['DELIVERED'] : 0}</h3>
+                            <h3 class="mb-0"><%= deliveredCount %></h3>
                         </div>
                         <div class="stat-icon text-success">
                             <i class="fas fa-check-circle"></i>
@@ -359,7 +397,7 @@
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title text-danger">Cancelled</h6>
-                            <h3 class="mb-0">${orderCounts['CANCELLED'] != null ? orderCounts['CANCELLED'] : 0}</h3>
+                            <h3 class="mb-0"><%= cancelledCount %></h3>
                         </div>
                         <div class="stat-icon text-danger">
                             <i class="fas fa-times-circle"></i>
@@ -372,16 +410,7 @@
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title text-success">Total Sales</h6>
-                            <h3 class="mb-0">$
-                                <c:choose>
-                                    <c:when test="${totalSales != null}">
-                                        <fmt:formatNumber value="${totalSales}" pattern="0.00" />
-                                    </c:when>
-                                    <c:otherwise>
-                                        0.00
-                                    </c:otherwise>
-                                </c:choose>
-                            </h3>
+                            <h3 class="mb-0">$<%= formattedTotalSales %></h3>
                         </div>
                         <div class="stat-icon text-success">
                             <i class="fas fa-dollar-sign"></i>
@@ -398,10 +427,14 @@
                     <div class="col-md-3">
                         <label for="status" class="form-label">Filter by Status</label>
                         <select class="form-select" id="status" name="status" onchange="this.form.submit()">
-                            <option value="" ${empty statusFilter ? 'selected' : ''}>All Orders</option>
-                            <c:forEach var="status" items="${statuses}">
-                                <option value="${status}" ${status.name() == statusFilter ? 'selected' : ''}>${status.displayName}</option>
-                            </c:forEach>
+                            <option value="" <%= statusFilter == null || statusFilter.isEmpty() ? "selected" : "" %>>All Orders</option>
+                            <% if (statuses != null) {
+                                for (OrderStatus status : statuses) { %>
+                                    <option value="<%= status.name() %>" <%= status.name().equals(statusFilter) ? "selected" : "" %>>
+                                        <%= status.getDisplayName() %>
+                                    </option>
+                            <%  }
+                               } %>
                         </select>
                     </div>
                     <div class="col-md-2 d-flex align-items-end">
@@ -417,88 +450,103 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
-                    <c:choose>
-                        <c:when test="${not empty search}">
-                            Search Results for "${search}"
-                        </c:when>
-                        <c:when test="${not empty statusFilter}">
-                            ${statusFilter} Orders
-                        </c:when>
-                        <c:otherwise>
-                            All Orders
-                        </c:otherwise>
-                    </c:choose>
+                    <% if (search != null && !search.trim().isEmpty()) { %>
+                        Search Results for "<%= search %>"
+                    <% } else if (statusFilter != null && !statusFilter.trim().isEmpty()) { %>
+                        <%= statusFilter %> Orders
+                    <% } else { %>
+                        All Orders
+                    <% } %>
                 </h5>
-                <span>Showing ${orders.size()} order(s)</span>
+                <span>Showing <%= orderCount %> order(s)</span>
             </div>
             <div class="card-body">
-                <c:choose>
-                    <c:when test="${empty orders}">
-                        <div class="text-center py-5">
-                            <i class="fas fa-search fa-4x mb-3" style="color: var(--border-color);"></i>
-                            <h4>No Orders Found</h4>
-                            <p class="text-muted">Try adjusting your search or filter criteria</p>
-                        </div>
-                    </c:when>
-                    <c:otherwise>
-                        <div class="table-responsive">
-                            <table class="table table-dark table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Order #</th>
-                                        <th>Date</th>
-                                        <th>Customer</th>
-                                        <th>Items</th>
-                                        <th>Total</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <c:forEach var="order" items="${orders}">
-                                        <tr>
-                                            <td>${order.orderId.substring(0, 8)}</td>
-                                            <td>
-                                                <fmt:formatDate value="${order.orderDate}" pattern="MMM d, yyyy HH:mm" />
-                                            </td>
-                                            <td>${order.contactEmail}</td>
-                                            <td>${order.items.size()} item(s)</td>
-                                            <td>$<fmt:formatNumber value="${order.total}" pattern="0.00" /></td>
-                                            <td>
-                                                <c:choose>
-                                                    <c:when test="${order.status == 'PENDING'}">
-                                                        <span class="badge bg-warning text-dark">Pending</span>
-                                                    </c:when>
-                                                    <c:when test="${order.status == 'PROCESSING'}">
-                                                        <span class="badge bg-primary">Processing</span>
-                                                    </c:when>
-                                                    <c:when test="${order.status == 'SHIPPED'}">
-                                                        <span class="badge bg-info text-dark">Shipped</span>
-                                                    </c:when>
-                                                    <c:when test="${order.status == 'DELIVERED'}">
-                                                        <span class="badge bg-success">Delivered</span>
-                                                    </c:when>
-                                                    <c:when test="${order.status == 'CANCELLED'}">
-                                                        <span class="badge bg-danger">Cancelled</span>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <span class="badge bg-secondary">${order.status}</span>
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </td>
-                                            <td>
-                                                <a href="${pageContext.request.contextPath}/admin/order-details?orderId=${order.orderId}"
-                                                   class="btn btn-sm btn-accent">
-                                                    <i class="fas fa-eye me-1"></i> View
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    </c:forEach>
-                                </tbody>
-                            </table>
-                        </div>
-                    </c:otherwise>
-                </c:choose>
+                <% if (orders == null || orders.isEmpty()) { %>
+                    <div class="text-center py-5">
+                        <i class="fas fa-search fa-4x mb-3" style="color: var(--border-color);"></i>
+                        <h4>No Orders Found</h4>
+                        <p class="text-muted">Try adjusting your search or filter criteria</p>
+                    </div>
+                <% } else { %>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Date</th>
+                                    <th>Customer</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <%
+                                SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d, yyyy");
+                                java.text.NumberFormat currencyFormat = java.text.NumberFormat.getCurrencyInstance();
+                                currencyFormat.setMinimumFractionDigits(2);
+
+                                for (Order order : orders) {
+                                    String dateStr = "N/A";
+                                    if (order.getOrderDate() != null) {
+                                        dateStr = dateFormat.format(order.getOrderDate());
+                                    }
+
+                                    String totalStr = "$0.00";
+                                    if (order.getTotal() > 0) {
+                                        totalStr = currencyFormat.format(order.getTotal());
+                                    }
+
+                                    String badgeClass = "bg-secondary";
+                                    String statusText = "Unknown";
+
+                                    if (order.getStatus() != null) {
+                                        switch(order.getStatus()) {
+                                            case PENDING:
+                                                badgeClass = "bg-warning text-dark";
+                                                statusText = "Pending";
+                                                break;
+                                            case PROCESSING:
+                                                badgeClass = "bg-primary";
+                                                statusText = "Processing";
+                                                break;
+                                            case SHIPPED:
+                                                badgeClass = "bg-info text-dark";
+                                                statusText = "Shipped";
+                                                break;
+                                            case DELIVERED:
+                                                badgeClass = "bg-success";
+                                                statusText = "Delivered";
+                                                break;
+                                            case CANCELLED:
+                                                badgeClass = "bg-danger";
+                                                statusText = "Cancelled";
+                                                break;
+                                            default:
+                                                statusText = order.getStatus().toString();
+                                        }
+                                    }
+                                %>
+                                <tr>
+                                    <td><%= order.getOrderId().substring(0, Math.min(8, order.getOrderId().length())) %></td>
+                                    <td><%= dateStr %></td>
+                                    <td><%= order.getContactEmail() != null ? order.getContactEmail() : "N/A" %></td>
+                                    <td><%= order.getItems() != null ? order.getItems().size() : 0 %> item(s)</td>
+                                    <td><%= totalStr %></td>
+                                    <td><span class="badge <%= badgeClass %>"><%= statusText %></span></td>
+                                    <td>
+                                        <a href="${pageContext.request.contextPath}/admin/order-details?orderId=<%= order.getOrderId() %>"
+                                           class="btn btn-sm btn-accent">
+                                            <i class="fas fa-eye me-1"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } %>
             </div>
         </div>
     </div>
