@@ -232,6 +232,9 @@
     String search = (String)request.getAttribute("search");
     List<Order> orders = (List<Order>)request.getAttribute("orders");
 
+    // Get context path for links
+    String contextPath = request.getContextPath();
+
     // Format values
     String formattedTotalSales = "0.00";
     if (totalSales != null) {
@@ -263,40 +266,40 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-brand">
-            <a href="${pageContext.request.contextPath}/admin/dashboard">
+            <a href="<%= contextPath %>/admin/dashboard">
                 <i class="fas fa-book-open me-2"></i> BookVerse Admin
             </a>
         </div>
         <ul class="sidebar-menu">
             <li>
-                <a href="${pageContext.request.contextPath}/admin/dashboard">
+                <a href="<%= contextPath %>/admin/dashboard">
                     <i class="fas fa-tachometer-alt"></i> Dashboard
                 </a>
             </li>
             <li>
-                <a href="${pageContext.request.contextPath}/admin/manage-books.jsp">
+                <a href="<%= contextPath %>/admin/manage-books.jsp">
                     <i class="fas fa-book"></i> Books
                 </a>
             </li>
             <li>
-                <a href="${pageContext.request.contextPath}/admin/orders" class="active">
+                <a href="<%= contextPath %>/admin/orders" class="active">
                     <i class="fas fa-shopping-cart"></i> Orders
                 </a>
             </li>
             <li>
-                <a href="${pageContext.request.contextPath}/admin/manage-users.jsp">
+                <a href="<%= contextPath %>/admin/manage-users.jsp">
                     <i class="fas fa-users"></i> Users
                 </a>
             </li>
             <c:if test="${sessionScope.isSuperAdmin}">
                 <li>
-                    <a href="${pageContext.request.contextPath}/admin/manage-admins">
+                    <a href="<%= contextPath %>/admin/manage-admins">
                         <i class="fas fa-user-shield"></i> Admins
                     </a>
                 </li>
             </c:if>
             <li>
-                <a href="${pageContext.request.contextPath}/admin/logout">
+                <a href="<%= contextPath %>/admin/logout">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </a>
             </li>
@@ -326,7 +329,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2><i class="fas fa-shopping-cart me-2"></i> Order Management</h2>
             <div class="search-container">
-                <form action="${pageContext.request.contextPath}/admin/orders" method="get">
+                <form action="<%= contextPath %>/admin/orders" method="get">
                     <div class="input-group">
                         <span class="search-icon">
                             <i class="fas fa-search"></i>
@@ -423,7 +426,7 @@
         <!-- Filter Controls -->
         <div class="card mb-4">
             <div class="card-body">
-                <form action="${pageContext.request.contextPath}/admin/orders" method="get" class="row g-3 align-items-end">
+                <form action="<%= contextPath %>/admin/orders" method="get" class="row g-3 align-items-end">
                     <div class="col-md-3">
                         <label for="status" class="form-label">Filter by Status</label>
                         <select class="form-select" id="status" name="status" onchange="this.form.submit()">
@@ -438,7 +441,7 @@
                         </select>
                     </div>
                     <div class="col-md-2 d-flex align-items-end">
-                        <a href="${pageContext.request.contextPath}/admin/orders" class="btn btn-outline-light">
+                        <a href="<%= contextPath %>/admin/orders" class="btn btn-outline-light">
                             <i class="fas fa-sync-alt me-1"></i> Reset Filters
                         </a>
                     </div>
@@ -536,7 +539,7 @@
                                     <td><%= totalStr %></td>
                                     <td><span class="badge <%= badgeClass %>"><%= statusText %></span></td>
                                     <td>
-                                        <a href="${pageContext.request.contextPath}/admin/order-details?orderId=<%= order.getOrderId() %>"
+                                        <a href="<%= contextPath %>/admin/order-details?orderId=<%= order.getOrderId() %>"
                                            class="btn btn-sm btn-accent">
                                             <i class="fas fa-eye me-1"></i> View
                                         </a>
