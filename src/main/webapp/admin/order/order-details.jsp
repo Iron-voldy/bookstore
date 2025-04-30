@@ -461,19 +461,19 @@
                                 <tfoot>
                                     <tr>
                                         <td colspan="4" class="text-end"><strong>Subtotal:</strong></td>
-                                        <td class="text-end">$<fmt:formatNumber value="${order.subtotal}" pattern="0.00" /></td>
+                                        <td class="text-end">$<fmt:formatNumber value="${order.subtotal}" type="number" pattern="0.00" /></td>
                                     </tr>
                                     <tr>
                                         <td colspan="4" class="text-end"><strong>Tax:</strong></td>
-                                        <td class="text-end">$<fmt:formatNumber value="${order.tax}" pattern="0.00" /></td>
+                                        <td class="text-end">$<fmt:formatNumber value="${order.tax}" type="number" pattern="0.00" /></td>
                                     </tr>
                                     <tr>
                                         <td colspan="4" class="text-end"><strong>Shipping:</strong></td>
-                                        <td class="text-end">$<fmt:formatNumber value="${order.shippingCost}" pattern="0.00" /></td>
+                                        <td class="text-end">$<fmt:formatNumber value="${order.shippingCost}" type="number" pattern="0.00" /></td>
                                     </tr>
                                     <tr>
                                         <td colspan="4" class="text-end"><strong>Total:</strong></td>
-                                        <td class="text-end"><strong>$<fmt:formatNumber value="${order.total}" pattern="0.00" /></strong></td>
+                                        <td class="text-end"><strong>$<fmt:formatNumber value="${order.total}" type="number" pattern="0.00" /></strong></td>
                                     </tr>
                                 </tfoot>
                             </table>

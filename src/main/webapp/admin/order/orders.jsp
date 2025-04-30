@@ -1,7 +1,9 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page import="com.bookstore.model.order.Order" %>
 <%@ page import="com.bookstore.model.order.OrderStatus" %>
+<%@ page import="java.util.List" %>
 <%@ page import="java.util.Date" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 
@@ -370,7 +372,16 @@
                     <div class="card-body d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="card-title text-success">Total Sales</h6>
-                            <h3 class="mb-0">$<c:out value="${totalSales != null ? totalSales : 0.00}" /></h3>
+                            <h3 class="mb-0">$
+                                <c:choose>
+                                    <c:when test="${totalSales != null}">
+                                        <fmt:formatNumber value="${totalSales}" pattern="0.00" />
+                                    </c:when>
+                                    <c:otherwise>
+                                        0.00
+                                    </c:otherwise>
+                                </c:choose>
+                            </h3>
                         </div>
                         <div class="stat-icon text-success">
                             <i class="fas fa-dollar-sign"></i>
@@ -448,24 +459,11 @@
                                         <tr>
                                             <td>${order.orderId.substring(0, 8)}</td>
                                             <td>
-                                                <%
-                                                // Safe date formatting
-                                                Object orderObj = pageContext.findAttribute("order");
-                                                if (orderObj != null) {
-                                                    com.bookstore.model.order.Order currentOrder = (com.bookstore.model.order.Order)orderObj;
-                                                    Date orderDate = currentOrder.getOrderDate();
-                                                    if (orderDate != null) {
-                                                        SimpleDateFormat sdf = new SimpleDateFormat("MMM d, yyyy HH:mm");
-                                                        out.print(sdf.format(orderDate));
-                                                    } else {
-                                                        out.print("N/A");
-                                                    }
-                                                }
-                                                %>
+                                                <fmt:formatDate value="${order.orderDate}" pattern="MMM d, yyyy HH:mm" />
                                             </td>
                                             <td>${order.contactEmail}</td>
                                             <td>${order.items.size()} item(s)</td>
-                                            <td>$${order.total != null ? String.format('%.2f', order.total) : '0.00'}</td>
+                                            <td>$<fmt:formatNumber value="${order.total}" pattern="0.00" /></td>
                                             <td>
                                                 <c:choose>
                                                     <c:when test="${order.status == 'PENDING'}">

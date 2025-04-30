@@ -31,6 +31,10 @@ public class AdminOrdersServlet extends HttpServlet {
 
         HttpSession session = request.getSession();
 
+        // Flag to track if an exception occurs but response already started
+        boolean errorOccurred = false;
+        String errorMessage = "";
+
         try {
             // Check if admin is logged in
             if (session.getAttribute("adminId") == null) {
@@ -86,7 +90,7 @@ public class AdminOrdersServlet extends HttpServlet {
             request.setAttribute("totalSales", totalSales);
             request.setAttribute("search", search);
 
-            // Ensure safe access to request attributes
+            // Forward to JSP page
             request.getRequestDispatcher("/admin/order/orders.jsp").forward(request, response);
 
         } catch (Exception e) {
@@ -94,11 +98,23 @@ public class AdminOrdersServlet extends HttpServlet {
             System.err.println("Error in AdminOrdersServlet: " + e.getMessage());
             e.printStackTrace();
 
-            // Set error message
-            session.setAttribute("errorMessage", "An error occurred while loading orders: " + e.getMessage());
+            errorOccurred = true;
+            errorMessage = e.getMessage();
 
-            // Redirect to dashboard instead of forwarding to prevent further errors
-            response.sendRedirect(request.getContextPath() + "/admin/dashboard");
+            // Only set error message in session if it hasn't been committed
+            if (!response.isCommitted()) {
+                // Set error message
+                session.setAttribute("errorMessage", "An error occurred while loading orders: " + e.getMessage());
+
+                // Redirect to dashboard instead of forwarding
+                response.sendRedirect(request.getContextPath() + "/admin/dashboard");
+            }
+        }
+
+        // Log error if we couldn't handle it because response was already committed
+        if (errorOccurred && response.isCommitted()) {
+            System.err.println("Error occurred but response was already committed: " + errorMessage);
+            System.err.println("Unable to redirect to error page.");
         }
     }
 }
