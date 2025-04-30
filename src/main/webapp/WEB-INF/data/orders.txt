@@ -1,1 +1,1 @@
-de2e3004-8ba6-4931-9206-3cf5e4e7da39|3ee7b0b4-65d5-40cb-9459-538b2d4dfcbc|1745747935833|PENDING|45.0|3.1500000000000004|0.0|48.15|No 24/2,monnankulama,Galgamuwa|No 24/2,monnankulama,Galgamuwa|hasindutwm@gmail.com|0771212432||0|0|
+de2e3004-8ba6-4931-9206-3cf5e4e7da39|3ee7b0b4-65d5-40cb-9459-538b2d4dfcbc|1745747935833|PROCESSING|45.0|3.1500000000000004|0.0|48.15|No 24/2,monnankulama,Galgamuwa|No 24/2,monnankulama,Galgamuwa|hasindutwm@gmail.com|0771212432||0|0|
