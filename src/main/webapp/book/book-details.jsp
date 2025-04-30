@@ -721,7 +721,7 @@
                             <% } else { %>
                                 <p>No ratings yet. Be the first to review this book!</p>
                             <% } %>
-                            <a href="<%=request.getContextPath()%>/add-book-review?bookId=<%= book.getId() %>" class="btn btn-accent mt-3">
+                            <a href="<%= request.getContextPath() %>/add-book-review?bookId=<%= book.getId() %>" class="btn btn-accent mt-3">
                                 <i class="fas fa-pen me-2"></i> Write a Review
                             </a>
                         </div>

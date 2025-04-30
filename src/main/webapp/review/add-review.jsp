@@ -8,7 +8,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Review - ${book.title}</title>
+    <title>Add Review - <c:out value="${book.title}" /></title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -52,17 +52,17 @@
 <body>
     <div class="container">
         <div class="review-container">
-            <h2 class="mb-4">Write a Review for ${book.title}</h2>
+            <h2 class="mb-4">Write a Review for <c:out value="${book.title}" /></h2>
 
             <%-- Error Message --%>
             <c:if test="${not empty errorMessage}">
                 <div class="alert alert-danger" role="alert">
-                    ${errorMessage}
+                    <c:out value="${errorMessage}" />
                 </div>
             </c:if>
 
-            <form action="<%=request.getContextPath()%>/add-book-review" method="post">
-                <input type="hidden" name="bookId" value="${book.id}">
+            <form action="<%= request.getContextPath() %>/add-book-review" method="post">
+                <input type="hidden" name="bookId" value="<c:out value='${book.id}' />">
 
                 <%-- Star Rating --%>
                 <div class="mb-3">

@@ -11,7 +11,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reviews - ${book.title}</title>
+    <title>Reviews - <c:out value="${book.title}" /></title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -57,12 +57,12 @@
         <div class="book-header mb-4">
             <div class="row align-items-center">
                 <div class="col-md-3 text-center">
-                    <img src="<%=request.getContextPath()%>/book-covers/${book.coverImagePath}"
-                         alt="${book.title}" class="img-fluid" style="max-height: 250px;">
+                    <img src="<%= request.getContextPath() %>/book-covers/<c:out value='${book.coverImagePath}' />"
+                         alt="<c:out value='${book.title}' />" class="img-fluid" style="max-height: 250px;">
                 </div>
                 <div class="col-md-9">
-                    <h1>${book.title}</h1>
-                    <p class="text-muted">by ${book.author}</p>
+                    <h1><c:out value="${book.title}" /></h1>
+                    <p class="text-muted">by <c:out value="${book.author}" /></p>
 
                     <%-- Overall Rating --%>
                     <div class="d-flex align-items-center">
@@ -81,12 +81,12 @@
                                 </c:choose>
                             </c:forEach>
                         </div>
-                        <span>${book.averageRating} / 5.0</span>
+                        <span><c:out value="${book.averageRating}" /> / 5.0</span>
                     </div>
-                    <p class="text-muted">${reviewStats.totalReviews} total reviews</p>
+                    <p class="text-muted"><c:out value="${reviewStats.totalReviews}" /> total reviews</p>
 
                     <%-- Add Review Button --%>
-                    <a href="<%=request.getContextPath()%>/add-book-review?bookId=${book.id}"
+                    <a href="<%= request.getContextPath() %>/add-book-review?bookId=<c:out value='${book.id}' />"
                        class="btn btn-primary mt-2">
                         <i class="bi bi-pencil-fill me-2"></i>Write a Review
                     </a>
@@ -102,12 +102,12 @@
                     <div class="card-body">
                         <c:forEach begin="1" end="5" var="rating" varStatus="status">
                             <div class="d-flex align-items-center mb-2">
-                                <div class="me-2">${rating} Star</div>
+                                <div class="me-2"><c:out value="${rating}" /> Star</div>
                                 <div class="rating-bar flex-grow-1">
                                     <div class="rating-bar-fill"
                                          style="width: ${(reviewStats.ratingDistribution[rating] * 100) / reviewStats.totalReviews}%"></div>
                                 </div>
-                                <div class="ms-2">${reviewStats.ratingDistribution[rating]}</div>
+                                <div class="ms-2"><c:out value="${reviewStats.ratingDistribution[rating]}" /></div>
                             </div>
                         </c:forEach>
                     </div>
@@ -129,7 +129,7 @@
                             <div class="review-card">
                                 <div class="d-flex justify-content-between mb-3">
                                     <div>
-                                        <strong>${review.userName}</strong>
+                                        <strong><c:out value="${review.userName}" /></strong>
                                         <span class="text-muted ms-2">
                                             <fmt:formatDate value="${review.reviewDate}" pattern="MMMM dd, yyyy"/>
                                         </span>
@@ -147,19 +147,19 @@
                                         </c:forEach>
                                     </div>
                                 </div>
-                                <p>${review.comment}</p>
+                                <p><c:out value="${review.comment}" /></p>
 
                                 <%-- Show edit/delete for user's own review --%>
                                 <c:if test="${sessionScope.userId eq review.userId}">
                                     <div class="review-actions mt-2">
-                                        <a href="<%=request.getContextPath()%>/update-book-review?reviewId=${review.reviewId}"
+                                        <a href="<%= request.getContextPath() %>/update-book-review?reviewId=<c:out value='${review.reviewId}' />"
                                            class="btn btn-sm btn-outline-primary me-2">
                                             <i class="bi bi-pencil me-1"></i>Edit
                                         </a>
-                                        <form action="<%=request.getContextPath()%>/delete-book-review"
+                                        <form action="<%= request.getContextPath() %>/delete-book-review"
                                               method="post" class="d-inline"
                                               onsubmit="return confirm('Are you sure you want to delete this review?');">
-                                            <input type="hidden" name="reviewId" value="${review.reviewId}">
+                                            <input type="hidden" name="reviewId" value="<c:out value='${review.reviewId}' />">
                                             <input type="hidden" name="confirm" value="yes">
                                             <button type="submit" class="btn btn-sm btn-outline-danger">
                                                 <i class="bi bi-trash me-1"></i>Delete

@@ -33,7 +33,7 @@ public class BookDetailsServlet extends HttpServlet {
 
         if (bookId == null || bookId.trim().isEmpty()) {
             // Redirect to book search if no ID provided
-            response.sendRedirect(request.getContextPath() + "/search-book");
+            response.sendRedirect(request.getContextPath() + "/books");
             return;
         }
 
@@ -45,7 +45,7 @@ public class BookDetailsServlet extends HttpServlet {
             // Book not found
             HttpSession session = request.getSession();
             session.setAttribute("errorMessage", "Book not found");
-            response.sendRedirect(request.getContextPath() + "/search-book");
+            response.sendRedirect(request.getContextPath() + "/books");
             return;
         }
 
@@ -92,11 +92,21 @@ public class BookDetailsServlet extends HttpServlet {
         // Set related books in request
         request.setAttribute("relatedBooks", relatedBooks.toArray(new Book[0]));
 
-        // Set review count - we'll use the number of ratings from the book
+        // Get review count - we'll use the number of ratings from the book
         int reviewsCount = book.getNumberOfRatings();
         request.setAttribute("reviewsCount", reviewsCount);
 
         // Forward to book details page
         request.getRequestDispatcher("/book/book-details.jsp").forward(request, response);
+    }
+
+    /**
+     * Handles POST requests if needed
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        // Optionally handle POST requests, if required
+        doGet(request, response);
     }
 }

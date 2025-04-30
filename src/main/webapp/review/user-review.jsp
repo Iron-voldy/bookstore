@@ -41,11 +41,6 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        .navbar {
-            background-color: var(--secondary-dark);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        }
-
         .container {
             padding-top: 30px;
             padding-bottom: 50px;
@@ -55,26 +50,6 @@
             margin-bottom: 30px;
             display: flex;
             align-items: center;
-        }
-
-        .page-title i {
-            color: var(--accent-color);
-            margin-right: 10px;
-            font-size: 1.8rem;
-        }
-
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-
-        .card-header {
-            background-color: rgba(138, 92, 245, 0.1);
-            border-bottom: 1px solid var(--border-color);
-            padding: 15px 20px;
         }
 
         .review-card {
@@ -196,17 +171,6 @@
             box-shadow: 0 5px 15px rgba(214, 64, 69, 0.3);
         }
 
-        .btn-outline {
-            background-color: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-        }
-
-        .btn-outline:hover {
-            border-color: var(--accent-color);
-            color: var(--accent-color);
-        }
-
         .no-reviews {
             text-align: center;
             padding: 50px 20px;
@@ -218,36 +182,9 @@
             display: block;
             margin-bottom: 20px;
         }
-
-        .alert {
-            border-radius: 10px;
-            background-color: var(--card-bg);
-        }
-
-        .alert-success {
-            border-left: 4px solid var(--success-color);
-        }
-
-        .alert-danger {
-            border-left: 4px solid var(--danger-color);
-        }
     </style>
 </head>
 <body>
-    <!-- Header/Navbar goes here -->
-    <!-- Using a placeholder, replace with your actual navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="<%=request.getContextPath()%>/">BookVerse</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <!-- Your navigation links -->
-            </div>
-        </div>
-    </nav>
-
     <div class="container">
         <!-- Page Title -->
         <div class="page-title">
@@ -258,14 +195,14 @@
         <!-- Flash Messages -->
         <c:if test="${not empty sessionScope.successMessage}">
             <div class="alert alert-success mb-4">
-                <i class="bi bi-check-circle me-2"></i> ${sessionScope.successMessage}
+                <i class="bi bi-check-circle me-2"></i> <c:out value="${sessionScope.successMessage}" />
             </div>
             <c:remove var="successMessage" scope="session"/>
         </c:if>
 
         <c:if test="${not empty sessionScope.errorMessage}">
             <div class="alert alert-danger mb-4">
-                <i class="bi bi-exclamation-triangle me-2"></i> ${sessionScope.errorMessage}
+                <i class="bi bi-exclamation-triangle me-2"></i> <c:out value="${sessionScope.errorMessage}" />
             </div>
             <c:remove var="errorMessage" scope="session"/>
         </c:if>
@@ -277,7 +214,7 @@
                     <i class="bi bi-journal-text"></i>
                     <h4>You haven't written any reviews yet</h4>
                     <p class="text-muted mb-4">Your book reviews will appear here once you've shared your thoughts.</p>
-                    <a href="<%=request.getContextPath()%>/books" class="btn btn-accent">Browse Books</a>
+                    <a href="<%= request.getContextPath() %>/books" class="btn btn-accent">Browse Books</a>
                 </div>
             </c:when>
             <c:otherwise>
@@ -289,8 +226,8 @@
                                     <i class="bi bi-book"></i>
                                 </div>
                                 <div>
-                                    <h5 class="book-title">${bookMap[review.bookId].title}</h5>
-                                    <p class="book-author">by ${bookMap[review.bookId].author}</p>
+                                    <h5 class="book-title"><c:out value="${bookMap[review.bookId].title}" /></h5>
+                                    <p class="book-author">by <c:out value="${bookMap[review.bookId].author}" /></p>
                                 </div>
                             </div>
                             <c:if test="${review.reviewType.name() == 'VERIFIED'}">
@@ -318,18 +255,18 @@
                                 </div>
                             </div>
                             <div class="review-text">
-                                ${review.comment}
+                                <c:out value="${review.comment}" />
                             </div>
                             <div class="review-actions">
-                                <a href="<%=request.getContextPath()%>/book-reviews?bookId=${review.bookId}"
-                                   class="btn btn-outline btn-sm">
+                                <a href="<%= request.getContextPath() %>/book-reviews?bookId=<c:out value='${review.bookId}' />"
+                                   class="btn btn-outline-secondary btn-sm">
                                     <i class="bi bi-eye me-1"></i> View All Book Reviews
                                 </a>
-                                <a href="<%=request.getContextPath()%>/update-book-review?reviewId=${review.reviewId}"
+                                <a href="<%= request.getContextPath() %>/update-book-review?reviewId=<c:out value='${review.reviewId}' />"
                                    class="btn btn-accent btn-sm">
                                     <i class="bi bi-pencil me-1"></i> Edit
                                 </a>
-                                <a href="<%=request.getContextPath()%>/delete-book-review?reviewId=${review.reviewId}"
+                                <a href="<%= request.getContextPath() %>/delete-book-review?reviewId=<c:out value='${review.reviewId}' />"
                                    class="btn btn-danger btn-sm"
                                    onclick="return confirm('Are you sure you want to delete this review?');">
                                     <i class="bi bi-trash me-1"></i> Delete
