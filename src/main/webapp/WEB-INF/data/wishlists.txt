@@ -1,2 +1,1 @@
-748dde86-d546-4fd1-8dfc-d0b586fad361,3ee7b0b4-65d5-40cb-9459-538b2d4dfcbc,My Wishlist,Default wishlist,1745483378910,false
 6df69460-bda2-46cc-a8c3-be92bd12a237,3ee7b0b4-65d5-40cb-9459-538b2d4dfcbc,My Wishlist,Default wishlist,1745483389645,false
