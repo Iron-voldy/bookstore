@@ -12,15 +12,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-/**
- * Filter to check if admin is logged in for admin pages
- */
+
 @WebFilter(urlPatterns = {"/admin/*"})
 public class AdminAuthFilter implements Filter {
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        // Initialization code if needed
     }
 
     @Override
@@ -60,6 +57,6 @@ public class AdminAuthFilter implements Filter {
 
     @Override
     public void destroy() {
-        // Cleanup code if needed
+
     }
 }

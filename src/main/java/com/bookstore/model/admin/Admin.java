@@ -2,9 +2,6 @@ package com.bookstore.model.admin;
 
 import java.util.Date;
 
-/**
- * Admin class representing administrators with system access
- */
 public class Admin {
     private String adminId;
     private String username;

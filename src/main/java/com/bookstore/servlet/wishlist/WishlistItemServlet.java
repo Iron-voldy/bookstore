@@ -108,6 +108,12 @@ public class WishlistItemServlet extends HttpServlet {
         log("BookId: " + bookId, DEBUG);
 
         try {
+            // Handle select-wishlist action (new action to handle)
+            if ("select-wishlist".equals(action)) {
+                handleSelectWishlistAction(request, response, session, userId, bookId);
+                return;
+            }
+
             // Handle remove action
             if ("remove".equals(action)) {
                 handleRemoveAction(request, response, session, userId, wishlistId, bookId);
@@ -181,6 +187,54 @@ public class WishlistItemServlet extends HttpServlet {
             session.setAttribute("errorMessage", "An unexpected error occurred");
             response.sendRedirect(request.getContextPath() + "/wishlists");
         }
+    }
+
+    /**
+     * Handle select-wishlist action to display the form for adding a book to a wishlist
+     */
+    private void handleSelectWishlistAction(HttpServletRequest request, HttpServletResponse response,
+                                            HttpSession session, String userId, String bookId)
+            throws ServletException, IOException {
+        // Validate book ID
+        if (bookId == null || bookId.trim().isEmpty()) {
+            setErrorAndRedirect(session, "Invalid book information",
+                    request.getContextPath() + "/books", response);
+            return;
+        }
+
+        // Initialize managers
+        BookManager bookManager = new BookManager(getServletContext());
+        WishlistManager wishlistManager = new WishlistManager(getServletContext());
+
+        // Get the book
+        Book book = bookManager.getBookById(bookId);
+        if (book == null) {
+            setErrorAndRedirect(session, "Book not found",
+                    request.getContextPath() + "/books", response);
+            return;
+        }
+
+        // Get user's wishlists
+        List<Wishlist> userWishlists = wishlistManager.getUserWishlists(userId);
+
+        // If no wishlists exist, create a default one
+        if (userWishlists.isEmpty()) {
+            Wishlist defaultWishlist = wishlistManager.getDefaultWishlist(userId);
+            if (defaultWishlist != null) {
+                userWishlists = wishlistManager.getUserWishlists(userId);
+            }
+        }
+
+        // Set attributes for the select-wishlist JSP
+        request.setAttribute("book", book);
+        request.setAttribute("wishlists", userWishlists);
+
+        // Debug output
+        log("Forwarding to select-wishlist.jsp with bookId: " + bookId, DEBUG);
+        log("Number of wishlists available: " + userWishlists.size(), DEBUG);
+
+        // Forward to the select-wishlist JSP
+        request.getRequestDispatcher("/wishlist/select-wishlist.jsp").forward(request, response);
     }
 
     /**
