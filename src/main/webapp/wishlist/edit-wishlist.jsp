@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page import="com.bookstore.model.wishlist.Wishlist" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -112,6 +113,30 @@
     </style>
 </head>
 <body>
+    <%
+    // Get wishlist from request attributes
+    Wishlist wishlist = (Wishlist) request.getAttribute("wishlist");
+    String wishlistId = "";
+    String wishlistName = "";
+    String wishlistDescription = "";
+    boolean isPublic = false;
+
+    if (wishlist != null) {
+        wishlistId = wishlist.getWishlistId();
+        wishlistName = wishlist.getName() != null ? wishlist.getName() : "";
+        wishlistDescription = wishlist.getDescription() != null ? wishlist.getDescription() : "";
+        isPublic = wishlist.isPublic();
+
+        // Debug information
+        System.out.println("Edit Wishlist JSP - Wishlist data: ID=" + wishlistId +
+                          ", Name=" + wishlistName +
+                          ", Description=" + wishlistDescription +
+                          ", isPublic=" + isPublic);
+    } else {
+        System.out.println("Edit Wishlist JSP - Wishlist is null!");
+    }
+    %>
+
     <!-- Include Header -->
     <jsp:include page="../includes/header.jsp" />
 
@@ -120,8 +145,8 @@
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb" class="mb-4">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/">Home</a></li>
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/wishlists">My Wishlists</a></li>
+                <li class="breadcrumb-item"><a href="<%=request.getContextPath()%>/">Home</a></li>
+                <li class="breadcrumb-item"><a href="<%=request.getContextPath()%>/wishlists">My Wishlists</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Edit Wishlist</li>
             </ol>
         </nav>
@@ -140,26 +165,26 @@
         <!-- Edit Wishlist Form -->
         <div class="card">
             <div class="card-body">
-                <form action="${pageContext.request.contextPath}/wishlists" method="post">
+                <form action="<%=request.getContextPath()%>/wishlists" method="post">
                     <input type="hidden" name="action" value="update">
-                    <input type="hidden" name="wishlistId" value="${wishlist.wishlistId}">
+                    <input type="hidden" name="wishlistId" value="<%=wishlistId%>">
 
                     <div class="mb-3">
                         <label for="name" class="form-label">Wishlist Name*</label>
                         <input type="text" class="form-control" id="name" name="name" required
-                               value="${wishlist.name}" maxlength="100">
+                               value="<%=wishlistName%>" maxlength="100">
                     </div>
 
                     <div class="mb-3">
                         <label for="description" class="form-label">Description</label>
                         <textarea class="form-control" id="description" name="description" rows="3"
-                                  maxlength="500">${wishlist.description}</textarea>
+                                  maxlength="500"><%=wishlistDescription%></textarea>
                     </div>
 
                     <div class="mb-3">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="isPublic" name="isPublic"
-                                   ${wishlist.public ? 'checked' : ''}>
+                                   <%= isPublic ? "checked" : "" %>>
                             <label class="form-check-label" for="isPublic">
                                 Make this wishlist public
                             </label>
@@ -170,7 +195,7 @@
                     </div>
 
                     <div class="d-flex justify-content-between">
-                        <a href="${pageContext.request.contextPath}/wishlists" class="btn btn-outline-light">
+                        <a href="<%=request.getContextPath()%>/wishlists" class="btn btn-outline-light">
                             <i class="fas fa-arrow-left me-2"></i> Back to Wishlists
                         </a>
                         <div>
@@ -197,14 +222,14 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Are you sure you want to delete the wishlist "${wishlist.name}"?</p>
+                    <p>Are you sure you want to delete the wishlist "<%=wishlistName%>"?</p>
                     <p class="text-danger">This action cannot be undone and all items in this wishlist will be removed.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancel</button>
-                    <form action="${pageContext.request.contextPath}/wishlists" method="post">
+                    <form action="<%=request.getContextPath()%>/wishlists" method="post">
                         <input type="hidden" name="action" value="delete">
-                        <input type="hidden" name="wishlistId" value="${wishlist.wishlistId}">
+                        <input type="hidden" name="wishlistId" value="<%=wishlistId%>">
                         <button type="submit" class="btn btn-danger">Delete</button>
                     </form>
                 </div>

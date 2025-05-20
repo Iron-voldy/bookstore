@@ -120,8 +120,8 @@
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb" class="mb-4">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/">Home</a></li>
-                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/wishlists">My Wishlists</a></li>
+                <li class="breadcrumb-item"><a href="<%=request.getContextPath()%>/">Home</a></li>
+                <li class="breadcrumb-item"><a href="<%=request.getContextPath()%>/wishlists">My Wishlists</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Create Wishlist</li>
             </ol>
         </nav>
@@ -140,7 +140,7 @@
         <!-- Create Wishlist Form -->
         <div class="card">
             <div class="card-body">
-                <form action="${pageContext.request.contextPath}/wishlists" method="post">
+                <form action="<%=request.getContextPath()%>/wishlists" method="post">
                     <input type="hidden" name="action" value="create">
 
                     <div class="mb-3">
@@ -168,7 +168,7 @@
                     </div>
 
                     <div class="d-flex justify-content-between">
-                        <a href="${pageContext.request.contextPath}/wishlists" class="btn btn-outline-light">
+                        <a href="<%=request.getContextPath()%>/wishlists" class="btn btn-outline-light">
                             <i class="fas fa-arrow-left me-2"></i> Back to Wishlists
                         </a>
                         <button type="submit" class="btn btn-accent">

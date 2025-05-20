@@ -114,6 +114,40 @@
             box-shadow: 0 5px 15px rgba(138, 92, 245, 0.3);
         }
 
+        /* Add new style for the delete button */
+        .btn-outline-danger {
+            color: var(--danger-color);
+            background-color: transparent;
+            border: 1px solid var(--danger-color);
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-outline-danger:hover {
+            background-color: var(--danger-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(214, 64, 69, 0.3);
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-danger:hover {
+            background-color: #b32e33;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(214, 64, 69, 0.3);
+        }
+
         .card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -216,6 +250,34 @@
             background-color: var(--secondary-dark);
             color: var(--text-secondary);
             padding: 20px 0;
+        }
+
+        /* Add modal styles */
+        .modal-content {
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-header, .modal-footer {
+            border-color: var(--border-color);
+        }
+
+        .form-control {
+            background-color: var(--secondary-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .form-control:focus {
+            background-color: var(--secondary-dark);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.25rem rgba(138, 92, 245, 0.25);
+            color: var(--text-primary);
+        }
+
+        .password-toggle {
+            cursor: pointer;
         }
     </style>
 </head>
@@ -415,6 +477,10 @@
                                     <i class="fas fa-award me-1"></i> Change Membership Tier
                                 </button>
                                 <% } %>
+                                <!-- Add Delete Account Button Here -->
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                                    <i class="fas fa-user-times me-1"></i> Delete Account
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -614,40 +680,95 @@
                         <div class="mb-3">
                             <label for="newTier" class="form-label">Select New Tier</label>
                             <select class="form-select" id="newTier" name="newTier" style="background-color: var(--secondary-dark); color: var(--text-primary); border-color: var(--border-color);">
-                            <option value="SILVER" <%= membershipTier.equals("SILVER") ? "selected" : "" %>>Silver ($9.99/month)</option>
-                                                            <option value="GOLD" <%= membershipTier.equals("GOLD") ? "selected" : "" %>>Gold ($14.99/month)</option>
-                                                            <option value="PLATINUM" <%= membershipTier.equals("PLATINUM") ? "selected" : "" %>>Platinum ($19.99/month)</option>
-                                                        </select>
-                                                    </div>
-                                                    <hr style="background-color: var(--border-color);">
-                                                    <div class="d-grid">
-                                                        <button type="submit" class="btn btn-accent">
-                                                            <i class="fas fa-save me-2"></i> Update Membership
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <% } %>
+                                <option value="SILVER" <%= membershipTier.equals("SILVER") ? "selected" : "" %>>Silver ($9.99/month)</option>
+                                <option value="GOLD" <%= membershipTier.equals("GOLD") ? "selected" : "" %>>Gold ($14.99/month)</option>
+                                <option value="PLATINUM" <%= membershipTier.equals("PLATINUM") ? "selected" : "" %>>Platinum ($19.99/month)</option>
+                            </select>
+                        </div>
+                        <hr style="background-color: var(--border-color);">
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-accent">
+                                <i class="fas fa-save me-2"></i> Update Membership
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <% } %>
 
-                                <!-- Footer -->
-                                <footer>
-                                    <div class="container">
-                                        <div class="row">
-                                            <div class="col-md-6 text-center text-md-start">
-                                                <p class="mb-0">&copy; 2023 BookVerse. All rights reserved.</p>
-                                            </div>
-                                            <div class="col-md-6 text-center text-md-end">
-                                                <a href="#" class="me-3 text-light">Privacy Policy</a>
-                                                <a href="#" class="text-light">Terms of Service</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </footer>
+    <!-- Add Delete Account Modal -->
+    <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background-color: var(--card-bg); color: var(--text-primary);">
+                <div class="modal-header" style="border-color: var(--border-color);">
+<h5 class="modal-title" id="deleteAccountModalLabel">Delete Account</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-custom alert-danger" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This action cannot be undone. All your data including orders, reviews, and preferences will be permanently deleted.
+                    </div>
+                    <p>Please enter your password to confirm account deletion:</p>
+                    <form action="<%=request.getContextPath()%>/delete-user" method="post" id="deleteAccountForm">
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Password</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                <span class="input-group-text password-toggle" onclick="togglePasswordVisibility('confirmPassword', 'toggleDeleteIcon')">
+                                    <i class="fas fa-eye" id="toggleDeleteIcon"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="border-color: var(--border-color);">
+                    <button type="button" class="btn btn-outline-accent" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick="document.getElementById('deleteAccountForm').submit();">
+                        <i class="fas fa-user-times me-1"></i> Delete My Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                                <!-- Bootstrap Bundle with Popper -->
-                                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-                            </body>
-                            </html>
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0">&copy; 2023 BookVerse. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <a href="#" class="me-3 text-light">Privacy Policy</a>
+                    <a href="#" class="text-light">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Add JavaScript for password toggle -->
+    <script>
+        // Toggle password visibility
+        function togglePasswordVisibility(inputId, iconId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleIcon = document.getElementById(iconId);
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+    </script>
+</body>
+</html>
