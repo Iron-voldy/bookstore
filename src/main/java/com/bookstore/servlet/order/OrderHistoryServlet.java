@@ -56,32 +56,31 @@ public class OrderHistoryServlet extends HttpServlet {
         String statusFilter = request.getParameter("status");
         System.out.println("OrderHistoryServlet: statusFilter = " + statusFilter);
 
-        // Fetch orders
+        // Fetch orders - ONLY FOR THE CURRENT USER
         List<Order> orders;
         try {
+            // Get only the current user's orders first
+            orders = orderManager.getOrdersByUser(userId);
+            System.out.println("Found " + orders.size() + " orders for user: " + userId);
+
+            // Then filter by status if needed
             if (statusFilter != null && !statusFilter.isEmpty()) {
                 try {
                     OrderStatus status = OrderStatus.valueOf(statusFilter.toUpperCase());
                     System.out.println("Filtering orders by status: " + status);
 
-                    // First get all user orders
-                    orders = orderManager.getOrdersByUser(userId);
-                    System.out.println("Found " + orders.size() + " orders for user before filtering");
-
-                    // Then filter by status (this is safer than filtering at DB level)
-                    orders.removeIf(order -> order.getStatus() != status);
+                    List<Order> filteredOrders = new ArrayList<>();
+                    for (Order order : orders) {
+                        if (order.getStatus() == status) {
+                            filteredOrders.add(order);
+                        }
+                    }
+                    orders = filteredOrders;
                     System.out.println("Found " + orders.size() + " orders after status filtering");
                 } catch (IllegalArgumentException e) {
-                    // Invalid status, fetch all orders
+                    // Invalid status, keep all orders
                     System.out.println("Invalid status filter: " + statusFilter + ", showing all orders");
-                    orders = orderManager.getOrdersByUser(userId);
-                    System.out.println("Found " + orders.size() + " orders for user");
                 }
-            } else {
-                // Fetch all orders for the user
-                System.out.println("Fetching all orders for user");
-                orders = orderManager.getOrdersByUser(userId);
-                System.out.println("Found " + orders.size() + " orders for user");
             }
 
             // Debug orders list
@@ -90,7 +89,7 @@ public class OrderHistoryServlet extends HttpServlet {
                 for (Order order : orders) {
                     System.out.println("Order ID: " + order.getOrderId() +
                             ", Status: " + order.getStatus() +
-                            ", Items: " + order.getItems().size() +
+                            ", Items: " + (order.getItems() != null ? order.getItems().size() : 0) +
                             ", Total: " + order.getTotal());
                 }
             } else {

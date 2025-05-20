@@ -429,6 +429,9 @@ public class OrderManager {
             return false;
         }
 
+        System.out.println("OrderManager: Updating order " + orderId + " status from " +
+                order.getStatus() + " to " + newStatus);
+
         // Update status
         order.setStatus(newStatus);
 
@@ -445,7 +448,9 @@ public class OrderManager {
         }
 
         // Save changes
-        return saveData();
+        boolean saved = saveData();
+        System.out.println("OrderManager: Order status update saved: " + saved);
+        return saved;
     }
 
     /**
@@ -453,7 +458,13 @@ public class OrderManager {
      */
     public boolean cancelOrder(String orderId) {
         Order order = getOrderById(orderId);
-        if (order == null || !order.canCancel()) {
+        if (order == null) {
+            System.out.println("OrderManager: Cannot cancel - order not found: " + orderId);
+            return false;
+        }
+
+        if (!order.canCancel()) {
+            System.out.println("OrderManager: Cannot cancel - order status does not allow cancellation: " + order.getStatus());
             return false;
         }
 
@@ -472,15 +483,26 @@ public class OrderManager {
         }
 
         // Save changes
-        return saveData();
+        boolean saved = saveData();
+        System.out.println("OrderManager: Order cancellation saved: " + saved);
+        return saved;
     }
 
     /**
      * Delete an order (admin function)
      */
     public boolean deleteOrder(String orderId) {
+        System.out.println("OrderManager: Attempting to delete order: " + orderId);
         Order order = orders.remove(orderId);
-        return order != null && saveData();
+
+        if (order == null) {
+            System.out.println("OrderManager: Order not found for deletion: " + orderId);
+            return false;
+        }
+
+        boolean saved = saveData();
+        System.out.println("OrderManager: Order deletion saved: " + saved);
+        return saved;
     }
 
     /**
@@ -636,7 +658,7 @@ public class OrderManager {
             }
 
             // Check if user ID contains the query
-            if (order.getUserId().toLowerCase().contains(searchQuery)) {
+            if (order.getUserId() != null && order.getUserId().toLowerCase().contains(searchQuery)) {
                 results.add(order);
                 continue;
             }
@@ -663,11 +685,13 @@ public class OrderManager {
             }
 
             // Check if any book title or author contains the query
-            for (OrderItem item : order.getItems()) {
-                if ((item.getTitle() != null && item.getTitle().toLowerCase().contains(searchQuery)) ||
-                        (item.getAuthor() != null && item.getAuthor().toLowerCase().contains(searchQuery))) {
-                    results.add(order);
-                    break;
+            if (order.getItems() != null) {
+                for (OrderItem item : order.getItems()) {
+                    if ((item.getTitle() != null && item.getTitle().toLowerCase().contains(searchQuery)) ||
+                            (item.getAuthor() != null && item.getAuthor().toLowerCase().contains(searchQuery))) {
+                        results.add(order);
+                        break;
+                    }
                 }
             }
         }
