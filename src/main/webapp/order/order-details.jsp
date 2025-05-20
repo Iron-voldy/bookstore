@@ -463,7 +463,8 @@
                     </a>
                     <%
                     // Show cancel button only if order can be cancelled (PENDING or PROCESSING)
-                    if (order.getStatus() == OrderStatus.PENDING || order.getStatus() == OrderStatus.PROCESSING) {
+                    boolean canCancel = order.canCancel();
+                    if (canCancel) {
                     %>
                         <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
                             <i class="fas fa-times-circle me-2"></i> Cancel Order
@@ -474,7 +475,7 @@
         </div>
 
         <!-- Cancel Order Modal -->
-        <% if (order.getStatus() == OrderStatus.PENDING || order.getStatus() == OrderStatus.PROCESSING) { %>
+        <% if (order.canCancel()) { %>
         <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">

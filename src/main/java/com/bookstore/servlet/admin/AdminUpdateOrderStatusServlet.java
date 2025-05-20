@@ -65,12 +65,25 @@ public class AdminUpdateOrderStatusServlet extends HttpServlet {
                 return;
             }
 
+            // Print the current status before change
+            System.out.println("AdminUpdateOrderStatusServlet: Current order status: " +
+                    (order.getStatus() != null ? order.getStatus().name() : "null"));
+
             // Convert status
             OrderStatus newStatus;
             try {
                 newStatus = OrderStatus.valueOf(statusStr);
+                System.out.println("AdminUpdateOrderStatusServlet: New status parsed as: " + newStatus.name());
             } catch (IllegalArgumentException e) {
+                System.err.println("AdminUpdateOrderStatusServlet: Invalid status value: " + statusStr);
                 session.setAttribute("errorMessage", "Invalid order status");
+                response.sendRedirect(request.getContextPath() + "/admin/order-details?orderId=" + orderId);
+                return;
+            }
+
+            // Validate tracking number if status is SHIPPED
+            if (newStatus == OrderStatus.SHIPPED && (trackingNumber == null || trackingNumber.trim().isEmpty())) {
+                session.setAttribute("errorMessage", "Tracking number is required when marking an order as Shipped");
                 response.sendRedirect(request.getContextPath() + "/admin/order-details?orderId=" + orderId);
                 return;
             }
@@ -80,6 +93,7 @@ public class AdminUpdateOrderStatusServlet extends HttpServlet {
 
             // Update order status
             order.setStatus(newStatus);
+            System.out.println("AdminUpdateOrderStatusServlet: Order status updated in object to: " + order.getStatus().name());
 
             // Update tracking number if provided
             if (trackingNumber != null && !trackingNumber.trim().isEmpty()) {
@@ -108,6 +122,17 @@ public class AdminUpdateOrderStatusServlet extends HttpServlet {
 
             // Save changes
             boolean updated = orderManager.updateOrderStatus(orderId, newStatus);
+
+            System.out.println("AdminUpdateOrderStatusServlet: Update result: " + updated);
+
+            // Verify the order status again after update
+            Order verifiedOrder = orderManager.getOrderById(orderId);
+            if (verifiedOrder != null) {
+                System.out.println("AdminUpdateOrderStatusServlet: Verified order status after update: " +
+                        (verifiedOrder.getStatus() != null ? verifiedOrder.getStatus().name() : "null"));
+            } else {
+                System.out.println("AdminUpdateOrderStatusServlet: Could not verify order after update - not found");
+            }
 
             if (updated) {
                 session.setAttribute("successMessage", "Order status updated successfully");

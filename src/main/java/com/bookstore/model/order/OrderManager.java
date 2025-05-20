@@ -101,6 +101,10 @@ public class OrderManager {
         File file = new File(getFilePath(ORDERS_FILE_NAME));
         if (!file.exists()) {
             try {
+                // Ensure parent directory exists
+                if (file.getParentFile() != null && !file.getParentFile().exists()) {
+                    file.getParentFile().mkdirs();
+                }
                 file.createNewFile();
                 System.out.println("Created orders file: " + file.getAbsolutePath());
             } catch (IOException e) {
@@ -144,6 +148,10 @@ public class OrderManager {
         File file = new File(getFilePath(ORDER_ITEMS_FILE_NAME));
         if (!file.exists()) {
             try {
+                // Ensure parent directory exists
+                if (file.getParentFile() != null && !file.getParentFile().exists()) {
+                    file.getParentFile().mkdirs();
+                }
                 file.createNewFile();
                 System.out.println("Created order items file: " + file.getAbsolutePath());
             } catch (IOException e) {
@@ -223,6 +231,10 @@ public class OrderManager {
         File file = new File(getFilePath(PAYMENTS_FILE_NAME));
         if (!file.exists()) {
             try {
+                // Ensure parent directory exists
+                if (file.getParentFile() != null && !file.getParentFile().exists()) {
+                    file.getParentFile().mkdirs();
+                }
                 file.createNewFile();
                 System.out.println("Created payments file: " + file.getAbsolutePath());
             } catch (IOException e) {
@@ -278,12 +290,19 @@ public class OrderManager {
     private boolean saveOrdersToFile() {
         try {
             File file = new File(getFilePath(ORDERS_FILE_NAME));
+
+            // Ensure parent directory exists
+            if (file.getParentFile() != null && !file.getParentFile().exists()) {
+                file.getParentFile().mkdirs();
+            }
+
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
                 for (Order order : orders.values()) {
                     writer.write(order.toFileString());
                     writer.newLine();
                 }
             }
+            System.out.println("Orders saved to file successfully");
             return true;
         } catch (IOException e) {
             System.err.println("Error saving orders: " + e.getMessage());
@@ -298,11 +317,20 @@ public class OrderManager {
     private boolean saveOrderItemsToFile() {
         try {
             File file = new File(getFilePath(ORDER_ITEMS_FILE_NAME));
+
+            // Ensure parent directory exists
+            if (file.getParentFile() != null && !file.getParentFile().exists()) {
+                file.getParentFile().mkdirs();
+            }
+
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
                 for (Order order : orders.values()) {
-                    writer.write(order.itemsToFileString());
+                    if (order.getItems() != null && !order.getItems().isEmpty()) {
+                        writer.write(order.itemsToFileString());
+                    }
                 }
             }
+            System.out.println("Order items saved to file successfully");
             return true;
         } catch (IOException e) {
             System.err.println("Error saving order items: " + e.getMessage());
@@ -317,6 +345,12 @@ public class OrderManager {
     private boolean savePaymentsToFile() {
         try {
             File file = new File(getFilePath(PAYMENTS_FILE_NAME));
+
+            // Ensure parent directory exists
+            if (file.getParentFile() != null && !file.getParentFile().exists()) {
+                file.getParentFile().mkdirs();
+            }
+
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
                 for (Order order : orders.values()) {
                     Payment payment = order.getPayment();
@@ -326,6 +360,7 @@ public class OrderManager {
                     }
                 }
             }
+            System.out.println("Payments saved to file successfully");
             return true;
         } catch (IOException e) {
             System.err.println("Error saving payments: " + e.getMessage());
@@ -426,33 +461,50 @@ public class OrderManager {
     public boolean updateOrderStatus(String orderId, OrderStatus newStatus) {
         Order order = getOrderById(orderId);
         if (order == null) {
+            System.err.println("OrderManager.updateOrderStatus: Order not found: " + orderId);
             return false;
         }
 
+        // Debug output before update
         System.out.println("OrderManager: Updating order " + orderId + " status from " +
-                order.getStatus() + " to " + newStatus);
+                (order.getStatus() != null ? order.getStatus().name() : "null") + " to " + newStatus.name());
 
         // Update status
+        OrderStatus oldStatus = order.getStatus();
         order.setStatus(newStatus);
 
-        // Update additional fields based on status
-        if (newStatus == OrderStatus.SHIPPED) {
-            order.setShippedDate(new Date());
+        // Debug check after updating the status
+        System.out.println("OrderManager: Status after update: " +
+                (order.getStatus() != null ? order.getStatus().name() : "null"));
 
-            // Generate a tracking number if one doesn't exist
-            if (order.getTrackingNumber() == null || order.getTrackingNumber().isEmpty()) {
-                order.setTrackingNumber("TRK" + System.currentTimeMillis());
-            }
-        } else if (newStatus == OrderStatus.DELIVERED) {
+        // Update additional fields based on status
+        if (newStatus == OrderStatus.SHIPPED && order.getShippedDate() == null) {
+            order.setShippedDate(new Date());
+            System.out.println("OrderManager: Set shipped date to " + order.getShippedDate());
+        } else if (newStatus == OrderStatus.DELIVERED && order.getDeliveredDate() == null) {
             order.setDeliveredDate(new Date());
+            System.out.println("OrderManager: Set delivered date to " + order.getDeliveredDate());
         }
 
         // Save changes
         boolean saved = saveData();
         System.out.println("OrderManager: Order status update saved: " + saved);
+
+        // Verify the status was saved correctly by retrieving it again
+        Order verifiedOrder = getOrderById(orderId);
+        if (verifiedOrder != null) {
+            System.out.println("OrderManager: Verified status after save: " +
+                    (verifiedOrder.getStatus() != null ? verifiedOrder.getStatus().name() : "null"));
+            if (verifiedOrder.getStatus() != newStatus) {
+                System.err.println("OrderManager: WARNING - Status mismatch after save! Expected: " +
+                        newStatus.name() + ", Actual: " + verifiedOrder.getStatus().name());
+            }
+        } else {
+            System.err.println("OrderManager: Failed to verify order after save - not found");
+        }
+
         return saved;
     }
-
     /**
      * Cancel an order
      */

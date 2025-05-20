@@ -46,7 +46,7 @@ public class AdminDeleteOrderServlet extends HttpServlet {
         }
 
         try {
-            // Get order ID
+            // Get order ID and confirmation parameter
             String orderId = request.getParameter("orderId");
             String confirm = request.getParameter("confirm");
 

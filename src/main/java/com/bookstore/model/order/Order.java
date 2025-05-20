@@ -286,6 +286,9 @@ public class Order implements Comparable<Order> {
      * Check if the order can be cancelled
      */
     public boolean canCancel() {
+        if (status == null) {
+            return false;
+        }
         return status == OrderStatus.PENDING || status == OrderStatus.PROCESSING;
     }
 
@@ -309,6 +312,15 @@ public class Order implements Comparable<Order> {
      */
     @Override
     public int compareTo(Order other) {
+        if (this.orderDate == null && other.orderDate == null) {
+            return 0;
+        }
+        if (this.orderDate == null) {
+            return 1;
+        }
+        if (other.orderDate == null) {
+            return -1;
+        }
         return other.orderDate.compareTo(this.orderDate); // Newest first
     }
 
@@ -481,6 +493,7 @@ public class Order implements Comparable<Order> {
             return null;
         }
     }
+
     /**
      * Add items to order from file string representation
      */
