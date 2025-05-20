@@ -1,6 +1,7 @@
 package com.bookstore.servlet.order;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -33,50 +34,80 @@ public class OrderConfirmationServlet extends HttpServlet {
 
         HttpSession session = request.getSession();
 
-        // Check if user is logged in
-        String userId = (String) session.getAttribute("userId");
-        if (userId == null) {
-            session.setAttribute("errorMessage", "Please log in to view order confirmation");
-            session.setAttribute("redirectAfterLogin", request.getRequestURI() + "?" + request.getQueryString());
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
+        try {
+            // Check if user is logged in
+            String userId = (String) session.getAttribute("userId");
+            if (userId == null) {
+                session.setAttribute("errorMessage", "Please log in to view order confirmation");
+                session.setAttribute("redirectAfterLogin", request.getRequestURI() + "?" + request.getQueryString());
+                response.sendRedirect(request.getContextPath() + "/login");
+                return;
+            }
 
-        // Get order ID from request parameter
-        String orderId = request.getParameter("orderId");
-        if (orderId == null || orderId.trim().isEmpty()) {
-            // If no order ID is provided, check if there's one in the session
-            orderId = (String) session.getAttribute("currentOrderId");
-            if (orderId == null) {
-                session.setAttribute("errorMessage", "Order ID is required");
+            // Get order ID from request parameter
+            String orderId = request.getParameter("orderId");
+            if (orderId == null || orderId.trim().isEmpty()) {
+                // If no order ID is provided, check if there's one in the session
+                orderId = (String) session.getAttribute("currentOrderId");
+                if (orderId == null) {
+                    session.setAttribute("errorMessage", "Order ID is required");
+                    response.sendRedirect(request.getContextPath() + "/order-history");
+                    return;
+                }
+            }
+
+            // Get order details
+            Order order = orderManager.getOrderById(orderId);
+
+            if (order == null) {
+                session.setAttribute("errorMessage", "Order not found");
                 response.sendRedirect(request.getContextPath() + "/order-history");
                 return;
             }
-        }
 
-        // Get order details
-        Order order = orderManager.getOrderById(orderId);
+            // Check if this order belongs to the logged-in user
+            if (!order.getUserId().equals(userId)) {
+                session.setAttribute("errorMessage", "You do not have permission to view this order");
+                response.sendRedirect(request.getContextPath() + "/order-history");
+                return;
+            }
 
-        if (order == null) {
-            session.setAttribute("errorMessage", "Order not found");
+            // Ensure order values are properly set
+            if (order.getItems() == null || order.getItems().isEmpty()) {
+                // This normally shouldn't happen for a completed order, but just in case
+                System.out.println("Warning: Order " + orderId + " has no items.");
+            }
+
+            // Recalculate totals to ensure they are correct
+            order.calculateTotals();
+
+            // Format numbers with 2 decimal places
+            DecimalFormat df = new DecimalFormat("0.00");
+
+            // Set formatted string values in request
+            request.setAttribute("order", order);
+            request.setAttribute("orderSubtotal", df.format(order.getSubtotal()));
+            request.setAttribute("orderTax", df.format(order.getTax()));
+            request.setAttribute("orderShipping", df.format(order.getShippingCost()));
+            request.setAttribute("orderTotal", df.format(order.getTotal()));
+
+            // Debug output
+            System.out.println("OrderConfirmationServlet Debug - Order: " + order.getOrderId());
+            System.out.println("OrderConfirmationServlet Debug - Subtotal: " + df.format(order.getSubtotal()));
+            System.out.println("OrderConfirmationServlet Debug - Tax: " + df.format(order.getTax()));
+            System.out.println("OrderConfirmationServlet Debug - Shipping: " + df.format(order.getShippingCost()));
+            System.out.println("OrderConfirmationServlet Debug - Total: " + df.format(order.getTotal()));
+
+            // Remove the currentOrderId from session since we're done with it
+            session.removeAttribute("currentOrderId");
+
+            // Forward to confirmation page
+            request.getRequestDispatcher("/order/order-confirmation.jsp").forward(request, response);
+        } catch (Exception e) {
+            System.err.println("Error in OrderConfirmationServlet: " + e.getMessage());
+            e.printStackTrace();
+            session.setAttribute("errorMessage", "An unexpected error occurred: " + e.getMessage());
             response.sendRedirect(request.getContextPath() + "/order-history");
-            return;
         }
-
-        // Check if this order belongs to the logged-in user
-        if (!order.getUserId().equals(userId)) {
-            session.setAttribute("errorMessage", "You do not have permission to view this order");
-            response.sendRedirect(request.getContextPath() + "/order-history");
-            return;
-        }
-
-        // Set order in request
-        request.setAttribute("order", order);
-
-        // Remove the currentOrderId from session since we're done with it
-        session.removeAttribute("currentOrderId");
-
-        // Forward to confirmation page
-        request.getRequestDispatcher("/order/order-confirmation.jsp").forward(request, response);
     }
 }

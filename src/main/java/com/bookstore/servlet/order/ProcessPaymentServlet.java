@@ -3,6 +3,7 @@ package com.bookstore.servlet.order;
 import java.io.IOException;
 import java.util.Date;
 import java.util.UUID;
+import java.text.DecimalFormat;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -31,45 +32,75 @@ public class ProcessPaymentServlet extends HttpServlet {
 
         HttpSession session = request.getSession();
 
-        // Check if user is logged in
-        if (session.getAttribute("userId") == null) {
-            session.setAttribute("errorMessage", "Please log in to process payment");
-            session.setAttribute("redirectAfterLogin", request.getContextPath() + "/process-payment");
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
+        try {
+            // Check if user is logged in
+            if (session.getAttribute("userId") == null) {
+                session.setAttribute("errorMessage", "Please log in to process payment");
+                session.setAttribute("redirectAfterLogin", request.getContextPath() + "/process-payment");
+                response.sendRedirect(request.getContextPath() + "/login");
+                return;
+            }
 
-        // Check if there's a current order
-        String orderId = (String) session.getAttribute("currentOrderId");
-        if (orderId == null) {
-            session.setAttribute("errorMessage", "No pending order found");
+            // Check if there's a current order
+            String orderId = (String) session.getAttribute("currentOrderId");
+            if (orderId == null) {
+                session.setAttribute("errorMessage", "No pending order found");
+                response.sendRedirect(request.getContextPath() + "/checkout");
+                return;
+            }
+
+            // Get order details
+            OrderManager orderManager = new OrderManager(getServletContext());
+            Order order = orderManager.getOrderById(orderId);
+
+            if (order == null) {
+                session.setAttribute("errorMessage", "Order not found");
+                response.sendRedirect(request.getContextPath() + "/checkout");
+                return;
+            }
+
+            // Check if order belongs to user
+            String userId = (String) session.getAttribute("userId");
+            if (!order.getUserId().equals(userId)) {
+                session.setAttribute("errorMessage", "You do not have permission to access this order");
+                response.sendRedirect(request.getContextPath() + "/checkout");
+                return;
+            }
+
+            // Make sure order has calculated totals
+            if (order.getItems() == null || order.getItems().isEmpty()) {
+                session.setAttribute("errorMessage", "Order has no items");
+                response.sendRedirect(request.getContextPath() + "/checkout");
+                return;
+            }
+
+            // Ensure order totals are calculated
+            order.calculateTotals();
+
+            // Format numbers with 2 decimal places
+            DecimalFormat df = new DecimalFormat("0.00");
+
+            // Set formatted string values in request
+            request.setAttribute("order", order);
+            request.setAttribute("orderSubtotal", df.format(order.getSubtotal()));
+            request.setAttribute("orderTax", df.format(order.getTax()));
+            request.setAttribute("orderShipping", df.format(order.getShippingCost()));
+            request.setAttribute("orderTotal", df.format(order.getTotal()));
+
+            System.out.println("ProcessPaymentServlet Debug - Order: " + order.getOrderId());
+            System.out.println("ProcessPaymentServlet Debug - Subtotal: " + df.format(order.getSubtotal()));
+            System.out.println("ProcessPaymentServlet Debug - Tax: " + df.format(order.getTax()));
+            System.out.println("ProcessPaymentServlet Debug - Shipping: " + df.format(order.getShippingCost()));
+            System.out.println("ProcessPaymentServlet Debug - Total: " + df.format(order.getTotal()));
+
+            // Forward to payment form
+            request.getRequestDispatcher("/order/payment-form.jsp").forward(request, response);
+        } catch (Exception e) {
+            System.err.println("Error in ProcessPaymentServlet.doGet: " + e.getMessage());
+            e.printStackTrace();
+            session.setAttribute("errorMessage", "An unexpected error occurred: " + e.getMessage());
             response.sendRedirect(request.getContextPath() + "/checkout");
-            return;
         }
-
-        // Get order details
-        OrderManager orderManager = new OrderManager(getServletContext());
-        Order order = orderManager.getOrderById(orderId);
-
-        if (order == null) {
-            session.setAttribute("errorMessage", "Order not found");
-            response.sendRedirect(request.getContextPath() + "/checkout");
-            return;
-        }
-
-        // Check if order belongs to user
-        String userId = (String) session.getAttribute("userId");
-        if (!order.getUserId().equals(userId)) {
-            session.setAttribute("errorMessage", "You do not have permission to access this order");
-            response.sendRedirect(request.getContextPath() + "/checkout");
-            return;
-        }
-
-        // Set order in request
-        request.setAttribute("order", order);
-
-        // Forward to payment form
-        request.getRequestDispatcher("/order/payment-form.jsp").forward(request, response);
     }
 
     /**
@@ -81,40 +112,40 @@ public class ProcessPaymentServlet extends HttpServlet {
 
         HttpSession session = request.getSession();
 
-        // Check if user is logged in
-        if (session.getAttribute("userId") == null) {
-            session.setAttribute("errorMessage", "Please log in to process payment");
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
-
-        // Check if there's a current order
-        String orderId = (String) session.getAttribute("currentOrderId");
-        if (orderId == null) {
-            session.setAttribute("errorMessage", "No pending order found");
-            response.sendRedirect(request.getContextPath() + "/checkout");
-            return;
-        }
-
-        // Get order details
-        OrderManager orderManager = new OrderManager(getServletContext());
-        Order order = orderManager.getOrderById(orderId);
-
-        if (order == null) {
-            session.setAttribute("errorMessage", "Order not found");
-            response.sendRedirect(request.getContextPath() + "/checkout");
-            return;
-        }
-
-        // Check if order belongs to user
-        String userId = (String) session.getAttribute("userId");
-        if (!order.getUserId().equals(userId)) {
-            session.setAttribute("errorMessage", "You do not have permission to access this order");
-            response.sendRedirect(request.getContextPath() + "/checkout");
-            return;
-        }
-
         try {
+            // Check if user is logged in
+            if (session.getAttribute("userId") == null) {
+                session.setAttribute("errorMessage", "Please log in to process payment");
+                response.sendRedirect(request.getContextPath() + "/login");
+                return;
+            }
+
+            // Check if there's a current order
+            String orderId = (String) session.getAttribute("currentOrderId");
+            if (orderId == null) {
+                session.setAttribute("errorMessage", "No pending order found");
+                response.sendRedirect(request.getContextPath() + "/checkout");
+                return;
+            }
+
+            // Get order details
+            OrderManager orderManager = new OrderManager(getServletContext());
+            Order order = orderManager.getOrderById(orderId);
+
+            if (order == null) {
+                session.setAttribute("errorMessage", "Order not found");
+                response.sendRedirect(request.getContextPath() + "/checkout");
+                return;
+            }
+
+            // Check if order belongs to user
+            String userId = (String) session.getAttribute("userId");
+            if (!order.getUserId().equals(userId)) {
+                session.setAttribute("errorMessage", "You do not have permission to access this order");
+                response.sendRedirect(request.getContextPath() + "/checkout");
+                return;
+            }
+
             // Get payment form data
             String paymentMethodStr = request.getParameter("paymentMethod");
 

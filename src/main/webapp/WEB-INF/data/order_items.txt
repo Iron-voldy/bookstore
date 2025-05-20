@@ -1,1 +1,7 @@
+44b6b339-e3a3-4c37-b5eb-71628cc9e827,2ebe2ef3-d916-4a9d-aaec-94cae719f694,Educated,Tara Westover,12.0,10.2,1,EBOOK
+d1064f6a-058a-4b36-acf6-0d07c4390f0b,04de4fc8-3631-4b46-bdfb-de3d9aa83e53,Dune,Frank Herbert,9.0,9.0,1,PHYSICAL
+07e2d5f7-60e8-4463-858c-5f6761a7d8f9,04de4fc8-3631-4b46-bdfb-de3d9aa83e53,Dune,Frank Herbert,9.0,9.0,2,PHYSICAL
+fb88a9fa-0bc0-4559-9618-6126ee298877,04de4fc8-3631-4b46-bdfb-de3d9aa83e53,Dune,Frank Herbert,9.0,9.0,1,PHYSICAL
+9bd8800a-88fc-4ed3-b137-a2e754dac2a5,868b2f96-36c5-4d8b-bc46-f4ffa8c0f93d,The Night Circus,Erin Morgenstern,17.99,17.99,3,PHYSICAL
 de2e3004-8ba6-4931-9206-3cf5e4e7da39,b065ae6d-308d-40aa-ae65-775a12c3e238,frankenstein book,Mary Shelley,15.0,15.0,3,BOOK
+c6015f61-7f87-48d3-ad4a-e57af7433c1e,04de4fc8-3631-4b46-bdfb-de3d9aa83e53,Dune,Frank Herbert,9.0,9.0,1,PHYSICAL

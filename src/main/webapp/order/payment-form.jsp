@@ -1,252 +1,177 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Process Payment - Online Bookstore</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Simple styling */
+        .navbar {
+            background-color: #343a40;
+            color: white;
+            padding: 1rem;
+        }
+        .navbar-brand {
+            color: white;
+            font-size: 1.5rem;
+            text-decoration: none;
+        }
+        footer {
+            background-color: #343a40;
+            color: white;
+            padding: 1rem 0;
+            margin-top: 2rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Simple navbar -->
+    <div class="navbar">
+        <div class="container">
+            <a href="${pageContext.request.contextPath}/" class="navbar-brand">Online Bookstore</a>
+            <div>
+                <a href="${pageContext.request.contextPath}/cart" class="btn btn-outline-light">Cart</a>
+                <a href="${pageContext.request.contextPath}/order-history" class="btn btn-outline-light ms-2">My Orders</a>
+            </div>
+        </div>
+    </div>
 
-<jsp:include page="/includes/header.jsp">
-    <jsp:param name="pageTitle" value="Payment - BookVerse" />
-</jsp:include>
+    <div class="container mt-5 mb-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="card-title mb-0">Payment Information</h3>
+                    </div>
+                    <div class="card-body">
+                        <c:if test="${not empty errorMessage}">
+                            <div class="alert alert-danger">${errorMessage}</div>
+                        </c:if>
 
-<div class="container my-5">
-    <h2 class="mb-4"><i class="fas fa-credit-card me-2"></i>Payment Details</h2>
-
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/">Home</a></li>
-            <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/cart">Cart</a></li>
-            <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/checkout">Checkout</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Payment</li>
-        </ol>
-    </nav>
-
-    <div class="row">
-        <!-- Payment Form -->
-        <div class="col-lg-8 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Payment Information</h5>
-                </div>
-                <div class="card-body">
-                    <form action="${pageContext.request.contextPath}/process-payment" method="post" id="paymentForm">
-                        <!-- Payment Method Selection -->
-                        <h6 class="mb-3">Select Payment Method</h6>
-                        <div class="mb-4">
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="paymentMethod" id="creditCard" value="CREDIT_CARD" checked>
-                                <label class="form-check-label" for="creditCard">
-                                    <i class="fab fa-cc-visa me-1"></i> Credit Card
-                                </label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="paymentMethod" id="debitCard" value="DEBIT_CARD">
-                                <label class="form-check-label" for="debitCard">
-                                    <i class="fab fa-cc-mastercard me-1"></i> Debit Card
-                                </label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="paymentMethod" id="paypal" value="PAYPAL">
-                                <label class="form-check-label" for="paypal">
-                                    <i class="fab fa-paypal me-1"></i> PayPal
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Card Information -->
-                        <div id="cardDetails">
-                            <h6 class="mb-3">Card Details</h6>
-                            <div class="mb-3">
-                                <label for="cardNumber" class="form-label">Card Number*</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="cardNumber" name="cardNumber"
-                                        placeholder="1234 5678 9012 3456" maxlength="19" required>
-                                    <span class="input-group-text">
-                                        <i class="far fa-credit-card"></i>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="cardName" class="form-label">Cardholder Name*</label>
-                                <input type="text" class="form-control" id="cardName" name="cardName"
-                                    placeholder="John Doe" required>
-                            </div>
-
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label for="expiryDate" class="form-label">Expiry Date*</label>
-                                    <input type="text" class="form-control" id="expiryDate" name="expiryDate"
-                                        placeholder="MM/YY" maxlength="5" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="cvv" class="form-label">CVV*</label>
-                                    <input type="text" class="form-control" id="cvv" name="cvv"
-                                        placeholder="123" maxlength="4" required>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- PayPal Section (hidden by default) -->
-                        <div id="paypalDetails" style="display: none;">
-                            <div class="alert alert-info" role="alert">
-                                <i class="fab fa-paypal me-2"></i> You will be redirected to PayPal to complete your purchase securely.
-                            </div>
-                        </div>
-
-                        <!-- Billing Summary -->
-                        <h6 class="mb-3 mt-4">Billing Summary</h6>
-                        <div class="card bg-dark mb-3">
-                            <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h5>Order Summary</h5>
+                                <hr>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>Order Subtotal:</span>
-                                    <span>$<fmt:formatNumber value="${order.subtotal}" pattern="0.00" /></span>
+                                    <span>$<fmt:formatNumber value="${orderSubtotal}" pattern="0.00" /></span>
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>Tax:</span>
-                                    <span>$<fmt:formatNumber value="${order.tax}" pattern="0.00" /></span>
+                                    <span>$<fmt:formatNumber value="${orderTax}" pattern="0.00" /></span>
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>Shipping:</span>
-                                    <span>$<fmt:formatNumber value="${order.shippingCost}" pattern="0.00" /></span>
+                                    <span>$<fmt:formatNumber value="${orderShipping}" pattern="0.00" /></span>
                                 </div>
-                                <hr>
                                 <div class="d-flex justify-content-between fw-bold">
                                     <span>Total:</span>
-                                    <span class="text-accent">$<fmt:formatNumber value="${order.total}" pattern="0.00" /></span>
+                                    <span>$<fmt:formatNumber value="${orderTotal}" pattern="0.00" /></span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-accent btn-lg" id="paymentButton">
-                                <i class="fas fa-lock me-2"></i> Complete Payment
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+                        <form action="${pageContext.request.contextPath}/process-payment" method="post">
+                            <div class="mb-4">
+                                <h5>Payment Method</h5>
+                                <hr>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="paymentMethod" id="CREDIT_CARD" value="CREDIT_CARD" checked>
+                                    <label class="form-check-label" for="CREDIT_CARD">Credit Card</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="paymentMethod" id="DEBIT_CARD" value="DEBIT_CARD">
+                                    <label class="form-check-label" for="DEBIT_CARD">Debit Card</label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="paymentMethod" id="PAYPAL" value="PAYPAL">
+                                    <label class="form-check-label" for="PAYPAL">PayPal</label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="paymentMethod" id="BANK_TRANSFER" value="BANK_TRANSFER">
+                                    <label class="form-check-label" for="BANK_TRANSFER">Bank Transfer</label>
+                                </div>
+                            </div>
 
-        <!-- Order Summary -->
-        <div class="col-lg-4">
-            <div class="card sticky-top" style="top: 20px">
-                <div class="card-header">
-                    <h5 class="mb-0">Order #${not empty order.orderId ? order.orderId.substring(0, 8) : ''}</h5>
-                </div>
-                <div class="card-body">
-                    <!-- Order Items -->
-                    <h6 class="mb-3">Items (${not empty order.items ? order.items.size() : 0})</h6>
-                    <div class="table-responsive">
-                        <table class="table table-sm table-dark">
-                            <c:forEach var="item" items="${order.items}">
-                                <tr>
-                                    <td>
-                                        <strong>${item.title}</strong><br>
-                                        <small class="text-muted">Qty: ${item.quantity}</small>
-                                    </td>
-                                    <td class="text-end">
-                                        $<fmt:formatNumber value="${item.discountedPrice * item.quantity}" pattern="0.00" />
-                                    </td>
-                                </tr>
-                            </c:forEach>
-                        </table>
-                    </div>
+                            <div id="creditCardForm">
+                                <div class="mb-3">
+                                    <label for="cardNumber" class="form-label">Card Number</label>
+                                    <input type="text" class="form-control" id="cardNumber" name="cardNumber" placeholder="1234 5678 9012 3456" required>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label for="expiryDate" class="form-label">Expiry Date</label>
+                                        <input type="text" class="form-control" id="expiryDate" name="expiryDate" placeholder="MM/YY" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="cvv" class="form-label">CVV</label>
+                                        <input type="text" class="form-control" id="cvv" name="cvv" placeholder="123" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="cardName" class="form-label">Name on Card</label>
+                                    <input type="text" class="form-control" id="cardName" name="cardName" placeholder="John Doe" required>
+                                </div>
+                            </div>
 
-                    <!-- Shipping Address -->
-                    <div class="mt-3">
-                        <h6 class="mb-2">Shipping Address</h6>
-                        <p class="small text-muted mb-0">${order.shippingAddress}</p>
-                    </div>
-                </div>
-                <div class="card-footer">
-                    <div class="d-flex align-items-center">
-                        <div>
-                            <i class="fas fa-shield-alt me-2 text-success"></i>
-                        </div>
-                        <div class="small text-muted">
-                            Your payment information is processed securely. We do not store credit card details.
-                        </div>
+                            <div class="mb-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="savePaymentInfo" name="savePaymentInfo">
+                                    <label class="form-check-label" for="savePaymentInfo">
+                                        Save payment information for future purchases
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">Complete Payment</button>
+                                <a href="${pageContext.request.contextPath}/checkout" class="btn btn-outline-secondary">Back to Checkout</a>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    // Toggle payment method sections
-    document.addEventListener('DOMContentLoaded', function() {
-        // Toggle payment method sections
-        const paymentMethodRadios = document.querySelectorAll('input[name="paymentMethod"]');
-        const cardDetails = document.getElementById('cardDetails');
-        const paypalDetails = document.getElementById('paypalDetails');
-        const paymentButton = document.getElementById('paymentButton');
+    <!-- Simple footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Online Bookstore. All rights reserved.</p>
+        </div>
+    </footer>
 
-        paymentMethodRadios.forEach(radio => {
-            radio.addEventListener('change', function() {
-                if (this.value === 'PAYPAL') {
-                    cardDetails.style.display = 'none';
-                    paypalDetails.style.display = 'block';
-                    paymentButton.innerHTML = '<i class="fab fa-paypal me-2"></i> Pay with PayPal';
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script>
+        // Toggle payment forms based on payment method selection
+        document.addEventListener('DOMContentLoaded', function() {
+            const paymentMethods = document.querySelectorAll('input[name="paymentMethod"]');
+            const creditCardForm = document.getElementById('creditCardForm');
 
-                    // Disable card validation
-                    document.getElementById('cardNumber').removeAttribute('required');
-                    document.getElementById('cardName').removeAttribute('required');
-                    document.getElementById('expiryDate').removeAttribute('required');
-                    document.getElementById('cvv').removeAttribute('required');
-                } else {
-                    cardDetails.style.display = 'block';
-                    paypalDetails.style.display = 'none';
-                    paymentButton.innerHTML = '<i class="fas fa-lock me-2"></i> Complete Payment';
-
-                    // Enable card validation
-                    document.getElementById('cardNumber').setAttribute('required', '');
-                    document.getElementById('cardName').setAttribute('required', '');
-                    document.getElementById('expiryDate').setAttribute('required', '');
-                    document.getElementById('cvv').setAttribute('required', '');
-                }
+            paymentMethods.forEach(method => {
+                method.addEventListener('change', function() {
+                    if (this.value === 'CREDIT_CARD' || this.value === 'DEBIT_CARD') {
+                        creditCardForm.style.display = 'block';
+                        document.querySelectorAll('#creditCardForm input').forEach(input => {
+                            input.setAttribute('required', true);
+                        });
+                    } else {
+                        creditCardForm.style.display = 'none';
+                        document.querySelectorAll('#creditCardForm input').forEach(input => {
+                            input.removeAttribute('required');
+                        });
+                    }
+                });
             });
         });
-
-        // Format card number with spaces
-        const cardNumberInput = document.getElementById('cardNumber');
-        if (cardNumberInput) {
-            cardNumberInput.addEventListener('input', function(e) {
-                let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-                let formattedValue = '';
-
-                for (let i = 0; i < value.length; i++) {
-                    if (i > 0 && i % 4 === 0) {
-                        formattedValue += ' ';
-                    }
-                    formattedValue += value[i];
-                }
-
-                e.target.value = formattedValue;
-            });
-        }
-
-        // Format expiry date as MM/YY
-        const expiryDateInput = document.getElementById('expiryDate');
-        if (expiryDateInput) {
-            expiryDateInput.addEventListener('input', function(e) {
-                let value = e.target.value.replace(/\D/g, '');
-
-                if (value.length > 2) {
-                    value = value.substring(0, 2) + '/' + value.substring(2, 4);
-                }
-
-                e.target.value = value;
-            });
-        }
-
-        // Only allow numbers for CVV
-        const cvvInput = document.getElementById('cvv');
-        if (cvvInput) {
-            cvvInput.addEventListener('input', function(e) {
-                e.target.value = e.target.value.replace(/\D/g, '');
-            });
-        }
-    });
-</script>
-
-<jsp:include page="/includes/footer.jsp" />
+    </script>
+</body>
+</html>
