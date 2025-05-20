@@ -1,20 +1,22 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="com.bookstore.model.order.Order" %>
 <%@ page import="com.bookstore.model.order.OrderItem" %>
+<%@ page import="com.bookstore.model.order.OrderStatus" %>
 <%@ page import="java.text.DecimalFormat" %>
 <%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="java.util.Date" %>
+<%@ page import="java.util.Arrays" %>
 
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Order Details</title>
-     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-        <!-- Font Awesome -->
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>Order Details - Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
-       <style>
+    <style>
         body {
             background-color: #f8f9fa;
         }
@@ -24,6 +26,10 @@
         }
         .back-button {
             margin-bottom: 15px;
+        }
+        .required label:after {
+            content: ' *';
+            color: red;
         }
     </style>
 </head>
@@ -75,18 +81,30 @@
             // Order status styling
             String statusBadgeClass = "bg-secondary";
             if (order.getStatus() != null) {
-                if (order.getStatus().equals("PENDING")) {
-                    statusBadgeClass = "bg-warning text-dark";
-                } else if (order.getStatus().equals("PROCESSING")) {
-                    statusBadgeClass = "bg-primary";
-                } else if (order.getStatus().equals("SHIPPED")) {
-                    statusBadgeClass = "bg-info";
-                } else if (order.getStatus().equals("DELIVERED")) {
-                    statusBadgeClass = "bg-success";
-                } else if (order.getStatus().equals("CANCELLED")) {
-                    statusBadgeClass = "bg-danger";
+                switch(order.getStatus().name()) {
+                    case "PENDING":
+                        statusBadgeClass = "bg-warning text-dark";
+                        break;
+                    case "PROCESSING":
+                        statusBadgeClass = "bg-primary";
+                        break;
+                    case "SHIPPED":
+                        statusBadgeClass = "bg-info";
+                        break;
+                    case "DELIVERED":
+                        statusBadgeClass = "bg-success";
+                        break;
+                    case "CANCELLED":
+                        statusBadgeClass = "bg-danger";
+                        break;
                 }
             }
+
+            // Debug
+            System.out.println("Admin Order Details JSP - Order Status: " +
+                              (order.getStatus() != null ? order.getStatus().name() : "NULL"));
+            System.out.println("Admin Order Details JSP - Available Statuses: " +
+                              Arrays.toString((OrderStatus[])request.getAttribute("statuses")));
         %>
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -162,6 +180,7 @@
                                 <%
                                     } catch (Exception e) {
                                         // Handle the exception silently
+                                        System.out.println("Error displaying customer name: " + e.getMessage());
                                     }
                                 }
                                 %>
@@ -239,7 +258,9 @@
                     <% } %>
 
                     <div class="mt-4 d-flex gap-2">
-                        <% if (order.getStatus() != null && !order.getStatus().equals("CANCELLED") && !order.getStatus().equals("DELIVERED")) { %>
+                        <% if (order.getStatus() != null &&
+                              !order.getStatus().equals(OrderStatus.CANCELLED) &&
+                              !order.getStatus().equals(OrderStatus.DELIVERED)) { %>
                             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateStatusModal">
                                 <i class="fas fa-edit me-2"></i> Update Status
                             </button>
@@ -268,18 +289,36 @@
                             <h5 class="modal-title">Update Order Status</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
-                        <form action="<%= request.getContextPath() %>/admin/update-order-status" method="post">
+                        <form action="<%= request.getContextPath() %>/admin/update-order-status" method="post" id="updateStatusForm">
                             <div class="modal-body">
                                 <input type="hidden" name="orderId" value="<%= order.getOrderId() %>">
 
                                 <div class="mb-3">
                                     <label for="status" class="form-label">Status</label>
                                     <select class="form-select" id="status" name="status" required>
-                                        <option value="PENDING" <%= "PENDING".equals(order.getStatus()) ? "selected" : "" %>>Pending</option>
-                                        <option value="PROCESSING" <%= "PROCESSING".equals(order.getStatus()) ? "selected" : "" %>>Processing</option>
-                                        <option value="SHIPPED" <%= "SHIPPED".equals(order.getStatus()) ? "selected" : "" %>>Shipped</option>
-                                        <option value="DELIVERED" <%= "DELIVERED".equals(order.getStatus()) ? "selected" : "" %>>Delivered</option>
-                                        <option value="CANCELLED" <%= "CANCELLED".equals(order.getStatus()) ? "selected" : "" %>>Cancelled</option>
+                                        <%
+                                        OrderStatus[] statuses = (OrderStatus[])request.getAttribute("statuses");
+                                        if (statuses != null) {
+                                            for (OrderStatus status : statuses) {
+                                                String selected = "";
+                                                if (order.getStatus() != null && order.getStatus().equals(status)) {
+                                                    selected = "selected";
+                                                }
+                                        %>
+                                            <option value="<%= status.name() %>" <%= selected %>><%= status.getDisplayName() %></option>
+                                        <%
+                                            }
+                                        } else {
+                                            // Fallback if no statuses are provided
+                                        %>
+                                            <option value="PENDING" <%= order.getStatus() == OrderStatus.PENDING ? "selected" : "" %>>Pending</option>
+                                            <option value="PROCESSING" <%= order.getStatus() == OrderStatus.PROCESSING ? "selected" : "" %>>Processing</option>
+                                            <option value="SHIPPED" <%= order.getStatus() == OrderStatus.SHIPPED ? "selected" : "" %>>Shipped</option>
+                                            <option value="DELIVERED" <%= order.getStatus() == OrderStatus.DELIVERED ? "selected" : "" %>>Delivered</option>
+                                            <option value="CANCELLED" <%= order.getStatus() == OrderStatus.CANCELLED ? "selected" : "" %>>Cancelled</option>
+                                        <%
+                                        }
+                                        %>
                                     </select>
                                 </div>
 
@@ -334,14 +373,27 @@
         <% } %>
     </div>
 
-    <script src="<%= request.getContextPath() %>/assets/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // JavaScript to handle tracking number requirement for shipped status
         document.addEventListener('DOMContentLoaded', function() {
             const statusSelect = document.getElementById('status');
             const trackingInput = document.getElementById('trackingNumber');
+            const updateForm = document.getElementById('updateStatusForm');
 
-            if (statusSelect && trackingInput) {
+            if (statusSelect && trackingInput && updateForm) {
+                // Check if tracking number is required on form submission
+                updateForm.addEventListener('submit', function(event) {
+                    if (statusSelect.value === 'SHIPPED' && trackingInput.value.trim() === '') {
+                        event.preventDefault();
+                        alert('Tracking number is required when marking an order as Shipped.');
+                        trackingInput.focus();
+                        return false;
+                    }
+                    return true;
+                });
+
+                // Update required state when status changes
                 statusSelect.addEventListener('change', function() {
                     if (this.value === 'SHIPPED') {
                         trackingInput.setAttribute('required', 'required');
