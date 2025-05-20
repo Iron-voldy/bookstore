@@ -81,22 +81,15 @@ public class OrderConfirmationServlet extends HttpServlet {
             // Recalculate totals to ensure they are correct
             order.calculateTotals();
 
-            // Format numbers with 2 decimal places
-            DecimalFormat df = new DecimalFormat("0.00");
-
-            // Set formatted string values in request
+            // Set order in request (pass the actual order object, not formatted values)
             request.setAttribute("order", order);
-            request.setAttribute("orderSubtotal", df.format(order.getSubtotal()));
-            request.setAttribute("orderTax", df.format(order.getTax()));
-            request.setAttribute("orderShipping", df.format(order.getShippingCost()));
-            request.setAttribute("orderTotal", df.format(order.getTotal()));
 
             // Debug output
             System.out.println("OrderConfirmationServlet Debug - Order: " + order.getOrderId());
-            System.out.println("OrderConfirmationServlet Debug - Subtotal: " + df.format(order.getSubtotal()));
-            System.out.println("OrderConfirmationServlet Debug - Tax: " + df.format(order.getTax()));
-            System.out.println("OrderConfirmationServlet Debug - Shipping: " + df.format(order.getShippingCost()));
-            System.out.println("OrderConfirmationServlet Debug - Total: " + df.format(order.getTotal()));
+            System.out.println("OrderConfirmationServlet Debug - Subtotal: " + order.getSubtotal());
+            System.out.println("OrderConfirmationServlet Debug - Tax: " + order.getTax());
+            System.out.println("OrderConfirmationServlet Debug - Shipping: " + order.getShippingCost());
+            System.out.println("OrderConfirmationServlet Debug - Total: " + order.getTotal());
 
             // Remove the currentOrderId from session since we're done with it
             session.removeAttribute("currentOrderId");
@@ -106,8 +99,12 @@ public class OrderConfirmationServlet extends HttpServlet {
         } catch (Exception e) {
             System.err.println("Error in OrderConfirmationServlet: " + e.getMessage());
             e.printStackTrace();
-            session.setAttribute("errorMessage", "An unexpected error occurred: " + e.getMessage());
-            response.sendRedirect(request.getContextPath() + "/order-history");
+
+            // Error handling - avoid "Cannot call sendRedirect() after the response has been committed"
+            if (!response.isCommitted()) {
+                session.setAttribute("errorMessage", "An unexpected error occurred: " + e.getMessage());
+                response.sendRedirect(request.getContextPath() + "/order-history");
+            }
         }
     }
 }

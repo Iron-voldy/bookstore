@@ -67,6 +67,8 @@ public class CheckoutServlet extends HttpServlet {
             // Get user information for pre-filling the form
             User user = userManager.getUserById(userId);
             System.out.println("CheckoutServlet: user = " + (user != null ? user.toString() : "null"));
+
+            // Important: Set the user object in the request for the JSP
             request.setAttribute("user", user);
 
             // Get cart books details
@@ -81,7 +83,7 @@ public class CheckoutServlet extends HttpServlet {
             System.out.println("CheckoutServlet: calculated values - subtotal=" + subtotal
                     + ", tax=" + tax + ", shipping=" + shipping + ", total=" + total);
 
-            // Set attributes for JSP
+            // Set attributes for JSP as Double objects
             request.setAttribute("cart", cart);
             request.setAttribute("cartBooks", cartBooks);
             request.setAttribute("subtotal", Double.valueOf(subtotal));

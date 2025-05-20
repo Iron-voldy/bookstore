@@ -3,7 +3,6 @@ package com.bookstore.servlet.order;
 import java.io.IOException;
 import java.util.Date;
 import java.util.UUID;
-import java.text.DecimalFormat;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -77,29 +76,30 @@ public class ProcessPaymentServlet extends HttpServlet {
             // Ensure order totals are calculated
             order.calculateTotals();
 
-            // Format numbers with 2 decimal places
-            DecimalFormat df = new DecimalFormat("0.00");
-
-            // Set formatted string values in request
+            // Set numeric values directly
             request.setAttribute("order", order);
-            request.setAttribute("orderSubtotal", df.format(order.getSubtotal()));
-            request.setAttribute("orderTax", df.format(order.getTax()));
-            request.setAttribute("orderShipping", df.format(order.getShippingCost()));
-            request.setAttribute("orderTotal", df.format(order.getTotal()));
+            request.setAttribute("orderSubtotal", Double.valueOf(order.getSubtotal()));
+            request.setAttribute("orderTax", Double.valueOf(order.getTax()));
+            request.setAttribute("orderShipping", Double.valueOf(order.getShippingCost()));
+            request.setAttribute("orderTotal", Double.valueOf(order.getTotal()));
 
             System.out.println("ProcessPaymentServlet Debug - Order: " + order.getOrderId());
-            System.out.println("ProcessPaymentServlet Debug - Subtotal: " + df.format(order.getSubtotal()));
-            System.out.println("ProcessPaymentServlet Debug - Tax: " + df.format(order.getTax()));
-            System.out.println("ProcessPaymentServlet Debug - Shipping: " + df.format(order.getShippingCost()));
-            System.out.println("ProcessPaymentServlet Debug - Total: " + df.format(order.getTotal()));
+            System.out.println("ProcessPaymentServlet Debug - Subtotal: " + order.getSubtotal());
+            System.out.println("ProcessPaymentServlet Debug - Tax: " + order.getTax());
+            System.out.println("ProcessPaymentServlet Debug - Shipping: " + order.getShippingCost());
+            System.out.println("ProcessPaymentServlet Debug - Total: " + order.getTotal());
 
             // Forward to payment form
             request.getRequestDispatcher("/order/payment-form.jsp").forward(request, response);
         } catch (Exception e) {
             System.err.println("Error in ProcessPaymentServlet.doGet: " + e.getMessage());
             e.printStackTrace();
-            session.setAttribute("errorMessage", "An unexpected error occurred: " + e.getMessage());
-            response.sendRedirect(request.getContextPath() + "/checkout");
+
+            // Error handling - avoid "Cannot call sendRedirect() after the response has been committed"
+            if (!response.isCommitted()) {
+                session.setAttribute("errorMessage", "An unexpected error occurred: " + e.getMessage());
+                response.sendRedirect(request.getContextPath() + "/checkout");
+            }
         }
     }
 
@@ -217,8 +217,12 @@ public class ProcessPaymentServlet extends HttpServlet {
         } catch (Exception e) {
             System.err.println("Error processing payment: " + e.getMessage());
             e.printStackTrace();
-            session.setAttribute("errorMessage", "An error occurred during payment processing: " + e.getMessage());
-            response.sendRedirect(request.getContextPath() + "/process-payment");
+
+            // Error handling - avoid "Cannot call sendRedirect() after the response has been committed"
+            if (!response.isCommitted()) {
+                session.setAttribute("errorMessage", "An error occurred during payment processing: " + e.getMessage());
+                response.sendRedirect(request.getContextPath() + "/process-payment");
+            }
         }
     }
 }
