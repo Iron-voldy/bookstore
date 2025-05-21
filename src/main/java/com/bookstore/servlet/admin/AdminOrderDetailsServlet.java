@@ -29,6 +29,7 @@ public class AdminOrderDetailsServlet extends HttpServlet {
     public void init() throws ServletException {
         orderManager = new OrderManager(getServletContext());
         userManager = new UserManager(getServletContext());
+        System.out.println("AdminOrderDetailsServlet initialized");
     }
 
     @Override
@@ -53,13 +54,24 @@ public class AdminOrderDetailsServlet extends HttpServlet {
 
         System.out.println("AdminOrderDetailsServlet: Retrieving order: " + orderId);
 
-        // Get order details
+        // Clear any previous order data from request (important!)
+        request.removeAttribute("order");
+        request.removeAttribute("customer");
+        request.removeAttribute("statuses");
+
+        // Get order details - force reload from OrderManager to prevent stale data
+        orderManager = new OrderManager(getServletContext()); // Reload OrderManager to get fresh data
         Order order = orderManager.getOrderById(orderId);
+
         if (order == null) {
             session.setAttribute("errorMessage", "Order not found");
             response.sendRedirect(request.getContextPath() + "/admin/orders");
             return;
         }
+
+        // Log order details for debugging
+        System.out.println("AdminOrderDetailsServlet: Order found - ID: " + order.getOrderId() +
+                ", Status: " + order.getStatus());
 
         // Get customer info if available
         User customer = null;
@@ -78,7 +90,13 @@ public class AdminOrderDetailsServlet extends HttpServlet {
         // Set order statuses for the dropdown
         OrderStatus[] statuses = OrderStatus.values();
 
-        // Set attributes for JSP
+        // Debugging order status
+        System.out.println("AdminOrderDetailsServlet: Order Status: " +
+                (order.getStatus() != null ? order.getStatus().name() : "NULL"));
+        System.out.println("AdminOrderDetailsServlet: Available Statuses: " +
+                java.util.Arrays.toString(statuses));
+
+        // Set attributes for JSP (must be done AFTER clearing previous attributes)
         request.setAttribute("order", order);
         request.setAttribute("customer", customer);
         request.setAttribute("statuses", statuses);

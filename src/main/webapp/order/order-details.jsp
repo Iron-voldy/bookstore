@@ -463,8 +463,7 @@
                     </a>
                     <%
                     // Show cancel button only if order can be cancelled (PENDING or PROCESSING)
-                    boolean canCancel = order.canCancel();
-                    if (canCancel) {
+                    if (order.getStatus() == OrderStatus.PENDING || order.getStatus() == OrderStatus.PROCESSING) {
                     %>
                         <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
                             <i class="fas fa-times-circle me-2"></i> Cancel Order
@@ -475,7 +474,7 @@
         </div>
 
         <!-- Cancel Order Modal -->
-        <% if (order.canCancel()) { %>
+        <% if (order.getStatus() == OrderStatus.PENDING || order.getStatus() == OrderStatus.PROCESSING) { %>
         <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -539,5 +538,31 @@
 
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Add this script to the bottom of your admin/order/order-details.jsp file, before the closing </body> tag -->
+    <script>
+        // Add anti-caching for page refresh
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("Order status from JSP: <%= order.getStatus() %>");
+
+            // Add an event listener to the update form to prevent caching issues
+            const updateForm = document.getElementById('updateStatusForm');
+            if (updateForm) {
+                updateForm.addEventListener('submit', function() {
+                    // Set a flag to indicate that the page should be fully reloaded next time
+                    sessionStorage.setItem('forceReload', 'true');
+                });
+            }
+
+            // Check if we need to force reload (prevents browser caching)
+            if (sessionStorage.getItem('forceReload') === 'true') {
+                sessionStorage.removeItem('forceReload');
+                // Add a random parameter to the URL to bust cache
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('cache', Math.random());
+                window.location.href = currentUrl.toString();
+            }
+        });
+    </script>
 </body>
 </html>

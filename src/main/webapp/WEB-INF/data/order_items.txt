@@ -1,3 +1,0 @@
-98937387-fd88-4992-a15e-bcb8595c96cf,b065ae6d-308d-40aa-ae65-775a12c3e238,frankenstein book,Mary Shelley,15.0,15.0,1,BOOK
-49172157-d14c-4d97-abeb-196925199dc8,04de4fc8-3631-4b46-bdfb-de3d9aa83e53,Dune,Frank Herbert,9.0,9.0,1,PHYSICAL
-b9c5644c-d77b-421a-b16f-7bdf46dfac34,868b2f96-36c5-4d8b-bc46-f4ffa8c0f93d,The Night Circus,Erin Morgenstern,17.99,17.99,1,PHYSICAL

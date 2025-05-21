@@ -20,11 +20,14 @@ public class OrderHistoryServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private OrderManager orderManager;
 
+    @Override
     public void init() throws ServletException {
         // Initialize OrderManager with ServletContext
         orderManager = new OrderManager(getServletContext());
+        System.out.println("OrderHistoryServlet initialized");
     }
 
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         // Get user session

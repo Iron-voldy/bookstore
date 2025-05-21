@@ -25,6 +25,7 @@ public class AdminUpdateOrderStatusServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         orderManager = new OrderManager(getServletContext());
+        System.out.println("AdminUpdateOrderStatusServlet initialized");
     }
 
     @Override
@@ -48,7 +49,8 @@ public class AdminUpdateOrderStatusServlet extends HttpServlet {
 
             System.out.println("AdminUpdateOrderStatusServlet: orderId=" + orderId
                     + ", status=" + statusStr
-                    + ", tracking=" + trackingNumber);
+                    + ", tracking=" + trackingNumber
+                    + ", notes=" + notes);
 
             // Validate required parameters
             if (orderId == null || orderId.trim().isEmpty() || statusStr == null || statusStr.trim().isEmpty()) {
@@ -65,83 +67,86 @@ public class AdminUpdateOrderStatusServlet extends HttpServlet {
                 return;
             }
 
-            // Print the current status before change
-            System.out.println("AdminUpdateOrderStatusServlet: Current order status: " +
-                    (order.getStatus() != null ? order.getStatus().name() : "null"));
+            // Log current status before update
+            System.out.println("AdminUpdateOrderStatusServlet: Order current status: " + order.getStatus());
 
             // Convert status
             OrderStatus newStatus;
             try {
                 newStatus = OrderStatus.valueOf(statusStr);
-                System.out.println("AdminUpdateOrderStatusServlet: New status parsed as: " + newStatus.name());
             } catch (IllegalArgumentException e) {
-                System.err.println("AdminUpdateOrderStatusServlet: Invalid status value: " + statusStr);
                 session.setAttribute("errorMessage", "Invalid order status");
                 response.sendRedirect(request.getContextPath() + "/admin/order-details?orderId=" + orderId);
                 return;
             }
 
-            // Validate tracking number if status is SHIPPED
-            if (newStatus == OrderStatus.SHIPPED && (trackingNumber == null || trackingNumber.trim().isEmpty())) {
-                session.setAttribute("errorMessage", "Tracking number is required when marking an order as Shipped");
-                response.sendRedirect(request.getContextPath() + "/admin/order-details?orderId=" + orderId);
-                return;
-            }
-
-            // Get admin info
+            // Get admin info for logging
             String adminUsername = (String) session.getAttribute("adminUsername");
+            String statusNote = String.format("[%s] %s changed status to %s",
+                    new Date(), adminUsername != null ? adminUsername : "Admin", newStatus.getDisplayName());
 
-            // Update order status
-            order.setStatus(newStatus);
-            System.out.println("AdminUpdateOrderStatusServlet: Order status updated in object to: " + order.getStatus().name());
-
-            // Update tracking number if provided
+            // Apply tracking number if provided
             if (trackingNumber != null && !trackingNumber.trim().isEmpty()) {
-                order.setTrackingNumber(trackingNumber);
-            }
-
-            // Set dates based on status
-            if (newStatus == OrderStatus.SHIPPED && order.getShippedDate() == null) {
-                order.setShippedDate(new Date());
-            } else if (newStatus == OrderStatus.DELIVERED && order.getDeliveredDate() == null) {
-                order.setDeliveredDate(new Date());
+                if (!orderManager.updateTrackingNumber(orderId, trackingNumber)) {
+                    System.err.println("Failed to update tracking number");
+                }
             }
 
             // Update notes if provided
             if (notes != null && !notes.trim().isEmpty()) {
                 String existingNotes = order.getNotes() != null ? order.getNotes() : "";
-                String statusNote = String.format("[%s] %s changed status to %s",
-                        new Date(), adminUsername != null ? adminUsername : "Admin", newStatus.getDisplayName());
-
                 String updatedNotes = existingNotes.isEmpty() ?
                         statusNote + "\n" + notes :
                         existingNotes + "\n" + statusNote + "\n" + notes;
 
-                order.setNotes(updatedNotes);
+                if (!orderManager.updateOrderNotes(orderId, updatedNotes)) {
+                    System.err.println("Failed to update order notes");
+                }
+            } else {
+                // Just add the status change note
+                String existingNotes = order.getNotes() != null ? order.getNotes() : "";
+                String updatedNotes = existingNotes.isEmpty() ?
+                        statusNote :
+                        existingNotes + "\n" + statusNote;
+
+                if (!orderManager.updateOrderNotes(orderId, updatedNotes)) {
+                    System.err.println("Failed to update order notes");
+                }
             }
 
-            // Save changes
-            boolean updated = orderManager.updateOrderStatus(orderId, newStatus);
-
-            System.out.println("AdminUpdateOrderStatusServlet: Update result: " + updated);
-
-            // Verify the order status again after update
-            Order verifiedOrder = orderManager.getOrderById(orderId);
-            if (verifiedOrder != null) {
-                System.out.println("AdminUpdateOrderStatusServlet: Verified order status after update: " +
-                        (verifiedOrder.getStatus() != null ? verifiedOrder.getStatus().name() : "null"));
+            // If status is CANCELLED, use cancelOrder method
+            boolean updated;
+            if (newStatus == OrderStatus.CANCELLED) {
+                updated = orderManager.cancelOrder(orderId);
             } else {
-                System.out.println("AdminUpdateOrderStatusServlet: Could not verify order after update - not found");
+                // Set dates based on status
+                if (newStatus == OrderStatus.SHIPPED && order.getShippedDate() == null) {
+                    order.setShippedDate(new Date());
+                } else if (newStatus == OrderStatus.DELIVERED && order.getDeliveredDate() == null) {
+                    order.setDeliveredDate(new Date());
+                }
+
+                // Update order status
+                updated = orderManager.updateOrderStatus(orderId, newStatus);
             }
 
             if (updated) {
                 session.setAttribute("successMessage", "Order status updated successfully");
+                System.out.println("AdminUpdateOrderStatusServlet: Order status updated successfully to " + newStatus);
             } else {
                 session.setAttribute("errorMessage", "Failed to update order status");
+                System.out.println("AdminUpdateOrderStatusServlet: Failed to update order status");
             }
 
-            // Redirect back to order details
-            response.sendRedirect(request.getContextPath() + "/admin/order-details?orderId=" + orderId);
+            // Add a small delay to ensure file writes are complete
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                // Ignore
+            }
+
+            // Redirect back to order details with a cache-busting parameter
+            response.sendRedirect(request.getContextPath() + "/admin/order-details?orderId=" + orderId + "&t=" + System.currentTimeMillis());
 
         } catch (Exception e) {
             System.err.println("Error in AdminUpdateOrderStatusServlet: " + e.getMessage());

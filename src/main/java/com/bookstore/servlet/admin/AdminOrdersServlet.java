@@ -1,4 +1,4 @@
-package com.bookstore.servlet.admin;  // Make sure this is the correct package
+package com.bookstore.servlet.admin;
 
 import java.io.IOException;
 import java.util.List;
@@ -18,7 +18,7 @@ import com.bookstore.model.order.OrderStatus;
 /**
  * Servlet for displaying all orders in admin panel
  */
-@WebServlet("/admin/orders")  // This URL pattern is causing the conflict
+@WebServlet("/admin/orders")
 public class AdminOrdersServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private OrderManager orderManager;
@@ -26,6 +26,7 @@ public class AdminOrdersServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         orderManager = new OrderManager(getServletContext());
+        System.out.println("AdminOrdersServlet initialized");
     }
 
     @Override
@@ -55,15 +56,19 @@ public class AdminOrdersServlet extends HttpServlet {
             List<Order> orders;
             if (search != null && !search.trim().isEmpty()) {
                 orders = orderManager.searchOrders(search);
+                System.out.println("AdminOrdersServlet: Searched for: " + search + ", found: " + orders.size() + " orders");
             } else if (statusFilter != null && !statusFilter.trim().isEmpty()) {
                 try {
                     OrderStatus status = OrderStatus.valueOf(statusFilter.toUpperCase());
                     orders = orderManager.getOrdersByStatus(status);
+                    System.out.println("AdminOrdersServlet: Filtered by status: " + status + ", found: " + orders.size() + " orders");
                 } catch (IllegalArgumentException e) {
                     orders = orderManager.getAllOrders();
+                    System.out.println("AdminOrdersServlet: Invalid status filter, returning all orders: " + orders.size());
                 }
             } else {
                 orders = orderManager.getAllOrders();
+                System.out.println("AdminOrdersServlet: No filters, returning all orders: " + orders.size());
             }
 
             // Set order statuses for filtering

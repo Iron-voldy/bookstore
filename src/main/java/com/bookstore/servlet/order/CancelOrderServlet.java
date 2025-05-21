@@ -63,56 +63,39 @@ public class CancelOrderServlet extends HttpServlet {
 
         System.out.println("CancelOrderServlet: Processing cancellation for orderId=" + orderId + " by user " + userId);
 
+        // Get order details
+        Order order = orderManager.getOrderById(orderId);
+        if (order == null) {
+            System.out.println("CancelOrderServlet: Order not found: " + orderId);
+            session.setAttribute("errorMessage", "Order not found");
+            response.sendRedirect(request.getContextPath() + "/order-history");
+            return;
+        }
+
+        // Check if this order belongs to the logged-in user
+        if (!order.getUserId().equals(userId)) {
+            System.out.println("CancelOrderServlet: Permission denied - Order belongs to " +
+                    order.getUserId() + ", not " + userId);
+            session.setAttribute("errorMessage", "You do not have permission to cancel this order");
+            response.sendRedirect(request.getContextPath() + "/order-history");
+            return;
+        }
+
+        // Check if order can be cancelled
+        if (!order.canCancel()) {
+            System.out.println("CancelOrderServlet: Order cannot be cancelled, status: " + order.getStatus());
+            session.setAttribute("errorMessage", "This order cannot be cancelled. Current status: " + order.getStatus());
+            response.sendRedirect(request.getContextPath() + "/order-details?orderId=" + orderId);
+            return;
+        }
+
         try {
-            // Get order details
-            Order order = orderManager.getOrderById(orderId);
-            if (order == null) {
-                System.out.println("CancelOrderServlet: Order not found: " + orderId);
-                session.setAttribute("errorMessage", "Order not found");
-                response.sendRedirect(request.getContextPath() + "/order-history");
-                return;
-            }
-
-            // Check if this order belongs to the logged-in user
-            if (!order.getUserId().equals(userId)) {
-                System.out.println("CancelOrderServlet: Permission denied - Order belongs to " +
-                        order.getUserId() + ", not " + userId);
-                session.setAttribute("errorMessage", "You do not have permission to cancel this order");
-                response.sendRedirect(request.getContextPath() + "/order-history");
-                return;
-            }
-
-            // Check if order can be cancelled
-            if (!order.canCancel()) {
-                System.out.println("CancelOrderServlet: Order cannot be cancelled, status: " + order.getStatus());
-                session.setAttribute("errorMessage", "This order cannot be cancelled. Current status: " + order.getStatus());
-                response.sendRedirect(request.getContextPath() + "/order-details?orderId=" + orderId);
-                return;
-            }
-
             // Add cancellation note
             String existingNotes = order.getNotes() != null ? order.getNotes() : "";
             String cancelNote = String.format("[%s] Order cancelled by user", new Date());
             order.setNotes(existingNotes.isEmpty() ? cancelNote : existingNotes + "\n" + cancelNote);
 
-            // Return items to inventory for physical books
-            if (order.getItems() != null) {
-                for (OrderItem item : order.getItems()) {
-                    if (item.getBookType() != null &&
-                            (item.getBookType().equals("PHYSICAL") || item.getBookType().equals("BOOK"))) {
-                        Book book = bookManager.getBookById(item.getBookId());
-                        if (book != null) {
-                            // Increase book quantity
-                            book.increaseQuantity(item.getQuantity());
-                            bookManager.updateBook(book);
-                            System.out.println("CancelOrderServlet: Restored inventory for book: " +
-                                    book.getTitle() + ", quantity: " + item.getQuantity());
-                        }
-                    }
-                }
-            }
-
-            // Cancel the order
+            // Update order status to CANCELLED
             boolean cancelled = orderManager.cancelOrder(orderId);
 
             if (cancelled) {
@@ -122,16 +105,14 @@ public class CancelOrderServlet extends HttpServlet {
                 session.setAttribute("errorMessage", "Failed to cancel order. Please try again or contact customer support.");
                 System.out.println("CancelOrderServlet: Failed to cancel order");
             }
-
-            // Redirect back to order details
-            response.sendRedirect(request.getContextPath() + "/order-details?orderId=" + orderId);
-
         } catch (Exception e) {
             System.err.println("CancelOrderServlet: Error during cancellation: " + e.getMessage());
             e.printStackTrace();
             session.setAttribute("errorMessage", "An error occurred while cancelling your order: " + e.getMessage());
-            response.sendRedirect(request.getContextPath() + "/order-details?orderId=" + orderId);
         }
+
+        // Redirect back to order details
+        response.sendRedirect(request.getContextPath() + "/order-details?orderId=" + orderId);
     }
 
     /**
